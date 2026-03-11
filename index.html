@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="AI-Powered Trading Bot - Automated stock trading using technical analysis, market structure, and sentiment analysis">
+    <title>AI Trading Bot - Automated Stock Trading Platform</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="config.js"></script>
+    <script src="api.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="chart-component.js"></script>
+    <script src="technical-indicators.js"></script>
+    <script src="ai-trading-engine.js"></script>
+    <script src="paper-trading.js"></script>
+</head>
+
+<body>
+
+    <!-- ============================================
+       STICKY HEADER
+       ============================================ -->
+    <header class="header">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-accent-blue);">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                </svg>
+                AI TRADER
+            </a>
+            <nav class="nav-links">
+                <a href="#how-it-works" class="nav-link">Features</a>
+                <a href="#strategy" class="nav-link">Strategy</a>
+                <a href="#dashboard" class="nav-link">Dashboard</a>
+                <a href="#pricing" class="nav-link">Pricing</a>
+                <button onclick="scrollToSection('#dashboard')" class="btn btn-primary"
+                    style="padding: 0.6rem 1.2rem; font-size: 0.8125rem;">Execute Trade</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- ============================================
+       HERO SECTION
+       ============================================ -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">Intelligent Trading <br><span class="text-gradient">Redefined by AI</span></h1>
+                <p class="hero-subtitle">Experience high-frequency accuracy with our multi-factor neural engine.
+                    Automated execution, bank-level risk protocol, and institutional data feeds.</p>
+
+                <div class="hero-cta">
+                    <button onclick="scrollToSection('#dashboard')" class="btn btn-primary">Start Auto-Trading</button>
+                    <button onclick="scrollToSection('#virtual-portfolio')" class="btn btn-secondary">View
+                        Performance</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================
+       TRUSTED BY (CREDIBILITY)
+       ============================================ -->
+    <div id="partners"
+        style="background: var(--color-bg-secondary); border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border); padding: 1.5rem 0;">
+        <div class="container"
+            style="display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 2rem; opacity: 0.5; filter: grayscale(1);">
+            <div
+                style="font-weight: 800; font-size: 0.875rem; color: var(--color-text-tertiary); letter-spacing: 0.1em; text-transform: uppercase;">
+                Institutional Partners</div>
+            <a href="https://www.forbes.com" target="_blank"
+                style="font-weight: 700; font-size: 1.25rem; font-family: serif; color: inherit; text-decoration: none; transition: opacity 0.3s;"
+                onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'">FORBES</a>
+            <a href="https://www.bloomberg.com" target="_blank"
+                style="font-weight: 900; font-size: 1.25rem; color: inherit; text-decoration: none; transition: opacity 0.3s;"
+                onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'">BLOOMBERG</a>
+            <a href="https://www.reuters.com" target="_blank"
+                style="font-weight: 700; font-size: 1.25rem; color: inherit; text-decoration: none; transition: opacity 0.3s;"
+                onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'">REUTERS</a>
+            <a href="https://www.nasdaq.com" target="_blank"
+                style="font-weight: 800; font-size: 1.25rem; color: inherit; text-decoration: none; transition: opacity 0.3s;"
+                onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'">NASDAQ</a>
+        </div>
+    </div>
+
+    <!-- ============================================
+       HOW IT WORKS
+       ============================================ -->
+    <section id="how-it-works" class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">How It Works</h2>
+                <p class="section-subtitle">Four intelligent layers working together to execute profitable trades</p>
+            </div>
+
+            <div class="grid grid-4">
+                <div class="glass-card feature-card animate-on-scroll">
+                    <div class="feature-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 3v18h18" />
+                            <path d="m19 9-5 5-4-4-3 3" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Market Data Ingestion</h3>
+                    <p class="feature-description">Real-time price feeds, volume analysis, and historical patterns from
+                        multiple exchanges</p>
+                </div>
+
+                <div class="glass-card feature-card animate-on-scroll">
+                    <div class="feature-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">AI Analysis Engine</h3>
+                    <p class="feature-description">Machine learning models analyze technical indicators, market
+                        structure, and sentiment signals</p>
+                </div>
+
+                <div class="glass-card feature-card animate-on-scroll">
+                    <div class="feature-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Risk Management</h3>
+                    <p class="feature-description">Dynamic position sizing, stop-loss automation, and portfolio exposure
+                        controls</p>
+                </div>
+
+                <div class="glass-card feature-card animate-on-scroll">
+                    <div class="feature-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Automated Execution</h3>
+                    <p class="feature-description">Lightning-fast order placement with optimal timing and price
+                        improvement</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================
+       STRATEGY ENGINE
+       ============================================ -->
+    <section id="strategy" class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Strategy Engine</h2>
+                <p class="section-subtitle">Multi-factor analysis powered by advanced algorithms</p>
+            </div>
+
+            <div class="grid grid-2">
+                <div class="glass-card animate-on-scroll">
+                    <h3 class="mb-md" style="display: flex; align-items: center; gap: 0.75rem;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                            style="color: var(--color-accent-blue);">
+                            <path d="M3 3v18h18" />
+                            <path d="m19 9-5 5-4-4-3 3" />
+                        </svg>
+                        Technical Indicators
+                    </h3>
+                    <div class="mb-md">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>RSI Analysis</span>
+                            <span id="strategy-rsi-percent" class="text-gradient">--%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="strategy-rsi-bar" class="progress-fill" data-progress="0"></div>
+                        </div>
+                    </div>
+                    <div class="mb-md">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>MACD Signals</span>
+                            <span id="strategy-macd-percent" class="text-gradient">--%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="strategy-macd-bar" class="progress-fill" data-progress="0"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Moving Averages (EMA-200)</span>
+                            <span id="strategy-ma-percent" class="text-gradient">--%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="strategy-ma-bar" class="progress-fill" data-progress="0"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card animate-on-scroll">
+                    <h3 class="mb-md">🎯 Trend & Momentum</h3>
+                    <div class="mb-md">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Trend Strength (Z-Score)</span>
+                            <span id="strategy-trend-percent" class="text-gradient">--%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="strategy-trend-bar" class="progress-fill" data-progress="0"></div>
+                        </div>
+                    </div>
+                    <div class="mb-md">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Volume Profile</span>
+                            <span id="strategy-volume-percent" class="text-gradient">--%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="strategy-volume-bar" class="progress-fill" data-progress="0"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>SRZ Proximity</span>
+                            <span id="strategy-momentum-percent" class="text-gradient">--%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="strategy-momentum-bar" class="progress-fill" data-progress="0"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card animate-on-scroll">
+                    <h3 class="mb-md" style="display: flex; align-items: center; gap: 0.75rem;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                            style="color: var(--color-accent-blue);">
+                            <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+                            <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+                            <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
+                        </svg>
+                        Sentiment Scoring
+                    </h3>
+                    <p class="mb-md" style="color: var(--color-text-secondary);">Real-time analysis of social media buzz
+                        and financial news sentiment</p>
+                    <div class="grid grid-2" style="gap: 1rem;">
+                        <div class="badge">
+                            <span>🐦</span>
+                            <span id="sentiment-twitter">Twitter: Bullish</span>
+                        </div>
+                        <div class="badge">
+                            <span>📰</span>
+                            <span id="sentiment-news">News: Positive</span>
+                        </div>
+                        <div class="badge">
+                            <span>💼</span>
+                            <span id="sentiment-reddit">Reddit: Strong</span>
+                        </div>
+                        <div class="badge">
+                            <span>📊</span>
+                            <span id="sentiment-analysts">Analysts: Buy</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card animate-on-scroll"
+                    style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.03), rgba(5, 150, 105, 0.03)); border-color: var(--color-accent-blue);">
+                    <h3 class="mb-md" style="display: flex; align-items: center; gap: 0.75rem;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                            style="color: var(--color-accent-blue);">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                        AI Confidence Score
+                    </h3>
+                    <div id="ai-confidence-value" class="metric-value" style="font-size: 4rem;">--%</div>
+                    <p id="ai-confidence-reason" style="color: var(--color-text-secondary); margin-bottom: 1rem;">
+                        Monitoring market signals...</p>
+                    <div class="progress-bar" style="height: 12px;">
+                        <div id="ai-confidence-bar" class="progress-fill" data-progress="0"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================
+       LIVE DASHBOARD
+       ============================================ -->
+    <section id="dashboard" class="section"
+        style="background: radial-gradient(ellipse at center, rgba(0, 212, 255, 0.05), transparent);">
+        <div class="container">
+            <div class="section-header">
+                <div
+                    style="display: flex; justify-content: center; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                    <h2 class="section-title" style="margin-bottom: 0;">Live Dashboard</h2>
+                    <span id="market-status-badge" class="badge" style="background: var(--glass-bg);">
+                        <span id="market-status-icon">⏸️</span>
+                        <span id="market-status-text">Checking...</span>
+                    </span>
+                    <!-- Added API Status -->
+                    <div id="api-status-badge" class="status-badge"
+                        style="border: 1px solid var(--glass-border); padding: 0.25rem 0.75rem;">
+                        <span class="status-dot"></span>
+                        <span id="api-status-text" style="font-size: 0.75rem; font-weight: 600;">Finnhub: Off</span>
+                    </div>
+                </div>
+                <p class="section-subtitle">Real-time performance metrics and active positions</p>
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1rem;">
+                    <button id="refresh-btn" class="btn btn-secondary"
+                        style="padding: 0.5rem 1.5rem; font-size: 0.875rem;">
+                        <span id="refresh-icon">🔄</span> Refresh Data
+                    </button>
+                    <span id="last-updated" style="color: var(--color-text-tertiary); font-size: 0.875rem;">
+                        Never updated
+                    </span>
+                </div>
+            </div>
+
+            <div class="grid grid-4 mb-xl">
+                <div class="metric-card animate-on-scroll">
+                    <div class="metric-value" data-count="12">0</div>
+                    <div class="metric-label">Open Positions</div>
+                </div>
+
+                <div class="metric-card animate-on-scroll">
+                    <div class="metric-value" data-count="73.5">0%</div>
+                    <div class="metric-label">Win Rate</div>
+                </div>
+
+                <div class="metric-card animate-on-scroll">
+                    <div class="metric-value" data-count="24.8">0%</div>
+                    <div class="metric-label">Risk Exposure</div>
+                </div>
+
+                <div class="metric-card animate-on-scroll">
+                    <div class="metric-value" data-count="89">0%</div>
+                    <div class="metric-label">AI Confidence</div>
+                </div>
+            </div>
+
+            <div class="glass-card animate-on-scroll">
+                <h3 class="mb-lg">Active Positions</h3>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--glass-border);">
+                                <th
+                                    style="padding: 1rem; text-align: left; color: var(--color-text-secondary); font-weight: 600;">
+                                    Symbol</th>
+                                <th
+                                    style="padding: 1rem; text-align: left; color: var(--color-text-secondary); font-weight: 600;">
+                                    Entry</th>
+                                <th
+                                    style="padding: 1rem; text-align: left; color: var(--color-text-secondary); font-weight: 600;">
+                                    Current</th>
+                                <th
+                                    style="padding: 1rem; text-align: left; color: var(--color-text-secondary); font-weight: 600;">
+                                    P&L</th>
+                                <th
+                                    style="padding: 1rem; text-align: left; color: var(--color-text-secondary); font-weight: 600;">
+                                    Confidence</th>
+                            </tr>
+                        </thead>
+                        <tbody id="positions-table-body">
+                            <!-- Positions will be injected here via JS -->
+                            <tr id="no-positions-row">
+                                <td colspan="5"
+                                    style="text-align: center; padding: 2rem; color: var(--color-text-secondary);">
+                                    No active positions
+                                </td>
+                            </tr>
+                            <div class="progress-bar" style="width: 100px;">
+                                <div class="progress-fill confidence-bar" data-progress="92"></div>
+                            </div>
+                            </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);" data-symbol="TSLA">
+                                <td style="padding: 1rem; font-weight: 600;">TSLA</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="entry-price">
+                                    $245.80</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="current-price">
+                                    $251.20</td>
+                                <td style="padding: 1rem; color: var(--color-accent-green);" class="pnl">+$540 (2.2%)
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="progress-bar" style="width: 100px;">
+                                        <div class="progress-fill confidence-bar" data-progress="87"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);" data-symbol="NVDA">
+                                <td style="padding: 1rem; font-weight: 600;">NVDA</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="entry-price">
+                                    $485.20</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="current-price">
+                                    $492.50</td>
+                                <td style="padding: 1rem; color: var(--color-accent-green);" class="pnl">+$730 (1.5%)
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="progress-bar" style="width: 100px;">
+                                        <div class="progress-fill confidence-bar" data-progress="94"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);" data-symbol="MSFT">
+                                <td style="padding: 1rem; font-weight: 600;">MSFT</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="entry-price">
+                                    $420.00</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="current-price">
+                                    $425.80</td>
+                                <td style="padding: 1rem; color: var(--color-accent-green);" class="pnl">+$464 (1.4%)
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="progress-bar" style="width: 100px;">
+                                        <div class="progress-fill confidence-bar" data-progress="88"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);" data-symbol="AMZN">
+                                <td style="padding: 1rem; font-weight: 600;">AMZN</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="entry-price">
+                                    $175.00</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="current-price">
+                                    $178.50</td>
+                                <td style="padding: 1rem; color: var(--color-accent-green);" class="pnl">+$42 (2.0%)
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="progress-bar" style="width: 100px;">
+                                        <div class="progress-fill confidence-bar" data-progress="85"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);" data-symbol="GOOGL">
+                                <td style="padding: 1rem; font-weight: 600;">GOOGL</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="entry-price">
+                                    $140.00</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="current-price">
+                                    $142.80</td>
+                                <td style="padding: 1rem; color: var(--color-accent-green);" class="pnl">+$42 (2.0%)
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="progress-bar" style="width: 100px;">
+                                        <div class="progress-fill confidence-bar" data-progress="82"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);" data-symbol="META">
+                                <td style="padding: 1rem; font-weight: 600;">META</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="entry-price">
+                                    $450.00</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="current-price">
+                                    $459.00</td>
+                                <td style="padding: 1rem; color: var(--color-accent-green);" class="pnl">+$36 (2.0%)
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="progress-bar" style="width: 100px;">
+                                        <div class="progress-fill confidence-bar" data-progress="89"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);" data-symbol="NFLX">
+                                <td style="padding: 1rem; font-weight: 600;">NFLX</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="entry-price">
+                                    $580.00</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="current-price">
+                                    $591.60</td>
+                                <td style="padding: 1rem; color: var(--color-accent-green);" class="pnl">+$23 (2.0%)
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="progress-bar" style="width: 100px;">
+                                        <div class="progress-fill confidence-bar" data-progress="87"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);" data-symbol="AMD">
+                                <td style="padding: 1rem; font-weight: 600;">AMD</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="entry-price">
+                                    $160.00</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="current-price">
+                                    $163.20</td>
+                                <td style="padding: 1rem; color: var(--color-accent-green);" class="pnl">+$32 (2.0%)
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="progress-bar" style="width: 100px;">
+                                        <div class="progress-fill confidence-bar" data-progress="91"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--glass-border);" data-symbol="INTC">
+                                <td style="padding: 1rem; font-weight: 600;">INTC</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="entry-price">
+                                    $42.00</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="current-price">
+                                    $42.84</td>
+                                <td style="padding: 1rem; color: var(--color-accent-green);" class="pnl">+$42 (2.0%)
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="progress-bar" style="width: 100px;">
+                                        <div class="progress-fill confidence-bar" data-progress="75"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--glass-border);" data-symbol="CRM">
+                                <td style="padding: 1rem; font-weight: 600;">CRM</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="entry-price">
+                                    $280.00</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="current-price">
+                                    $285.60</td>
+                                <td style="padding: 1rem; color: var(--color-accent-green);" class="pnl">+$28 (2.0%)
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="progress-bar" style="width: 100px;">
+                                        <div class="progress-fill confidence-bar" data-progress="84"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--glass-border);" data-symbol="PYPL">
+                                <td style="padding: 1rem; font-weight: 600;">PYPL</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="entry-price">
+                                    $60.00</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="current-price">
+                                    $61.20</td>
+                                <td style="padding: 1rem; color: var(--color-accent-green);" class="pnl">+$24 (2.0%)
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="progress-bar" style="width: 100px;">
+                                        <div class="progress-fill confidence-bar" data-progress="79"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);" data-symbol="ADBE">
+                                <td style="padding: 1rem; font-weight: 600;">ADBE</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="entry-price">
+                                    $550.00</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="current-price">
+                                    $561.00</td>
+                                <td style="padding: 1rem; color: var(--color-accent-green);" class="pnl">+$33 (2.0%)
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="progress-bar" style="width: 100px;">
+                                        <div class="progress-fill confidence-bar" data-progress="86"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);" data-symbol="ORCL">
+                                <td style="padding: 1rem; font-weight: 600;">ORCL</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="entry-price">
+                                    $115.00</td>
+                                <td style="padding: 1rem; color: var(--color-text-secondary);" class="current-price">
+                                    $117.30</td>
+                                <td style="padding: 1rem; color: var(--color-accent-green);" class="pnl">+$34 (2.0%)
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div class="progress-bar" style="width: 100px;">
+                                        <div class="progress-fill confidence-bar" data-progress="83"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Price Charts Section (Refactored Slim View) -->
+            <div class="glass-card animate-on-scroll" style="margin-top: 2rem;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <h3 style="margin: 0;">Interactive Price Chart</h3>
+
+                    <div class="chart-controls">
+                        <div class="selector-group">
+                            <label for="master-stock-select">Asset</label>
+                            <select id="master-stock-select" class="market-select">
+                                <option value="AAPL">Apple (AAPL)</option>
+                                <option value="TSLA">Tesla (TSLA)</option>
+                                <option value="NVDA">NVIDIA (NVDA)</option>
+                                <option value="MSFT">Microsoft (MSFT)</option>
+                                <option value="AMZN">Amazon (AMZN)</option>
+                                <option value="GOOGL">Alphabet (GOOGL)</option>
+                                <option value="META">Meta (META)</option>
+                                <option value="NFLX">Netflix (NFLX)</option>
+                                <option value="AMD">AMD (AMD)</option>
+                                <option value="INTC">Intel (INTC)</option>
+                                <option value="CRM">Salesforce (CRM)</option>
+                                <option value="PYPL">PayPal (PYPL)</option>
+                                <option value="ADBE">Adobe (ADBE)</option>
+                                <option value="ORCL">Oracle (ORCL)</option>
+                            </select>
+                        </div>
+                        <div class="selector-group">
+                            <label for="master-timeframe-select">Timeframe</label>
+                            <select id="master-timeframe-select" class="market-select">
+                                <option value="D">Daily</option>
+                                <option value="W">Weekly</option>
+                            </select>
+                        </div>
+
+                        <div class="selector-group">
+                            <label for="backtest-period-select">Simulation Period</label>
+                            <select id="backtest-period-select" class="market-select">
+                                <option value="1">1 Year</option>
+                                <option value="2">2 Years</option>
+                                <option value="5">5 Years</option>
+                                <option value="10">10 Years</option>
+                            </select>
+                        </div>
+
+                        <button id="run-backtest-btn" class="backtest-btn">Run Backtest</button>
+                    </div>
+                </div>
+
+                <div id="master-chart-container" style="position: relative; height: 450px; width: 100%;">
+                    <canvas id="master-chart-canvas"></canvas>
+                </div>
+
+                <!-- Backtest Results (Hidden by default) -->
+                <div id="backtest-results-panel"
+                    style="display: none; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--glass-border);">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h4 style="margin: 0; color: var(--color-accent-cyan);">Backtest Report: <span
+                                id="bt-symbol-display">AAPL</span></h4>
+                        <button id="close-backtest" class="btn btn-secondary"
+                            style="padding: 0.25rem 0.75rem; font-size: 0.75rem;">Close Report</button>
+                    </div>
+
+                    <div class="backtest-summary-ribbon">
+                        <div class="summary-item">
+                            <span class="summary-label">Final Balance</span>
+                            <span id="bt-balance" class="summary-value">$0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Net Profit</span>
+                            <span id="bt-profit" class="summary-value">$0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">ROI</span>
+                            <span id="bt-roi" class="summary-value">0%</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Win Rate</span>
+                            <span id="bt-winrate" class="summary-value">0%</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Total Trades</span>
+                            <span id="bt-trades" class="summary-value">0</span>
+                        </div>
+                    </div>
+
+                    <div style="overflow-x: auto; max-height: 250px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.8125rem;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--glass-border);">
+                                    <th style="padding: 0.5rem; text-align: left; color: var(--color-text-tertiary);">
+                                        Date</th>
+                                    <th style="padding: 0.5rem; text-align: left; color: var(--color-text-tertiary);">
+                                        Type</th>
+                                    <th style="padding: 0.5rem; text-align: left; color: var(--color-text-tertiary);">
+                                        Price</th>
+                                    <th style="padding: 0.5rem; text-align: left; color: var(--color-text-tertiary);">
+                                        Profit/Loss</th>
+                                    <th style="padding: 0.5rem; text-align: left; color: var(--color-text-tertiary);">
+                                        Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bt-trades-body">
+                                <!-- Trades populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+
+            </div>
+
+            <!-- Virtual Portfolio Overview -->
+            <div id="virtual-portfolio" class="glass-card animate-on-scroll" style="margin-top: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 1.5rem;">
+                        <h3 id="portfolio-title" style="margin: 0;">Virtual Portfolio (Paper Trading)</h3>
+                        <div class="mode-selector"
+                            style="display: flex; align-items: center; gap: 0.75rem; border-left: 1px solid var(--glass-border); padding-left: 1.5rem;">
+                            <label class="switch">
+                                <input type="checkbox" id="mode-toggle">
+                                <span class="slider round"></span>
+                            </label>
+                            <span id="mode-label"
+                                style="font-size: 0.875rem; font-weight: 600; color: var(--color-text-secondary);">Paper
+                                Mode</span>
+                        </div>
+                        <div id="ibkr-status" class="status-badge" style="display: none;">
+                            <span class="status-dot"></span>
+                            <span id="ibkr-status-text">IBKR: Off</span>
+                        </div>
+                        <!-- Added Reset Button -->
+                        <button id="reset-portfolio-btn" class="btn btn-secondary"
+                            style="padding: 0.35rem 0.75rem; font-size: 0.75rem; height: auto;">
+                            Reset Portfolio
+                        </button>
+                    </div>
+                    <div style="text-align: right;">
+                        <span id="portfolio-total-value"
+                            style="font-size: 1.5rem; font-weight: 800; color: var(--color-accent-green);">$100,000.00</span>
+                        <div style="font-size: 0.875rem; color: var(--color-text-tertiary);">Total Account Value</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-3 mb-lg">
+                    <div class="metric-card">
+                        <div id="portfolio-cash" class="metric-value">$100,000.00</div>
+                        <div class="metric-label">Buying Power (Cash)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div id="portfolio-pnl" class="metric-value">$0.00</div>
+                        <div class="metric-label">Total G/L (Realized)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div id="portfolio-winrate" class="metric-value">0%</div>
+                        <div class="metric-label">Win Rate</div>
+                    </div>
+                </div>
+
+                <h4 class="mb-md">Recent Trade Activity</h4>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--glass-border);">
+                                <th
+                                    style="padding: 0.75rem; text-align: left; color: var(--color-text-secondary); font-size: 0.875rem;">
+                                    Time</th>
+                                <th
+                                    style="padding: 0.75rem; text-align: left; color: var(--color-text-secondary); font-size: 0.875rem;">
+                                    Type</th>
+                                <th
+                                    style="padding: 0.75rem; text-align: left; color: var(--color-text-secondary); font-size: 0.875rem;">
+                                    Asset</th>
+                                <th
+                                    style="padding: 0.75rem; text-align: left; color: var(--color-text-secondary); font-size: 0.875rem;">
+                                    Price</th>
+                                <th
+                                    style="padding: 0.75rem; text-align: left; color: var(--color-text-secondary); font-size: 0.875rem;">
+                                    Shares</th>
+                                <th
+                                    style="padding: 0.75rem; text-align: left; color: var(--color-text-secondary); font-size: 0.875rem;">
+                                    Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trade-history-body">
+                            <tr>
+                                <td colspan="6"
+                                    style="padding: 2rem; text-align: center; color: var(--color-text-tertiary);">No
+                                    trades executed yet. AI logic is monitoring for signals...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================
+       TRADING RULES TRANSPARENCY
+       ============================================ -->
+    <section id="transparency" class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Trading Rules Transparency</h2>
+                <p class="section-subtitle">Clear, documented logic behind every trade decision</p>
+            </div>
+
+            <div class="grid grid-3">
+                <div class="glass-card animate-on-scroll">
+                    <h3 class="mb-md">📋 Stock Selection</h3>
+                    <ul style="list-style: none; color: var(--color-text-secondary); line-height: 2;">
+                        <li>✓ Minimum $1B market cap</li>
+                        <li>✓ Average volume > 1M shares</li>
+                        <li>✓ Price range: $10 - $500</li>
+                        <li>✓ Volatility: 15-40% annualized</li>
+                        <li>✓ No penny stocks or OTC</li>
+                    </ul>
+                </div>
+
+                <div class="glass-card animate-on-scroll">
+                    <h3 class="mb-md">🎯 Buy/Sell Logic</h3>
+                    <ul style="list-style: none; color: var(--color-text-secondary); line-height: 2;">
+                        <li>✓ AI confidence > 75%</li>
+                        <li>✓ 3+ technical confirmations</li>
+                        <li>✓ Positive sentiment score</li>
+                        <li>✓ Volume surge detected</li>
+                        <li>✓ Risk/reward ratio > 2:1</li>
+                    </ul>
+                </div>
+
+                <div class="glass-card animate-on-scroll">
+                    <h3 class="mb-md">🛡️ Risk Controls</h3>
+                    <ul style="list-style: none; color: var(--color-text-secondary); line-height: 2;">
+                        <li>✓ Max 5% per position</li>
+                        <li>✓ Stop-loss at 2% drawdown</li>
+                        <li>✓ Max 30% portfolio exposure</li>
+                        <li>✓ Daily loss limit: 3%</li>
+                        <li>✓ Auto-exit on volatility spike</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================
+       SECURITY & COMPLIANCE
+       ============================================ -->
+    <section id="security" class="section"
+        style="background: linear-gradient(180deg, transparent, rgba(0, 212, 255, 0.03), transparent);">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Security & Compliance</h2>
+                <p class="section-subtitle">Bank-level security protecting your trading account</p>
+            </div>
+
+            <div class="grid grid-3">
+                <div class="glass-card animate-on-scroll text-center">
+                    <div style="margin-bottom: 1.5rem; display: flex; justify-content: center;">
+                        <div
+                            style="width: 64px; height: 64px; background: rgba(79, 70, 229, 0.1); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: var(--color-accent-blue);">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                        </div>
+                    </div>
+                    <h3 class="mb-sm">Read-Only API</h3>
+                    <p style="color: var(--color-text-secondary);">We never hold your funds. Our bot connects via
+                        read-only broker API for maximum security.</p>
+                </div>
+
+                <div class="glass-card animate-on-scroll text-center">
+                    <div style="margin-bottom: 1.5rem; display: flex; justify-content: center;">
+                        <div
+                            style="width: 64px; height: 64px; background: rgba(5, 150, 105, 0.1); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: var(--color-accent-green);">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <h3 class="mb-sm">Encrypted Keys</h3>
+                    <p style="color: var(--color-text-secondary);">AES-256 encryption for all API keys and credentials.
+                        Your data is protected at rest and in transit.</p>
+                </div>
+
+                <div class="glass-card animate-on-scroll text-center">
+                    <div style="margin-bottom: 1.5rem; display: flex; justify-content: center;">
+                        <div
+                            style="width: 64px; height: 64px; background: rgba(124, 58, 237, 0.1); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: var(--color-accent-purple);">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                    <h3 class="mb-sm">Automated Logic</h3>
+                    <p style="color: var(--color-text-secondary);">Fully automated execution eliminates human error and
+                        emotional trading decisions.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================
+       PRICING
+       ============================================ -->
+    <section id="pricing" class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Simple, Transparent Pricing</h2>
+                <p class="section-subtitle">Start free, upgrade when you're ready to automate</p>
+            </div>
+
+            <div class="grid grid-2" style="max-width: 900px; margin: 0 auto;">
+                <div class="pricing-card animate-on-scroll">
+                    <h3 class="pricing-title">Free</h3>
+                    <div class="pricing-price">$0</div>
+                    <p style="color: var(--color-text-secondary); margin-bottom: 1.5rem;">Perfect for testing strategies
+                    </p>
+                    <ul class="pricing-features">
+                        <li>Unlimited backtesting</li>
+                        <li>Historical data access</li>
+                        <li>Strategy builder</li>
+                        <li>Performance analytics</li>
+                        <li>Paper trading mode</li>
+                    </ul>
+                    <a href="#" class="btn btn-secondary" style="width: 100%; margin-top: 1.5rem;">Start Backtesting</a>
+                </div>
+
+                <div class="pricing-card featured animate-on-scroll">
+                    <div class="badge" style="margin-bottom: 1rem;">Most Popular</div>
+                    <h3 class="pricing-title">Pro</h3>
+                    <div class="pricing-price">$99<span style="font-size: 1.5rem; font-weight: 400;">/mo</span></div>
+                    <p style="color: var(--color-text-secondary); margin-bottom: 1.5rem;">Full automation + premium
+                        features</p>
+                    <ul class="pricing-features">
+                        <li>Everything in Free</li>
+                        <li>Live auto-trading</li>
+                        <li>Real-time AI signals</li>
+                        <li>Advanced risk management</li>
+                        <li>Priority support</li>
+                        <li>Custom strategy parameters</li>
+                    </ul>
+                    <a href="#" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;">Start Auto-Trading</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================
+       FOOTER
+       ============================================ -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4 class="text-gradient">AI Trading Bot</h4>
+                    <p style="color: var(--color-text-secondary); margin-top: 1rem;">Intelligent automated trading
+                        powered by advanced AI and machine learning.</p>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Product</h4>
+                    <ul class="footer-links">
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#strategy">Strategy Engine</a></li>
+                        <li><a href="#dashboard">Dashboard</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Company</h4>
+                    <ul class="footer-links">
+                        <li><a href="#partners">Institutional Partners</a></li>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Risk Disclosure</a></li>
+                        <li><a href="#">Compliance</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-disclaimer">
+                <p><strong>⚠️ Risk Disclaimer:</strong> Trading stocks involves substantial risk of loss and is not
+                    suitable for every investor. Past performance is not indicative of future results. The AI trading
+                    bot is a tool to assist in trading decisions and does not guarantee profits. You should carefully
+                    consider your financial situation and risk tolerance before using automated trading systems. All
+                    trading decisions are ultimately your responsibility.</p>
+                <p style="margin-top: 1rem;">© 2026 AI Trading Bot. All rights reserved. | Not financial advice. For
+                    educational purposes only.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Backtest Engine -->
+    <script src="backtest-engine.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

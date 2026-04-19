@@ -4,7 +4,7 @@ const IB = require('ib');
 const path = require('path');
 
 const app = express();
-const PORT = 3001;
+const PORT = 3000;
 const TWS_PORT = 4002; // Default for IB Gateway. TWS is 7496.
 
 app.use(cors());

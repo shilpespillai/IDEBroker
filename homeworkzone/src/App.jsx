@@ -57,38 +57,38 @@ const GRADE_GAUGE = [
   { name: 'Remaining', value: 15, color: '#f1f5f9' },
 ];
 
-// --- Student Dashboard (Command Center Redesign) ---
+// --- Student Dashboard (Technical Breakdown Redesign) ---
 const StudentDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
 
   return (
     <div className="flex min-h-screen bg-[#F5F7FA] font-sans">
-      {/* --- Sidebar (Matching Teacher Rail) --- */}
+      {/* --- Sidebar (25% Width Rail) --- */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 sticky top-0 h-screen z-50">
         <div className="p-8 flex items-center gap-3">
-           <div className="w-8 h-8 bg-orange-500 rounded-lg flex-center text-white">
-              <Rocket className="w-5 h-5" />
+           <div className="w-8 h-8 bg-blue-600 rounded-lg flex-center text-white">
+              <GraduationCap className="w-5 h-5" />
            </div>
            <span className="text-xl font-black text-slate-900 tracking-tighter italic">HomeworkZone</span>
         </div>
         
         <nav className="flex-1 px-4 space-y-1">
           <SidebarItem icon={<LayoutDashboard className="w-4 h-4" />} label="Dashboard" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
-          <SidebarItem icon={<BookOpen className="w-4 h-4" />} label="My Missions" />
-          <SidebarItem icon={<Library className="w-4 h-4" />} label="Library" />
+          <SidebarItem icon={<Rocket className="w-4 h-4" />} label="My Missions" />
+          <SidebarItem icon={<Library className="w-4 h-4" />} label="Resources" />
           <SidebarItem icon={<Award className="w-4 h-4" />} label="Achievements" />
           <SidebarItem icon={<MessageSquare className="w-4 h-4" />} label="Chat Hub" />
-          <SidebarItem icon={<Settings className="w-4 h-4" />} label="Preferences" />
+          <SidebarItem icon={<Settings className="w-4 h-4" />} label="Settings" />
         </nav>
 
-        {/* Sidebar CTA Card (Matching Teacher) */}
+        {/* Sidebar CTA Card (Technical Spec) */}
         <div className="p-6">
-           <div className="bg-orange-500 rounded-2xl p-6 text-white space-y-4 shadow-xl shadow-orange-500/20 relative overflow-hidden">
+           <div className="bg-blue-600 rounded-2xl p-6 text-white space-y-4 shadow-xl shadow-blue-600/20 relative overflow-hidden">
               <div className="relative z-10">
                  <p className="text-sm font-bold">New Mission Pack</p>
                  <p className="text-[10px] opacity-70 leading-relaxed font-medium">Unlock the AI-powered Science adventure today!</p>
-                 <button className="bg-white text-orange-600 w-full py-2.5 rounded-xl text-xs font-black uppercase tracking-widest mt-4">Unlock Now</button>
+                 <button className="bg-white text-blue-600 w-full py-2.5 rounded-xl text-xs font-black uppercase tracking-widest mt-4">Unlock Now</button>
               </div>
               <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full" />
            </div>
@@ -106,17 +106,17 @@ const StudentDashboard = () => {
           
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2">
-               <button className="p-2 text-slate-400 hover:text-orange-500 transition-all relative">
+               <button className="p-2 text-slate-400 hover:text-blue-600 transition-all relative">
                   <Bell className="w-5 h-5" />
                   <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-4 border-white" />
                </button>
-               <button className="p-2 text-slate-400 hover:text-orange-500 transition-all"><HelpCircle className="w-5 h-5" /></button>
+               <button className="p-2 text-slate-400 hover:text-blue-600 transition-all"><HelpCircle className="w-5 h-5" /></button>
             </div>
             <div className="h-8 w-px bg-slate-100" />
             <div className="flex items-center gap-4 cursor-pointer group">
               <div className="text-right">
-                <p className="text-sm font-black text-slate-900 group-hover:text-orange-500 transition-colors">Claire A. McHaggen</p>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Premium Adventurer</p>
+                <p className="text-sm font-black text-slate-900 group-hover:text-blue-600 transition-colors">Claire A. McHaggen</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Premium Student</p>
               </div>
               <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex-center shadow-sm">
                  <img src="/student_avatar.png" alt="Avatar" className="w-8 h-8" />
@@ -223,7 +223,7 @@ const StudentDashboard = () => {
                                   paddingAngle={0} 
                                   dataKey="value"
                                 >
-                                   <Cell key="cell-0" fill="#f29130" />
+                                   <Cell key="cell-0" fill="#3b82f6" />
                                    <Cell key="cell-1" fill="#f1f5f9" />
                                 </Pie>
                              </PieChart>
@@ -257,7 +257,7 @@ const SidebarItem = ({ icon, label, active, onClick }) => (
     onClick={onClick}
     className={`flex items-center gap-4 px-4 py-3.5 rounded-xl cursor-pointer transition-all border-2 ${
       active 
-        ? 'bg-orange-50 text-orange-600 border-orange-100 font-bold' 
+        ? 'bg-blue-50 text-blue-600 border-blue-100 font-bold' 
         : 'text-slate-400 border-transparent hover:bg-slate-50 hover:text-slate-900'
     }`}
   >
@@ -308,7 +308,7 @@ const MissionJournalRow = ({ name, subject, icon, completed }) => (
            <p className="text-[10px] font-medium text-slate-400">{subject}</p>
         </div>
      </div>
-     <button className={`text-[10px] font-black uppercase tracking-widest border px-3 py-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100 ${completed ? 'text-slate-400 border-slate-200' : 'text-orange-600 border-orange-200 hover:bg-orange-600 hover:text-white'}`}>
+     <button className={`text-[10px] font-black uppercase tracking-widest border px-3 py-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100 ${completed ? 'text-slate-400 border-slate-200' : 'text-blue-600 border-blue-200 hover:bg-blue-600 hover:text-white'}`}>
         {completed ? 'Review' : 'Play'}
      </button>
   </div>
@@ -318,7 +318,7 @@ const GridData = ({ label, value, percent }) => (
   <div className="text-center space-y-1">
      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</p>
      <p className="text-xs font-black text-slate-900">{value}</p>
-     <p className="text-[10px] font-bold text-orange-600">{percent}</p>
+     <p className="text-[10px] font-bold text-blue-600">{percent}</p>
   </div>
 );
 

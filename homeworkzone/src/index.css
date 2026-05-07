@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,8 +12,6 @@
   --kiddy-cream: #fffde7;
   --kiddy-green: #a2d148;
 }
-
-@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&family=Inter:wght@400;500;600;700&display=swap');
 
 * {
   margin: 0;

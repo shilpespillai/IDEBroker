@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import HomeworkGenerator from './HomeworkGenerator';
+import TeacherAnalytics from './TeacherAnalytics';
 import { useAI } from '../context/AIContext';
 
 export default function TeacherDashboard() {
@@ -42,6 +43,12 @@ export default function TeacherDashboard() {
             label="Generate Homework" 
             active={activeTab === 'generate'} 
             onClick={() => setActiveTab('generate')} 
+          />
+          <SidebarItem 
+            icon={<TrendingUp className="w-4 h-4" />} 
+            label="Analytics Hub" 
+            active={activeTab === 'analytics'} 
+            onClick={() => setActiveTab('analytics')} 
           />
           <SidebarItem 
             icon={<ClipboardList className="w-4 h-4" />} 
@@ -105,32 +112,54 @@ export default function TeacherDashboard() {
                   <h2 className="text-2xl font-black text-slate-900 tracking-tight">Morning, Dr. Jenkins</h2>
                   <p className="text-sm text-slate-500">Your classroom is performing <span className="text-accent font-bold">12% better</span> this week.</p>
                 </div>
-                <button onClick={() => setActiveTab('generate')} className="btn btn-primary h-10 gap-2">
-                  <PlusCircle className="w-4 h-4" /> New Homework
-                </button>
+                <div className="flex gap-3">
+                  <button onClick={() => setActiveTab('overview')} className="btn btn-outline h-10 gap-2">
+                    <TrendingUp className="w-4 h-4" /> Reports
+                  </button>
+                  <button onClick={() => setActiveTab('generate')} className="btn btn-primary h-10 gap-2">
+                    <PlusCircle className="w-4 h-4" /> New Homework
+                  </button>
+                </div>
               </div>
 
               {/* Stats Grid */}
               <div className="grid grid-cols-4 gap-6">
-                <StatCard label="Total Students" value="28" icon={<Users className="w-4 h-4" />} />
-                <StatCard label="Active Papers" value="12" icon={<ClipboardList className="w-4 h-4" />} />
-                <StatCard label="Avg. Score" value="84%" icon={<TrendingUp className="w-4 h-4 text-accent" />} />
+                <StatCard label="Total Students" value="28" icon={<Users className="w-4 h-4" />} onClick={() => setActiveTab('students')} />
+                <StatCard label="Active Papers" value="12" icon={<ClipboardList className="w-4 h-4" />} onClick={() => setActiveTab('assignments')} />
+                <StatCard label="Avg. Score" value="84%" icon={<TrendingUp className="w-4 h-4 text-accent" />} onClick={() => setActiveTab('analytics')} />
                 <StatCard label="AI Tokens Used" value="4.2k" icon={<BrainCircuit className="w-4 h-4 text-primary" />} />
               </div>
 
-              {/* Active Assignments */}
-              <section className="space-y-4">
-                <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Current Assignments</h3>
-                <div className="grid grid-cols-1 gap-4">
-                  <AssignmentRow title="Maths: Quadratic Fractions" grade="Grade 6" completions="24/28" status="Active" />
-                  <AssignmentRow title="Science: Photosynthesis Lab" grade="Grade 4" completions="12/30" status="Draft" />
-                  <AssignmentRow title="English: Shakespeare Intro" grade="Grade 5" completions="30/30" status="Completed" />
-                </div>
-              </section>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Active Assignments */}
+                <section className="space-y-4">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Current Assignments</h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    <AssignmentRow title="Maths: Quadratic Fractions" grade="Grade 6" completions="24/28" status="Active" />
+                    <AssignmentRow title="Science: Photosynthesis Lab" grade="Grade 4" completions="12/30" status="Draft" />
+                    <AssignmentRow title="English: Shakespeare Intro" grade="Grade 5" completions="30/30" status="Completed" />
+                  </div>
+                </section>
+
+                {/* Top Performers Preview */}
+                <section className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Top Performers</h3>
+                    <button onClick={() => setActiveTab('analytics')} className="text-[10px] font-black text-primary hover:underline">View All</button>
+                  </div>
+                  <div className="card space-y-4">
+                     <TopStudent name="Jamie L." score="98%" progress="+5%" />
+                     <TopStudent name="Sarah K." score="94%" progress="+2%" />
+                     <TopStudent name="Marcus T." score="91%" progress="+1%" />
+                  </div>
+                </section>
+              </div>
             </motion.div>
           )}
 
           {activeTab === 'generate' && <HomeworkGenerator />}
+          
+          {activeTab === 'analytics' && <TeacherAnalytics />}
           
           {activeTab === 'settings' && <AISettings />}
         </div>
@@ -215,10 +244,23 @@ const SidebarItem = ({ icon, label, active, onClick }) => (
   </div>
 );
 
-const StatCard = ({ label, value, icon }) => (
-  <div className="card">
+const TopStudent = ({ name, score, progress }) => (
+  <div className="flex items-center justify-between group">
+    <div className="flex items-center gap-3">
+       <div className="w-8 h-8 rounded-full bg-slate-100 flex-center text-[10px] font-black group-hover:bg-primary group-hover:text-white transition-colors">{name[0]}</div>
+       <span className="text-xs font-bold text-slate-700">{name}</span>
+    </div>
+    <div className="text-right">
+       <p className="text-xs font-black text-slate-900">{score}</p>
+       <p className="text-[8px] font-black text-emerald-500">{progress}</p>
+    </div>
+  </div>
+);
+
+const StatCard = ({ label, value, icon, onClick }) => (
+  <div className={`card cursor-pointer transition-all ${onClick ? 'hover:border-primary' : ''}`} onClick={onClick}>
     <div className="flex items-center justify-between mb-4">
-      <div className="p-2 bg-slate-50 rounded-lg text-slate-400">{icon}</div>
+      <div className="p-2 bg-slate-50 rounded-lg text-slate-400 group-hover:text-primary transition-colors">{icon}</div>
       <ArrowUpRight className="w-4 h-4 text-slate-300" />
     </div>
     <p className="text-2xl font-black text-slate-900 tracking-tight">{value}</p>

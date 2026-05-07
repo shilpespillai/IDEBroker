@@ -24,7 +24,8 @@ import {
   TrendingUp,
   BrainCircuit,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  ChevronDown
 } from 'lucide-react';
 import { 
   AreaChart, 

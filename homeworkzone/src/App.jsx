@@ -17,7 +17,14 @@ import {
   Sparkles,
   Rocket,
   MoreVertical,
-  CloudSun
+  CloudSun,
+  Target,
+  GraduationCap,
+  HelpCircle,
+  TrendingUp,
+  BrainCircuit,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -26,268 +33,294 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer 
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import TeacherDashboard from './pages/TeacherDashboard';
 import StudentQuiz from './pages/StudentQuiz';
 
-// --- Academic Progress Data ---
-const PROGRESS_DATA = [
-  { name: 'Feb', exams: 30, assignments: 40 },
-  { name: 'Mar', exams: 45, assignments: 70 },
-  { name: 'Apr', exams: 35, assignments: 60 },
-  { name: 'May', exams: 80, assignments: 40 },
-  { name: 'June', exams: 40, assignments: 60 },
-  { name: 'July', exams: 50, assignments: 45 },
+// --- Chart Data ---
+const SUBJECT_MASTERY = [
+  { name: 'Maths', value: 40, color: '#4f46e5' },
+  { name: 'Science', value: 30, color: '#3b82f6' },
+  { name: 'English', value: 20, color: '#f59e0b' },
+  { name: 'History', value: 10, color: '#10b981' },
 ];
 
-// --- Student Dashboard (High Fidelity e-Class Style) ---
+const GRADE_GAUGE = [
+  { name: 'Value', value: 85, color: '#3b82f6' },
+  { name: 'Remaining', value: 15, color: '#f1f5f9' },
+];
+
+// --- Student Dashboard (Command Center Redesign) ---
 const StudentDashboard = () => {
   const navigate = useNavigate();
-  const [activeCourse, setActiveCourse] = useState('Photography');
+  const [activeTab, setActiveTab] = useState('overview');
 
   return (
-    <div className="flex min-h-screen bg-[#4c49ed] font-sans overflow-hidden">
-      {/* --- Sidebar (Indigo-Violet) --- */}
-      <aside className="w-72 flex flex-col p-8 text-white space-y-12 shrink-0">
-        <div className="text-3xl font-black tracking-tighter flex items-center gap-2">
-           e-Class<span className="text-orange-400">.</span>
+    <div className="flex min-h-screen bg-[#F5F7FA] font-sans">
+      {/* --- Sidebar (Matching Teacher Rail) --- */}
+      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 sticky top-0 h-screen z-50">
+        <div className="p-8 flex items-center gap-3">
+           <div className="w-8 h-8 bg-orange-500 rounded-lg flex-center text-white">
+              <Rocket className="w-5 h-5" />
+           </div>
+           <span className="text-xl font-black text-slate-900 tracking-tighter italic">HomeworkZone</span>
         </div>
         
-        <nav className="flex-1 space-y-3">
-          <StudentSidebarItem icon={<LayoutDashboard className="w-5 h-5" />} label="Dashboard" active />
-          <StudentSidebarItem icon={<BookOpen className="w-5 h-5" />} label="Classes" />
-          <StudentSidebarItem icon={<Library className="w-5 h-5" />} label="Resources" />
-          <StudentSidebarItem icon={<ClipboardList className="w-5 h-5" />} label="Learning Plan" />
-          <StudentSidebarItem icon={<MessageSquare className="w-5 h-5" />} label="Chat" count={5} />
-          <StudentSidebarItem icon={<Settings className="w-5 h-5" />} label="Settings" />
+        <nav className="flex-1 px-4 space-y-1">
+          <SidebarItem icon={<LayoutDashboard className="w-4 h-4" />} label="Dashboard" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
+          <SidebarItem icon={<BookOpen className="w-4 h-4" />} label="My Missions" />
+          <SidebarItem icon={<Library className="w-4 h-4" />} label="Library" />
+          <SidebarItem icon={<Award className="w-4 h-4" />} label="Achievements" />
+          <SidebarItem icon={<MessageSquare className="w-4 h-4" />} label="Chat Hub" />
+          <SidebarItem icon={<Settings className="w-4 h-4" />} label="Preferences" />
         </nav>
 
-        {/* Upgrade Card with 3D Mascot */}
-        <div className="bg-white/10 rounded-[32px] p-6 pt-16 relative overflow-visible mt-20">
-           <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-48 drop-shadow-2xl">
-              <img src="/rocket_mascot.png" alt="Mascot" className="w-full" />
-           </div>
-           <div className="relative z-10 text-center space-y-4">
-              <div className="space-y-1">
-                 <p className="text-sm font-black">Upgrade to Pro</p>
-                 <p className="text-[10px] text-white/50 leading-relaxed font-bold uppercase tracking-widest">For more resources!</p>
+        {/* Sidebar CTA Card (Matching Teacher) */}
+        <div className="p-6">
+           <div className="bg-orange-500 rounded-2xl p-6 text-white space-y-4 shadow-xl shadow-orange-500/20 relative overflow-hidden">
+              <div className="relative z-10">
+                 <p className="text-sm font-bold">New Mission Pack</p>
+                 <p className="text-[10px] opacity-70 leading-relaxed font-medium">Unlock the AI-powered Science adventure today!</p>
+                 <button className="bg-white text-orange-600 w-full py-2.5 rounded-xl text-xs font-black uppercase tracking-widest mt-4">Unlock Now</button>
               </div>
-              <button className="bg-[#00c2ff] text-white w-full py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-[#00c2ff]/30 hover:scale-105 transition-all">Upgrade Now</button>
+              <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full" />
            </div>
         </div>
-
-        <button onClick={() => navigate('/')} className="flex items-center gap-3 text-white/40 hover:text-white transition-all text-xs font-black uppercase tracking-widest pl-4">
-           <LogOut className="w-4 h-4" /> Sign Out
-        </button>
       </aside>
 
-      {/* --- Main Content Area (Spread Across Page) --- */}
-      <main className="flex-1 bg-white my-4 mr-4 rounded-[48px] p-12 overflow-y-auto flex gap-12 shadow-2xl relative z-10">
-        
-        {/* Left Side: Feed (70%) */}
-        <div className="flex-[2] space-y-12">
-          {/* Welcome Header */}
-          <header className="flex items-center justify-between border-b border-slate-50 pb-10">
-            <div className="flex items-center gap-8">
-              <div className="w-24 h-24 bg-orange-50 rounded-full overflow-hidden flex-center border-4 border-white shadow-xl">
-                 <img src="/student_avatar.png" alt="Avatar" className="w-20 h-20" />
-              </div>
-              <div className="space-y-1">
-                 <h2 className="text-4xl font-black text-slate-900 tracking-tight">Welcome back!</h2>
-                 <p className="text-slate-400 font-bold text-sm leading-relaxed">
-                   You've learned <span className="text-slate-900 font-black">80%</span> of your goal this week!<br/> 
-                   Keep it up and improve your results!
-                 </p>
-              </div>
-            </div>
-            <div className="text-right space-y-1">
-               <div className="flex items-center gap-2 justify-end text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  <span>Thu, July 29, 2021</span>
-                  <CloudSun className="w-4 h-4 text-orange-400" />
-               </div>
-               <p className="text-2xl font-black text-slate-900">10:48 AM</p>
-            </div>
-          </header>
-
-          {/* Your Courses Section (Spaced Out) */}
-          <section className="space-y-8">
-            <div className="flex items-center justify-between">
-               <h3 className="text-3xl font-black text-slate-900 tracking-tighter">Your Courses</h3>
-               <div className="flex items-center gap-4 bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100 shadow-sm">
-                  <Search className="w-4 h-4 text-slate-400" />
-                  <input type="text" placeholder="Search your missions..." className="bg-transparent border-none outline-none text-xs w-48 font-bold" />
-               </div>
-            </div>
-            
-            <div className="flex items-center gap-10 text-[10px] font-black text-slate-400 border-b border-slate-50 pb-4 uppercase tracking-[0.1em]">
-               {['Drawing', 'Art History', 'Photography', 'Painting', 'Contemporary'].map(c => (
-                 <span 
-                  key={c} 
-                  onClick={() => setActiveCourse(c)}
-                  className={`cursor-pointer transition-all pb-4 border-b-4 ${activeCourse === c ? 'text-orange-500 border-orange-500' : 'border-transparent hover:text-slate-600'}`}
-                 >
-                   {c} I
-                 </span>
-               ))}
-            </div>
-
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-               <CourseCard title="Space Review" hours="2 Hours" progress={20} icon={<Rocket className="w-5 h-5 text-red-500" />} color="bg-red-50" />
-               <CourseCard title="Reflections" hours="3 Hours" progress={50} icon={<Sparkles className="w-5 h-5 text-purple-500" />} color="bg-purple-50" />
-               <CourseCard title="Patterns" hours="2.5 Hours" progress={0} icon={<Award className="w-5 h-5 text-amber-500" />} color="bg-amber-50" status="Start" />
-            </div>
-          </section>
-
-          {/* Academic Progress Chart (Full Width) */}
-          <section className="bg-[#fffcf7] rounded-[40px] p-10 space-y-8 border border-[#fff5e6]">
-             <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-black text-slate-900 tracking-tight">Academic Progress</h3>
-                <div className="flex items-center gap-8">
-                   <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#8b5cf6]" /> Exams
-                   </div>
-                   <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" /> Assignments
-                   </div>
-                   <select className="bg-white border border-slate-100 rounded-xl px-5 py-3 text-[10px] font-black text-slate-500 outline-none shadow-sm appearance-none">
-                      <option>Monthly Progress</option>
-                   </select>
-                </div>
-             </div>
-             
-             <div className="h-72 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                   <AreaChart data={PROGRESS_DATA}>
-                      <defs>
-                         <linearGradient id="colorExams" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4}/>
-                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                         </linearGradient>
-                         <linearGradient id="colorAss" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4}/>
-                            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
-                         </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#fff0de" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }} />
-                      <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
-                      <Area type="monotone" dataKey="exams" stroke="#8b5cf6" strokeWidth={5} fillOpacity={1} fill="url(#colorExams)" />
-                      <Area type="monotone" dataKey="assignments" stroke="#f59e0b" strokeWidth={5} fillOpacity={1} fill="url(#colorAss)" />
-                   </AreaChart>
-                </ResponsiveContainer>
-             </div>
-          </section>
-        </div>
-
-        {/* Right Side: Stats Panel (30%) */}
-        <div className="flex-1 w-80 space-y-12 shrink-0 border-l border-slate-50 pl-12">
-          <div className="space-y-6">
-             <div className="flex items-center justify-between">
-                <div>
-                   <p className="text-base font-black text-slate-900">Claire A. McHaggen</p>
-                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Premium Student</p>
-                </div>
-                <div className="relative p-2 bg-slate-50 rounded-xl">
-                   <Bell className="w-5 h-5 text-slate-400" />
-                   <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />
-                </div>
-             </div>
+      {/* --- Main Content Area --- */}
+      <main className="flex-1 flex flex-col min-w-0">
+        {/* Top Bar */}
+        <header className="h-20 bg-white px-10 flex items-center justify-between shrink-0 border-b border-slate-100 sticky top-0 z-40">
+          <div className="flex items-center gap-4 bg-slate-50 px-6 py-2.5 rounded-xl border border-slate-200 w-[450px]">
+            <Search className="w-4 h-4 text-slate-400" />
+            <input type="text" placeholder="Search missions, topics..." className="bg-transparent border-none outline-none text-xs w-full font-medium" />
           </div>
-
-          <div className="space-y-10">
-             <div className="text-center space-y-6 relative py-12 bg-slate-50/30 rounded-[40px] border border-slate-50">
-                <div className="space-y-1">
-                   <p className="text-lg font-black text-slate-900">Art (B.A)</p>
-                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Until Dec 14, 2021</p>
-                </div>
-                
-                <div className="relative flex-center">
-                   <svg className="w-48 h-48 transform -rotate-90">
-                      <circle cx="96" cy="96" r="85" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-slate-100" />
-                      <circle cx="96" cy="96" r="85" stroke="currentColor" strokeWidth="12" fill="transparent" strokeDasharray="534" strokeDashoffset={534 - (534 * 65) / 100} className="text-[#4c49ed]" strokeLinecap="round" />
-                   </svg>
-                   <div className="absolute flex flex-col items-center">
-                      <span className="text-4xl font-black text-slate-900">65%</span>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Semester I</span>
-                   </div>
-                </div>
-             </div>
-
-             <div className="space-y-4">
-                <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">My Schedule</h4>
-                <MiniCourseRow title="Drawing I" teacher="Kayla Williams" progress={80} credits="3 credits" />
-                <MiniCourseRow title="Art History" teacher="Kevin Lee" progress={40} credits="3 credits" />
-                <MiniCourseRow title="Photography 1" teacher="Krystal G." progress={65} credits="1 credit" active />
-                <MiniCourseRow title="Painting I" teacher="Kayla Williams" progress={10} credits="1 credit" />
-                <MiniCourseRow title="Contemporary Art" teacher="Mayra Wu" progress={90} credits="2 credits" />
-             </div>
+          
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-2">
+               <button className="p-2 text-slate-400 hover:text-orange-500 transition-all relative">
+                  <Bell className="w-5 h-5" />
+                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-4 border-white" />
+               </button>
+               <button className="p-2 text-slate-400 hover:text-orange-500 transition-all"><HelpCircle className="w-5 h-5" /></button>
+            </div>
+            <div className="h-8 w-px bg-slate-100" />
+            <div className="flex items-center gap-4 cursor-pointer group">
+              <div className="text-right">
+                <p className="text-sm font-black text-slate-900 group-hover:text-orange-500 transition-colors">Claire A. McHaggen</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Premium Adventurer</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex-center shadow-sm">
+                 <img src="/student_avatar.png" alt="Avatar" className="w-8 h-8" />
+              </div>
+              <ChevronDown className="w-4 h-4 text-slate-400" />
+            </div>
           </div>
+        </header>
+
+        {/* Dashboard Grid */}
+        <div className="p-10 space-y-10 overflow-y-auto">
+          {activeTab === 'overview' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 max-w-[1500px] mx-auto">
+              
+              {/* A. My Learning Statistics */}
+              <DashboardCard title="Learning Statistics">
+                 <div className="grid grid-cols-3 gap-6 pt-4">
+                    <KPIMetric label="Missions Done" value="24" icon={<ClipboardList className="w-5 h-5" />} color="bg-blue-50 text-blue-600" />
+                    <KPIMetric label="Strengths" value="3" icon={<Sparkles className="w-5 h-5" />} color="bg-purple-50 text-purple-600" />
+                    <KPIMetric label="XP Earned" value="4.2k" icon={<Star className="w-5 h-5" />} color="bg-emerald-50 text-emerald-600" />
+                 </div>
+                 <div className="space-y-3 mt-10">
+                    <div className="flex justify-between items-center text-xs font-black text-slate-400 uppercase tracking-widest">
+                       <span>Weekly Goal Progress</span>
+                       <span className="text-blue-600">80%</span>
+                    </div>
+                    <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-50 shadow-inner">
+                       <div className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full" style={{ width: '80%' }} />
+                    </div>
+                 </div>
+              </DashboardCard>
+
+              {/* B. Subject Mastery */}
+              <DashboardCard title="Subject Mastery">
+                 <div className="flex gap-8 items-center h-[280px]">
+                    <div className="w-48 h-full">
+                       <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                             <Pie data={SUBJECT_MASTERY} innerRadius={60} outerRadius={85} paddingAngle={5} dataKey="value">
+                                {SUBJECT_MASTERY.map((entry, index) => (
+                                   <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                             </Pie>
+                             <Tooltip />
+                          </PieChart>
+                       </ResponsiveContainer>
+                    </div>
+                    <div className="flex-1 space-y-3">
+                       {SUBJECT_MASTERY.map(item => (
+                         <div key={item.name} className="flex items-center justify-between group cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-all">
+                            <div className="flex items-center gap-3">
+                               <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                               <span className="text-xs font-bold text-slate-500">{item.name}</span>
+                            </div>
+                            <span className="text-xs font-black text-slate-900">{item.value}%</span>
+                         </div>
+                       ))}
+                    </div>
+                    <div className="w-[1px] h-32 bg-slate-100" />
+                    <div className="flex-1 space-y-4 overflow-y-auto pr-2 max-h-full text-right">
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Top Missions</p>
+                       <StatusRow label="Space Quiz" score="100%" color="text-emerald-500 bg-emerald-50" />
+                       <StatusRow label="Fractions" score="92%" color="text-emerald-500 bg-emerald-50" />
+                       <StatusRow label="Poetry" score="45%" color="text-orange-500 bg-orange-50" />
+                    </div>
+                 </div>
+              </DashboardCard>
+
+              {/* C. Mission Journal */}
+              <DashboardCard title="Mission Journal">
+                 <div className="grid grid-cols-2 gap-10 divide-x divide-slate-100">
+                    <section className="space-y-6">
+                       <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">To Do (Adventures)</h4>
+                       <div className="space-y-4">
+                          <MissionJournalRow name="Plant Cells" subject="Science" icon={<Rocket className="w-4 h-4" />} />
+                          <MissionJournalRow name="Division 2" subject="Maths" icon={<Target className="w-4 h-4" />} />
+                          <MissionJournalRow name="Solar System" subject="Science" icon={<CloudSun className="w-4 h-4" />} />
+                       </div>
+                    </section>
+                    <section className="space-y-6 pl-10">
+                       <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Completed (Mastered)</h4>
+                       <div className="space-y-4">
+                          <MissionJournalRow name="Subtraction" subject="Maths" completed icon={<CheckCircle2 className="w-4 h-4" />} />
+                          <MissionJournalRow name="Verbs Lab" subject="English" completed icon={<Sparkles className="w-4 h-4" />} />
+                          <MissionJournalRow name="Art Basics" subject="Creative" completed icon={<Award className="w-4 h-4" />} />
+                       </div>
+                    </section>
+                 </div>
+              </DashboardCard>
+
+              {/* D. Academic Grade Summary */}
+              <DashboardCard title="Achievement Summary">
+                 <div className="flex flex-col h-full justify-between">
+                    <div className="flex-1 flex flex-col items-center justify-center pt-8">
+                       <div className="w-64 h-40 relative">
+                          <ResponsiveContainer width="100%" height="100%">
+                             <PieChart>
+                                <Pie 
+                                  data={GRADE_GAUGE} 
+                                  startAngle={180} 
+                                  endAngle={0} 
+                                  innerRadius={70} 
+                                  outerRadius={100} 
+                                  paddingAngle={0} 
+                                  dataKey="value"
+                                >
+                                   <Cell key="cell-0" fill="#f29130" />
+                                   <Cell key="cell-1" fill="#f1f5f9" />
+                                </Pie>
+                             </PieChart>
+                          </ResponsiveContainer>
+                          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center">
+                             <p className="text-3xl font-black text-slate-900">85%</p>
+                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">A- Grade</p>
+                          </div>
+                       </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-4 gap-4 p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
+                       <GridData label="Questions" value="1,240" percent="Total" />
+                       <GridData label="Correct" value="1,080" percent="87%" />
+                       <GridData label="Streak" value="12 Days" percent="Active" />
+                       <GridData label="XP Boost" value="x1.5" percent="Active" />
+                    </div>
+                 </div>
+              </DashboardCard>
+
+            </div>
+          )}
         </div>
       </main>
     </div>
   );
 };
 
-const StudentSidebarItem = ({ icon, label, active, count }) => (
-  <div className={`flex items-center justify-between px-6 py-4 rounded-[20px] cursor-pointer transition-all ${active ? 'bg-orange-500 text-white shadow-xl shadow-orange-500/30' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}>
-    <div className="flex items-center gap-4">
-      {icon}
-      <span className="text-sm font-black tracking-tight">{label}</span>
-    </div>
-    {count && <span className="bg-red-500 text-white text-[10px] font-black w-6 h-6 rounded-full flex-center border-2 border-[#4c49ed]">{count}</span>}
+const SidebarItem = ({ icon, label, active, onClick }) => (
+  <div 
+    onClick={onClick}
+    className={`flex items-center gap-4 px-4 py-3.5 rounded-xl cursor-pointer transition-all border-2 ${
+      active 
+        ? 'bg-orange-50 text-orange-600 border-orange-100 font-bold' 
+        : 'text-slate-400 border-transparent hover:bg-slate-50 hover:text-slate-900'
+    }`}
+  >
+    {icon}
+    <span className="text-sm tracking-tight">{label}</span>
   </div>
 );
 
-const CourseCard = ({ title, hours, progress, icon, color, status = "Continue" }) => (
-  <div className="bg-white border border-slate-100 rounded-[40px] p-8 space-y-6 hover:shadow-2xl transition-all cursor-pointer group hover:-translate-y-2">
-    <div className="flex items-center justify-between">
-       <div className={`w-12 h-12 rounded-2xl flex-center ${color} shadow-sm group-hover:rotate-12 transition-transform`}>{icon}</div>
-       <MoreVertical className="w-4 h-4 text-slate-300" />
-    </div>
-    <div className="space-y-1">
-       <p className="text-lg font-black text-slate-900 tracking-tight">{title}</p>
-       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{hours} Duration</p>
-    </div>
-    <p className="text-[11px] text-slate-400 font-medium leading-relaxed">Master core concepts with our premium AI-native mission set.</p>
-    <div className="space-y-3">
-       <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
-          <span>Progress</span>
-          <span className="text-slate-900">{progress}%</span>
-       </div>
-       <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-50 shadow-inner">
-          <div className="h-full bg-[#4c49ed] rounded-full transition-all duration-1000" style={{ width: `${progress}%` }} />
-       </div>
-    </div>
-    <button className={`w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${status === 'Start' ? 'bg-[#4c49ed] text-white border-[#4c49ed] shadow-lg shadow-[#4c49ed]/20' : 'border-slate-100 text-slate-600 hover:bg-slate-50'}`}>
-       {status}
-    </button>
+const DashboardCard = ({ title, children }) => (
+  <section className="bg-white rounded-[24px] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all group flex flex-col h-full">
+     <div className="flex items-center justify-between mb-8">
+        <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">{title}</h3>
+        <button className="p-2 text-slate-300 hover:text-slate-600 transition-colors"><MoreVertical className="w-4 h-4" /></button>
+     </div>
+     <div className="flex-1">
+        {children}
+     </div>
+  </section>
+);
+
+const KPIMetric = ({ label, value, icon, color }) => (
+  <div className="space-y-4 group">
+     <div className={`w-12 h-12 rounded-2xl flex-center ${color} shadow-sm transition-transform group-hover:scale-110`}>
+        {icon}
+     </div>
+     <div className="space-y-1">
+        <p className="text-3xl font-black text-slate-900">{value}</p>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
+     </div>
   </div>
 );
 
-const MiniCourseRow = ({ title, teacher, progress, credits, active }) => (
-  <div className={`p-5 rounded-[24px] flex items-center justify-between gap-4 transition-all border ${active ? 'bg-[#4c49ed] text-white shadow-2xl border-[#4c49ed]' : 'bg-white border-slate-50 hover:border-slate-200'}`}>
+const StatusRow = ({ label, score, color }) => (
+  <div className="flex items-center justify-between gap-4">
+     <span className="text-[11px] font-bold text-slate-700">{label}</span>
+     <span className={`text-[9px] font-black px-2 py-1 rounded-full uppercase tracking-widest ${color}`}>{score}</span>
+  </div>
+);
+
+const MissionJournalRow = ({ name, subject, icon, completed }) => (
+  <div className="flex items-center justify-between group hover:bg-slate-50 p-2 rounded-xl transition-all">
      <div className="flex items-center gap-4">
-        <div className={`w-10 h-10 rounded-xl flex-center ${active ? 'bg-white/20' : 'bg-slate-50'}`}>
-           <BookOpen className={`w-5 h-5 ${active ? 'text-white' : 'text-slate-400'}`} />
+        <div className={`w-9 h-9 rounded-xl flex-center ${completed ? 'bg-emerald-50 text-emerald-500' : 'bg-slate-50 text-slate-400'}`}>
+           {icon}
         </div>
-        <div className="space-y-1">
-           <p className={`text-xs font-black ${active ? 'text-white' : 'text-slate-900'}`}>{title}</p>
-           <p className={`text-[10px] font-bold ${active ? 'text-white/60' : 'text-slate-400'}`}>Teacher: {teacher}</p>
-        </div>
-     </div>
-     <div className="text-right">
-        <p className={`text-[9px] font-black uppercase tracking-widest ${active ? 'text-white/60' : 'text-slate-400'}`}>{credits}</p>
-        <div className={`h-1.5 w-16 mt-2 rounded-full overflow-hidden ${active ? 'bg-white/20' : 'bg-slate-50'}`}>
-           <div className={`h-full ${active ? 'bg-white' : 'bg-orange-400'}`} style={{ width: `${progress}%` }} />
+        <div>
+           <p className="text-xs font-bold text-slate-800">{name}</p>
+           <p className="text-[10px] font-medium text-slate-400">{subject}</p>
         </div>
      </div>
+     <button className={`text-[10px] font-black uppercase tracking-widest border px-3 py-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100 ${completed ? 'text-slate-400 border-slate-200' : 'text-orange-600 border-orange-200 hover:bg-orange-600 hover:text-white'}`}>
+        {completed ? 'Review' : 'Play'}
+     </button>
   </div>
 );
 
-// --- Landing Page (Unchanged) ---
+const GridData = ({ label, value, percent }) => (
+  <div className="text-center space-y-1">
+     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</p>
+     <p className="text-xs font-black text-slate-900">{value}</p>
+     <p className="text-[10px] font-bold text-orange-600">{percent}</p>
+  </div>
+);
+
+// --- Landing Page ---
 const LandingPage = () => {
   const navigate = useNavigate();
 

@@ -24,8 +24,16 @@ const StudentDashboard = () => {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-[#fffde7] pb-20">
-      <div className="ribbon-nav">
-        <div className="logo-box">STUDENT WORLD</div>
+      <div className="pt-8">
+        <nav className="ribbon-nav">
+          <div className="ribbon-tail left" />
+          <div className="ribbon-main">
+             <div onClick={() => navigate('/')} className="ribbon-segment">Exit World</div>
+             <div className="logo-box">STUDENT WORLD</div>
+             <div className="ribbon-segment">My Profile</div>
+          </div>
+          <div className="ribbon-tail right" />
+        </nav>
       </div>
       
       <div className="container mt-24 space-y-12">
@@ -65,15 +73,21 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Ribbon Header */}
-      <nav className="ribbon-nav">
-        <div className="flex items-center gap-12 text-white font-black uppercase text-xs tracking-widest px-10">
-           <span className="cursor-pointer hover:text-kiddy-yellow transition-colors">Features</span>
-           <span className="cursor-pointer hover:text-kiddy-yellow transition-colors">Grade 1-6</span>
-           <div className="logo-box">HOMEWORKZONE</div>
-           <span className="cursor-pointer hover:text-kiddy-yellow transition-colors">Missions</span>
-           <span onClick={() => navigate('/login/teacher')} className="cursor-pointer hover:text-kiddy-yellow transition-colors">Teacher Portal</span>
-        </div>
-      </nav>
+      <div className="pt-8">
+        <nav className="ribbon-nav">
+          <div className="ribbon-tail left" />
+          <div className="ribbon-main">
+             <div className="ribbon-segment">Home</div>
+             <div className="ribbon-segment">Features</div>
+             <div className="ribbon-segment">Grades</div>
+             <div className="logo-box">HOMEWORKZONE</div>
+             <div className="ribbon-segment">Mission</div>
+             <div onClick={() => navigate('/login/teacher')} className="ribbon-segment">Teacher</div>
+             <div onClick={() => navigate('/login/student')} className="ribbon-segment">Student</div>
+          </div>
+          <div className="ribbon-tail right" />
+        </nav>
+      </div>
 
       {/* Kiddy Hero */}
       <section className="kiddy-hero">

@@ -92,29 +92,34 @@ const LandingPage = () => {
       <div className="blob-bg w-[600px] h-[600px] bg-science/10 -bottom-32 -right-32" />
 
       {/* Navbar */}
-      <nav className="container flex items-center justify-between h-24 relative z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-primary flex-center rounded-[18px] text-white shadow-[0_5px_0_0_#6e48aa]">
-            <BookOpen className="w-7 h-7" />
+      <nav className="container flex items-center justify-between h-32 relative z-10">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-primary flex-center rounded-[22px] text-white shadow-[0_6px_0_0_#6e48aa]">
+            <BookOpen className="w-8 h-8" />
           </div>
-          <span className="text-2xl font-black tracking-tighter lowercase">homework<span className="text-primary">zone</span></span>
+          <span className="text-3xl font-black tracking-tighter lowercase">homework<span className="text-primary">zone</span></span>
         </div>
-        <div className="flex items-center gap-6">
-          <button onClick={() => navigate('/login/student')} className="text-sm font-black text-slate-500 hover:text-primary transition-colors lowercase">student login</button>
-          <button onClick={() => navigate('/login/teacher')} className="btn-bubble btn-primary h-12 text-sm px-8">teacher portal</button>
+        <div className="flex items-center gap-8">
+          <button onClick={() => navigate('/login/student')} className="text-md font-black text-slate-500 hover:text-primary transition-all hover:scale-110 lowercase">student mission</button>
+          <button onClick={() => navigate('/login/teacher')} className="btn-bubble btn-primary h-14 text-md px-10">teacher world</button>
         </div>
       </nav>
 
       {/* Hero Section */}
       <main className="container pt-20 pb-32 relative z-10">
         <div className="max-w-4xl mx-auto text-center space-y-12">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="inline-flex items-center gap-3 px-6 py-2 bg-blue-50 text-blue-600 rounded-full text-xs font-black uppercase tracking-widest border-2 border-blue-100 shadow-sm"
-          >
-            <Sparkles className="w-4 h-4" /> homework made magical
-          </motion.div>
+          <div className="relative">
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.8 }}
+               animate={{ opacity: 1, scale: 1 }}
+               className="inline-flex items-center gap-3 px-6 py-2 bg-blue-50 text-blue-600 rounded-full text-xs font-black uppercase tracking-widest border-2 border-blue-100 shadow-sm mb-12"
+             >
+               <Sparkles className="w-4 h-4" /> homework made magical
+             </motion.div>
+             
+             <Star className="absolute -top-10 -left-10 w-12 h-12 text-yellow-400 fill-yellow-400 opacity-20 animate-pulse" />
+             <Star className="absolute top-20 -right-20 w-8 h-8 text-primary fill-primary opacity-20 animate-bounce" />
+           </div>
           
           <h1 className="text-7xl md:text-8xl font-black text-slate-900 leading-[0.9] tracking-tight lowercase">
             The playground <br />

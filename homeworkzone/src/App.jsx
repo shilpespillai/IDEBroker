@@ -25,7 +25,8 @@ import {
   BrainCircuit,
   CheckCircle2,
   AlertCircle,
-  ChevronDown
+  ChevronDown,
+  Star
 } from 'lucide-react';
 import { 
   AreaChart, 

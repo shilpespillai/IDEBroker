@@ -10,158 +10,144 @@ import {
   Star,
   Sparkles,
   Rocket,
-  BrainCircuit
+  BrainCircuit,
+  Gamepad2,
+  Library,
+  Palette
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TeacherDashboard from './pages/TeacherDashboard';
 import StudentQuiz from './pages/StudentQuiz';
 
-// --- Student Dashboard ---
+// --- Student Dashboard (Kiddy Style) ---
 const StudentDashboard = () => {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen bg-[#f8f9fe] p-8 md:p-12 relative overflow-hidden">
-      <div className="blob-bg w-[500px] h-[500px] bg-science/20 -top-64 -right-32" />
+    <div className="min-h-screen bg-[#fffde7] pb-20">
+      <div className="ribbon-nav">
+        <div className="logo-box">STUDENT WORLD</div>
+      </div>
       
-      <div className="max-w-4xl mx-auto space-y-12 relative z-10">
-        <header className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-white rounded-[24px] flex-center shadow-bubble border-2 border-slate-50">
-              <UserCheck className="w-8 h-8 text-science" />
-            </div>
-            <div>
-              <h2 className="text-3xl font-black text-slate-900 tracking-tight lowercase">welcome back, jamie!</h2>
-              <p className="text-sm text-slate-500 font-bold lowercase">You have <span className="text-science font-black">1 homework task</span> waiting for you!</p>
-            </div>
-          </div>
-          <div className="w-14 h-14 rounded-full bg-white border-4 border-white shadow-bubble overflow-hidden">
-             <div className="w-full h-full bg-slate-200" />
-          </div>
+      <div className="container mt-24 space-y-12">
+        <header className="text-center space-y-4">
+           <h2 className="text-5xl font-black text-slate-800 lowercase">Ready for a mission, Jamie?</h2>
+           <p className="text-xl text-slate-500 font-bold">You have 1 active task today!</p>
         </header>
 
-        <section className="space-y-6">
-          <h3 className="text-xs font-black uppercase tracking-[0.25em] text-slate-400">your active mission</h3>
-          <div className="card-bubble flex flex-col md:flex-row items-center justify-between p-8 bg-white group border-none shadow-2xl shadow-slate-200/40">
-            <div className="flex items-center gap-8 mb-6 md:mb-0">
-              <div className="w-20 h-20 bg-maths text-white flex-center rounded-[32px] shadow-[0_8px_0_0_#d35400] group-hover:rotate-6 transition-all">
-                <Rocket className="w-10 h-10" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center bg-white p-12 rounded-[60px] shadow-2xl relative overflow-hidden">
+           <div className="absolute top-0 right-0 w-32 h-32 bg-kiddy-blue/10 rounded-full -mr-16 -mt-16" />
+           <div className="space-y-6">
+              <span className="bg-orange-100 text-orange-600 px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest">Active Mission</span>
+              <h3 className="text-4xl font-black text-slate-900 lowercase">Addition & Subtraction Mastery</h3>
+              <p className="text-lg text-slate-500 font-bold">Grade 3 Maths · Mission by Dr. Jenkins</p>
+              <button 
+                onClick={() => navigate('/quiz/sample')}
+                className="kiddy-btn text-xl px-12 py-5 bg-kiddy-blue shadow-[0_8px_0_0_#0288d1]"
+              >
+                Launch Mission!
+              </button>
+           </div>
+           <div className="flex-center">
+              <div className="w-64 h-64 bg-slate-100 rounded-full flex-center animate-bounce">
+                 <Rocket className="w-32 h-32 text-kiddy-blue" />
               </div>
-              <div>
-                <p className="text-2xl font-black text-slate-900 lowercase">addition & subtraction mastery</p>
-                <p className="text-sm font-black uppercase tracking-widest text-maths mt-1">Maths · Grade 3 · Assigned by Dr. Jenkins</p>
-              </div>
-            </div>
-            <button 
-              onClick={() => navigate('/quiz/sample')}
-              className="btn-bubble btn-maths px-10 h-14 text-lg"
-            >
-              start mission! <ArrowRight className="w-5 h-5" />
-            </button>
-          </div>
-        </section>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="card-bubble p-6 bg-white border-none shadow-xl">
-             <Star className="w-8 h-8 text-yellow-400 mb-4 fill-yellow-400" />
-             <p className="text-2xl font-black text-slate-900">12</p>
-             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Stars Earned</p>
-          </div>
-          <div className="card-bubble p-6 bg-white border-none shadow-xl">
-             <Award className="w-8 h-8 text-primary mb-4" />
-             <p className="text-2xl font-black text-slate-900">Gold</p>
-             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Current Rank</p>
-          </div>
-          <div className="card-bubble p-6 bg-white border-none shadow-xl">
-             <CheckCircle2 className="w-8 h-8 text-accent mb-4" />
-             <p className="text-2xl font-black text-slate-900">85%</p>
-             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Avg. Accuracy</p>
-          </div>
+           </div>
         </div>
       </div>
     </div>
   );
 };
 
-// --- Landing Page ---
+// --- Landing Page (KIDDY Look) ---
 const LandingPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
-      <div className="blob-bg w-[800px] h-[800px] bg-primary/10 -top-96 -left-32" />
-      <div className="blob-bg w-[600px] h-[600px] bg-science/10 -bottom-32 -right-32" />
-
-      {/* Navbar */}
-      <nav className="container flex items-center justify-between h-32 relative z-10">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-primary flex-center rounded-[22px] text-white shadow-[0_6px_0_0_#6e48aa]">
-            <BookOpen className="w-8 h-8" />
-          </div>
-          <span className="text-3xl font-black tracking-tighter lowercase">homework<span className="text-primary">zone</span></span>
-        </div>
-        <div className="flex items-center gap-8">
-          <button onClick={() => navigate('/login/student')} className="text-md font-black text-slate-500 hover:text-primary transition-all hover:scale-110 lowercase">student mission</button>
-          <button onClick={() => navigate('/login/teacher')} className="btn-bubble btn-primary h-14 text-md px-10">teacher world</button>
+    <div className="min-h-screen bg-white">
+      {/* Ribbon Header */}
+      <nav className="ribbon-nav">
+        <div className="flex items-center gap-12 text-white font-black uppercase text-xs tracking-widest px-10">
+           <span className="cursor-pointer hover:text-kiddy-yellow transition-colors">Features</span>
+           <span className="cursor-pointer hover:text-kiddy-yellow transition-colors">Grade 1-6</span>
+           <div className="logo-box">HOMEWORKZONE</div>
+           <span className="cursor-pointer hover:text-kiddy-yellow transition-colors">Missions</span>
+           <span onClick={() => navigate('/login/teacher')} className="cursor-pointer hover:text-kiddy-yellow transition-colors">Teacher Portal</span>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <main className="container pt-20 pb-32 relative z-10">
-        <div className="max-w-4xl mx-auto text-center space-y-12">
-          <div className="relative">
-             <motion.div 
-               initial={{ opacity: 0, scale: 0.8 }}
-               animate={{ opacity: 1, scale: 1 }}
-               className="inline-flex items-center gap-3 px-6 py-2 bg-blue-50 text-blue-600 rounded-full text-xs font-black uppercase tracking-widest border-2 border-blue-100 shadow-sm mb-12"
-             >
-               <Sparkles className="w-4 h-4" /> homework made magical
-             </motion.div>
-             
-             <Star className="absolute -top-10 -left-10 w-12 h-12 text-yellow-400 fill-yellow-400 opacity-20 animate-pulse" />
-             <Star className="absolute top-20 -right-20 w-8 h-8 text-primary fill-primary opacity-20 animate-bounce" />
+      {/* Kiddy Hero */}
+      <section className="kiddy-hero">
+        <div className="container relative z-10">
+           <div className="flex flex-col md:flex-row items-center gap-16">
+              <div className="flex-1 text-left space-y-8">
+                 <h1 className="text-7xl md:text-8xl text-white leading-[0.9] drop-shadow-lg">
+                    Welcome to <br />
+                    HomeworkZone!
+                 </h1>
+                 <p className="text-2xl text-white font-bold max-w-lg drop-shadow-md">
+                    The perfect AI learning center for your students. Tailored for Grade 1-6.
+                 </p>
+                 <button 
+                  onClick={() => navigate('/login/student')}
+                  className="kiddy-btn bg-white text-kiddy-blue text-xl px-12 py-5 shadow-[0_8px_0_0_#e1f5fe]"
+                 >
+                   Enter Student Portal
+                 </button>
+              </div>
+              <div className="flex-1">
+                 <motion.img 
+                  initial={{ rotate: -5, scale: 0.9 }}
+                  animate={{ rotate: 5, scale: 1 }}
+                  transition={{ repeat: Infinity, duration: 4, repeatType: 'reverse' }}
+                  src="/kiddy_hero_kids.png" 
+                  className="sticker-photo" 
+                  alt="Happy Kids" 
+                 />
+              </div>
            </div>
-          
-          <h1 className="text-7xl md:text-8xl font-black text-slate-900 leading-[0.9] tracking-tight lowercase">
-            The playground <br />
-            <span className="text-primary">for learning.</span>
-          </h1>
-          
-          <p className="text-xl text-slate-500 max-w-2xl mx-auto font-bold lowercase leading-relaxed">
-            AI-native homework tailored to Grade 1-6. <br />
-            Teachers build the engine. Students lead the mission.
-          </p>
-
-          <div className="flex flex-col md:flex-row items-center justify-center gap-8 pt-8">
-            <div 
-              onClick={() => navigate('/login/teacher')}
-              className="card-bubble flex-1 max-w-[320px] p-10 text-left cursor-pointer group hover:border-primary border-none bg-white shadow-2xl shadow-slate-200/50"
-            >
-              <div className="w-16 h-16 bg-blue-50 text-primary flex-center rounded-[24px] mb-8 group-hover:bg-primary group-hover:text-white group-hover:shadow-[0_6px_0_0_#6e48aa] transition-all">
-                <GraduationCap className="w-8 h-8" />
-              </div>
-              <h3 className="text-2xl font-black mb-3 lowercase">for teachers</h3>
-              <p className="text-sm text-slate-400 font-bold mb-8 leading-relaxed">Generate papers and track student progress with AI.</p>
-              <div className="flex items-center gap-2 text-primary font-black text-sm lowercase">
-                start portal <ArrowRight className="w-4 h-4" />
-              </div>
-            </div>
-
-            <div 
-              onClick={() => navigate('/login/student')}
-              className="card-bubble flex-1 max-w-[320px] p-10 text-left cursor-pointer group hover:border-science border-none bg-white shadow-2xl shadow-slate-200/50"
-            >
-              <div className="w-16 h-16 bg-emerald-50 text-science flex-center rounded-[24px] mb-8 group-hover:bg-science group-hover:text-white group-hover:shadow-[0_6px_0_0_#1591a3] transition-all">
-                <UserCheck className="w-8 h-8" />
-              </div>
-              <h3 className="text-2xl font-black mb-3 lowercase">for students</h3>
-              <p className="text-sm text-slate-400 font-bold mb-8 leading-relaxed">Missions tailored for your grade and curriculum.</p>
-              <div className="flex items-center gap-2 text-science font-black text-sm lowercase">
-                enter world <ArrowRight className="w-4 h-4" />
-              </div>
-            </div>
-          </div>
         </div>
-      </main>
+        
+        {/* Scalloped Edge Divider */}
+        <div className="absolute bottom-0 w-full overflow-hidden leading-[0]">
+          <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-[calc(100%+1.3px)] h-[100px]">
+            <path d="M0,0 C150,110 300,110 450,0 C600,110 750,110 900,0 C1050,110 1200,110 1350,0 V120 H0 Z" fill="#fffde7"></path>
+          </svg>
+        </div>
+      </section>
+
+      {/* Services Section */}
+      <section className="py-20 bg-[#fffde7]">
+         <div className="container">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+               <div className="kiddy-card">
+                  <div className="w-20 h-20 bg-blue-50 text-kiddy-blue flex-center rounded-full mx-auto mb-8">
+                    <Gamepad2 className="w-10 h-10" />
+                  </div>
+                  <h3 className="text-2xl mb-4 text-kiddy-blue">Interactive</h3>
+                  <p className="text-sm text-slate-500 font-bold mb-8 leading-relaxed">Missions designed to feel like play, not work. Gamified learning for all grades.</p>
+                  <button className="kiddy-btn bg-kiddy-yellow text-slate-700 shadow-[0_6px_0_0_#fbc02d]">Explore</button>
+               </div>
+
+               <div className="kiddy-card">
+                  <div className="w-20 h-20 bg-orange-50 text-kiddy-orange flex-center rounded-full mx-auto mb-8">
+                    <Palette className="w-10 h-10" />
+                  </div>
+                  <h3 className="text-2xl mb-4 text-kiddy-orange">Creative</h3>
+                  <p className="text-sm text-slate-500 font-bold mb-8 leading-relaxed">AI tailors topics to student interests, making every paper unique and exciting.</p>
+                  <button className="kiddy-btn shadow-[0_6px_0_0_#d35400]">Discover</button>
+               </div>
+
+               <div className="kiddy-card">
+                  <div className="w-20 h-20 bg-emerald-50 text-emerald-500 flex-center rounded-full mx-auto mb-8">
+                    <Library className="w-10 h-10" />
+                  </div>
+                  <h3 className="text-2xl mb-4 text-emerald-500">Education</h3>
+                  <p className="text-sm text-slate-500 font-bold mb-8 leading-relaxed">Curriculum-aligned questions for UK, US, AU and India. Professional standards.</p>
+                  <button className="kiddy-btn bg-kiddy-yellow text-slate-700 shadow-[0_6px_0_0_#fbc02d]">Learn More</button>
+               </div>
+            </div>
+         </div>
+      </section>
     </div>
   );
 };
@@ -170,41 +156,42 @@ const LandingPage = () => {
 const LoginPage = ({ role }) => {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen bg-[#f8f9fe] flex-center p-6 relative overflow-hidden">
-      <div className="blob-bg w-[500px] h-[500px] bg-primary/10 -top-32 -left-32" />
+    <div className="min-h-screen bg-[#fffde7] flex-center p-6 relative overflow-hidden">
+      <div className="ribbon-nav absolute top-0 w-full">
+         <div className="logo-box">{role === 'teacher' ? 'TEACHER LOGIN' : 'STUDENT PORTAL'}</div>
+      </div>
       
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="card-bubble max-w-md w-full p-12 space-y-10 shadow-2xl border-none bg-white relative z-10"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="kiddy-card max-w-md w-full p-12 space-y-10 border-none bg-white relative z-10"
       >
         <div className="text-center space-y-3">
-          <h2 className="text-4xl font-black lowercase tracking-tight">{role === 'teacher' ? 'teacher login' : 'student portal'}</h2>
           <p className="text-xs text-slate-400 uppercase font-black tracking-[0.25em]">
-            {role === 'teacher' ? 'Manage your classroom' : 'Ready for a mission?'}
+            {role === 'teacher' ? 'Manage your world' : 'Start your adventure'}
           </p>
         </div>
 
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.1em]">Email Address</label>
-            <input type="email" placeholder="name@school.com" className="input h-14 rounded-2xl border-2 border-slate-100" />
+            <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.1em] block text-left ml-2">Email Address</label>
+            <input type="email" placeholder="name@school.com" className="w-full p-4 rounded-2xl border-4 border-slate-50 outline-none" />
           </div>
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.1em]">Password</label>
-            <input type="password" placeholder="••••••••" className="input h-14 rounded-2xl border-2 border-slate-100" />
+            <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.1em] block text-left ml-2">Password</label>
+            <input type="password" placeholder="••••••••" className="w-full p-4 rounded-2xl border-4 border-slate-50 outline-none" />
           </div>
         </div>
 
         <button 
           onClick={() => navigate(role === 'teacher' ? '/dashboard/teacher' : '/dashboard/student')} 
-          className="btn-bubble btn-primary w-full h-14 text-lg"
+          className="kiddy-btn w-full py-5 text-xl bg-kiddy-blue shadow-[0_8px_0_0_#0288d1]"
         >
-          continue mission!
+          Lets Go!
         </button>
 
         <p className="text-center text-[10px] text-slate-400 font-black uppercase tracking-widest">
-           institutional-grade security <ShieldCheck className="w-3 h-3 inline ml-1" />
+           Secure School Link <ShieldCheck className="w-3 h-3 inline ml-1" />
         </p>
       </motion.div>
     </div>

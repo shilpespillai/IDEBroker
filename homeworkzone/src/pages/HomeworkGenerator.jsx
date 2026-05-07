@@ -8,7 +8,9 @@ import {
   ChevronRight,
   BrainCircuit,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Star,
+  Rocket
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -22,9 +24,9 @@ const CURRICULUMS = [
 const GRADES = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'];
 
 const SUBJECTS = [
-  { id: 'english', name: 'English', icon: <BookOpen className="w-5 h-5" />, color: 'bg-blue-50 text-blue-600' },
-  { id: 'maths', name: 'Maths', icon: <Calculator className="w-5 h-5" />, color: 'bg-emerald-50 text-emerald-600' },
-  { id: 'science', name: 'Science', icon: <FlaskConical className="w-5 h-5" />, color: 'bg-purple-50 text-purple-600' },
+  { id: 'english', name: 'English', icon: <BookOpen className="w-6 h-6" />, color: 'bg-english text-white shadow-[0_5px_0_0_#b04c95]' },
+  { id: 'maths', name: 'Maths', icon: <Calculator className="w-6 h-6" />, color: 'bg-maths text-white shadow-[0_5px_0_0_#d35400]' },
+  { id: 'science', name: 'Science', icon: <FlaskConical className="w-6 h-6" />, color: 'bg-science text-white shadow-[0_5px_0_0_#1591a3]' },
 ];
 
 export default function HomeworkGenerator() {
@@ -41,7 +43,6 @@ export default function HomeworkGenerator() {
 
   const handleGenerate = () => {
     setIsGenerating(true);
-    // Mocking AI delay
     setTimeout(() => {
       setIsGenerating(false);
       setResult({
@@ -56,121 +57,123 @@ export default function HomeworkGenerator() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 bg-amber-50 text-amber-600 flex-center rounded-2xl shadow-sm">
-          <Sparkles className="w-6 h-6" />
+    <div className="max-w-5xl mx-auto space-y-12 animate-in pb-20">
+      <div className="flex items-center gap-5">
+        <div className="w-16 h-16 bg-yellow-50 text-yellow-500 flex-center rounded-[24px] shadow-tactile border-2 border-yellow-100/50">
+          <Sparkles className="w-8 h-8" />
         </div>
         <div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">AI Homework Generator</h2>
-          <p className="text-sm text-slate-500 uppercase font-bold tracking-widest">Create personalized curriculum-aware papers</p>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight lowercase">Homework Generator</h2>
+          <p className="text-xs text-slate-400 uppercase font-black tracking-[0.25em]">Create AI missions for your classroom</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Step 1: Curriculum & Grade */}
-        <div className={`card space-y-6 transition-all ${step === 1 ? 'border-primary ring-4 ring-blue-50' : 'opacity-50'}`}>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-slate-900 text-white flex-center rounded-lg text-xs font-bold">01</div>
-            <h3 className="font-bold">Core Settings</h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+        {/* Step 1: Core Settings */}
+        <div className={`card-bubble space-y-8 transition-all border-none bg-white shadow-2xl shadow-slate-200/40 ${step === 1 ? 'ring-4 ring-primary/10' : 'opacity-40 grayscale-[0.5]'}`}>
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-slate-900 text-white flex-center rounded-2xl text-sm font-black rotate-[-10deg]">01</div>
+            <h3 className="text-xl font-black lowercase">core settings</h3>
           </div>
 
-          <div className="space-y-4">
-            <div className="space-y-2">
+          <div className="space-y-6">
+            <div className="space-y-4">
               <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Select Country</label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 {CURRICULUMS.map(c => (
                   <div 
                     key={c.id}
                     onClick={() => setConfig({...config, country: c.id})}
-                    className={`p-3 rounded-xl border text-sm font-medium cursor-pointer transition-all flex items-center gap-2 ${
-                      config.country === c.id ? 'border-primary bg-blue-50 text-primary' : 'border-slate-100 hover:border-slate-300'
+                    className={`p-4 rounded-[20px] border-2 text-sm font-black cursor-pointer transition-all flex items-center gap-3 ${
+                      config.country === c.id ? 'border-primary bg-primary/5 text-primary shadow-tactile' : 'border-slate-50 hover:border-slate-100 bg-slate-50/50'
                     }`}
                   >
-                    <span>{c.icon}</span> {c.name}
+                    <span className="text-xl">{c.icon}</span> {c.name}
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Target Grade</label>
               <select 
                 value={config.grade}
                 onChange={(e) => setConfig({...config, grade: e.target.value})}
-                className="input font-bold"
+                className="input h-14 rounded-[20px] border-4 border-slate-50 font-black text-md"
               >
                 {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
               </select>
             </div>
           </div>
           
-          {step === 1 && <button onClick={() => setStep(2)} className="btn btn-primary w-full">Next Step</button>}
+          {step === 1 && <button onClick={() => setStep(2)} className="btn-bubble btn-primary w-full h-14">next mission <ChevronRight className="w-5 h-5" /></button>}
         </div>
 
-        {/* Step 2: Subject & Topic */}
-        <div className={`card space-y-6 transition-all ${step === 2 ? 'border-primary ring-4 ring-blue-50' : 'opacity-50'}`}>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-slate-900 text-white flex-center rounded-lg text-xs font-bold">02</div>
-            <h3 className="font-bold">Subject Matter</h3>
+        {/* Step 2: Subject Matter */}
+        <div className={`card-bubble space-y-8 transition-all border-none bg-white shadow-2xl shadow-slate-200/40 ${step === 2 ? 'ring-4 ring-primary/10' : 'opacity-40 grayscale-[0.5]'}`}>
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-slate-900 text-white flex-center rounded-2xl text-sm font-black rotate-[5deg]">02</div>
+            <h3 className="text-xl font-black lowercase">subject matter</h3>
           </div>
 
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-2">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-3">
               {SUBJECTS.map(s => (
                 <div 
                   key={s.id}
                   onClick={() => setConfig({...config, subject: s.id})}
-                  className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
-                    config.subject === s.id ? 'border-primary bg-blue-50 ring-2 ring-blue-100' : 'border-slate-100 hover:border-slate-200'
+                  className={`p-5 rounded-[24px] border-2 cursor-pointer transition-all flex items-center gap-5 ${
+                    config.subject === s.id ? 'border-primary bg-primary/5 ring-4 ring-primary/5' : 'border-slate-50 hover:border-slate-100 bg-slate-50/50'
                   }`}
                 >
-                  <div className={`w-10 h-10 flex-center rounded-xl ${s.color}`}>{s.icon}</div>
-                  <span className="font-bold">{s.name}</span>
+                  <div className={`w-14 h-14 flex-center rounded-[20px] ${s.color}`}>{s.icon}</div>
+                  <span className="text-lg font-black lowercase">{s.name}</span>
                 </div>
               ))}
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Specific Topic (Optional)</label>
+            <div className="space-y-3">
+              <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Mission Topic (Optional)</label>
               <input 
                 type="text" 
-                placeholder="e.g. Fractions, Planets, Poetry" 
+                placeholder="e.g. Fractions, Space, Poetry" 
                 value={config.topic}
                 onChange={(e) => setConfig({...config, topic: e.target.value})}
-                className="input"
+                className="input h-14 rounded-[20px] border-4 border-slate-50 font-bold"
               />
             </div>
           </div>
 
           {step === 2 && (
-            <div className="flex gap-2">
-              <button onClick={() => setStep(1)} className="btn btn-outline flex-1 text-xs">Back</button>
-              <button onClick={() => setStep(3)} className="btn btn-primary flex-[2]">Review AI</button>
+            <div className="flex gap-4">
+              <button onClick={() => setStep(1)} className="btn-bubble bg-white border-4 border-slate-50 text-slate-400 h-14 px-6 shadow-tactile">back</button>
+              <button onClick={() => setStep(3)} className="btn-bubble btn-primary h-14 flex-1">review AI</button>
             </div>
           )}
         </div>
 
-        {/* Step 3: AI Generation */}
-        <div className={`card space-y-6 transition-all ${step === 3 ? 'border-primary ring-4 ring-blue-50' : 'opacity-50'}`}>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-slate-900 text-white flex-center rounded-lg text-xs font-bold">03</div>
-            <h3 className="font-bold">AI Execution</h3>
+        {/* Step 3: AI Execution */}
+        <div className={`card-bubble space-y-8 transition-all border-none bg-white shadow-2xl shadow-slate-200/40 ${step === 3 ? 'ring-4 ring-primary/10' : 'opacity-40 grayscale-[0.5]'}`}>
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-slate-900 text-white flex-center rounded-2xl text-sm font-black rotate-[-5deg]">03</div>
+            <h3 className="text-xl font-black lowercase">AI Execution</h3>
           </div>
 
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
-            <div className="flex items-center gap-3">
-              <BrainCircuit className="w-5 h-5 text-primary" />
+          <div className="p-6 bg-[#f8f9fe] rounded-[32px] border-2 border-slate-50 space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white rounded-2xl flex-center shadow-tactile text-primary">
+                <BrainCircuit className="w-6 h-6" />
+              </div>
               <div>
                 <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Selected Engine</p>
-                <p className="text-xs font-bold">GPT-4o (Teacher's Key)</p>
+                <p className="text-sm font-black text-slate-900">GPT-4o legacy</p>
               </div>
             </div>
             
-            <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Summary</p>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Generating <span className="text-slate-900 font-bold">{config.questionCount} questions</span> for <span className="text-slate-900 font-bold">{config.grade}</span> ({config.country.toUpperCase()}) in <span className="text-slate-900 font-bold">{config.subject}</span>.
+            <div className="space-y-2">
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Mission Summary</p>
+              <p className="text-sm text-slate-500 font-bold leading-relaxed lowercase">
+                Building <span className="text-primary font-black">{config.questionCount} challenges</span> for <span className="text-primary font-black">{config.grade}</span> students in <span className="text-primary font-black">{config.subject}</span>.
               </p>
             </div>
           </div>
@@ -179,10 +182,10 @@ export default function HomeworkGenerator() {
             <button 
               onClick={handleGenerate}
               disabled={isGenerating}
-              className="btn btn-primary w-full h-14 text-md gap-3 bg-slate-900 hover:bg-black"
+              className="btn-bubble btn-primary w-full h-16 text-xl bg-slate-900 hover:bg-black shadow-[0_8px_0_0_#000000]"
             >
-              {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5 text-amber-400" />}
-              {isGenerating ? 'Generating Paper...' : 'Start Generation'}
+              {isGenerating ? <Loader2 className="w-6 h-6 animate-spin" /> : <Rocket className="w-6 h-6 text-yellow-400" />}
+              {isGenerating ? 'igniting...' : 'launch mission!'}
             </button>
           )}
         </div>
@@ -191,30 +194,35 @@ export default function HomeworkGenerator() {
       <AnimatePresence>
         {step === 4 && result && (
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card p-8 border-accent ring-4 ring-emerald-50"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card-bubble p-12 border-none bg-white shadow-2xl shadow-emerald-200/30 ring-4 ring-emerald-50"
           >
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-6 h-6 text-accent" />
-                <h3 className="text-xl font-bold">Homework Generated Successfully</h3>
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-12">
+              <div className="flex items-center gap-5">
+                <div className="w-16 h-16 bg-emerald-500 text-white flex-center rounded-[24px] shadow-[0_6px_0_0_#065f46] animate-bounce">
+                  <Star className="w-8 h-8 fill-white" />
+                </div>
+                <div>
+                  <h3 className="text-3xl font-black text-slate-900 lowercase">Mission Built Successfully!</h3>
+                  <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">ready to deploy to your classroom</p>
+                </div>
               </div>
-              <div className="flex gap-3">
-                <button className="btn btn-outline h-10">Preview Paper</button>
-                <button className="btn btn-primary h-10 bg-accent hover:bg-emerald-600">Assign to Class</button>
+              <div className="flex gap-4">
+                <button className="btn-bubble bg-white border-4 border-slate-50 text-slate-400 px-8 shadow-tactile">preview</button>
+                <button className="btn-bubble btn-primary bg-emerald-500 hover:bg-emerald-600 shadow-[0_6px_0_0_#065f46] px-10">Assign to Students!</button>
               </div>
             </div>
 
-            <div className="bg-slate-50 p-6 rounded-2xl space-y-4">
-              <p className="font-bold text-slate-900">{result.title}</p>
-              <div className="space-y-4">
+            <div className="bg-[#f8f9fe] p-10 rounded-[40px] space-y-8">
+              <p className="text-2xl font-black text-slate-900 lowercase border-b-4 border-white pb-6">{result.title}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {result.questions.map(q => (
-                  <div key={q.id} className="text-sm p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
-                    <p className="font-bold mb-2">{q.id}. {q.text}</p>
-                    <div className="grid grid-cols-2 gap-2">
+                  <div key={q.id} className="card-bubble p-6 bg-white border-none shadow-sm group hover:border-primary transition-all">
+                    <p className="text-md font-black text-slate-900 mb-6 lowercase">{q.id}. {q.text}</p>
+                    <div className="grid grid-cols-1 gap-3">
                       {q.options.map(opt => (
-                        <div key={opt} className={`p-2 rounded-lg border text-xs ${opt === q.answer ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-slate-50'}`}>
+                        <div key={opt} className={`p-3 rounded-2xl border-2 text-xs font-black transition-all ${opt === q.answer ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-slate-50/50 border-slate-50 text-slate-400'}`}>
                           {opt}
                         </div>
                       ))}

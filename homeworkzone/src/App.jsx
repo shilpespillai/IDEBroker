@@ -129,39 +129,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Services Section */}
-      <section className="py-12 bg-[#fffde7]">
-         <div className="container">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-               <div className="kiddy-card">
-                  <div className="w-16 h-16 bg-blue-50 text-kiddy-blue flex-center rounded-full mx-auto mb-6">
-                    <Gamepad2 className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-xl mb-3 text-kiddy-blue">Interactive</h3>
-                  <p className="text-xs text-slate-500 font-bold mb-6 leading-relaxed">Missions designed to feel like play. Gamified learning.</p>
-                  <button className="kiddy-btn bg-kiddy-yellow text-slate-700 shadow-[0_4px_0_0_#fbc02d]">Explore</button>
-               </div>
-
-               <div className="kiddy-card">
-                  <div className="w-16 h-16 bg-orange-50 text-kiddy-orange flex-center rounded-full mx-auto mb-6">
-                    <Palette className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-xl mb-3 text-kiddy-orange">Creative</h3>
-                  <p className="text-xs text-slate-500 font-bold mb-6 leading-relaxed">AI tailors topics to student interests. Unique papers.</p>
-                  <button className="kiddy-btn shadow-[0_4px_0_0_#d35400]">Discover</button>
-               </div>
-
-               <div className="kiddy-card">
-                  <div className="w-16 h-16 bg-emerald-50 text-emerald-500 flex-center rounded-full mx-auto mb-6">
-                    <Library className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-xl mb-3 text-emerald-500">Education</h3>
-                  <p className="text-xs text-slate-500 font-bold mb-6 leading-relaxed">Curriculum-aligned questions. Professional standards.</p>
-                  <button className="kiddy-btn bg-kiddy-yellow text-slate-700 shadow-[0_4px_0_0_#fbc02d]">Learn More</button>
-               </div>
-            </div>
-         </div>
-      </section>
     </div>
   );
 };

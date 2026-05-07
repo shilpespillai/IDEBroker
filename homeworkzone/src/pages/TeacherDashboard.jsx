@@ -1,247 +1,314 @@
 import React, { useState } from 'react';
 import { 
-  Trophy, 
+  LayoutDashboard, 
+  PlusCircle, 
   Users, 
-  Target, 
-  CheckCircle2, 
-  AlertCircle, 
-  Search, 
+  ClipboardList, 
+  Settings, 
   Bell, 
+  Search,
+  ArrowUpRight,
+  TrendingUp,
+  BrainCircuit,
+  GraduationCap,
+  Star,
+  Rocket,
   ChevronDown,
-  LayoutGrid,
-  BookOpen,
-  PieChart,
-  Settings,
   MoreVertical,
-  Plus
+  HelpCircle,
+  AlertCircle,
+  CheckCircle2,
+  PieChart as PieIcon,
+  ChevronRight,
+  Target
 } from 'lucide-react';
+import { 
+  PieChart, 
+  Pie, 
+  Cell, 
+  ResponsiveContainer, 
+  Tooltip,
+  Legend
+} from 'recharts';
 import { motion } from 'framer-motion';
 import HomeworkGenerator from './HomeworkGenerator';
 import TeacherAnalytics from './TeacherAnalytics';
 import { useAI } from '../context/AIContext';
 
+// --- Chart Data ---
+const PROFICIENCY_DATA = [
+  { name: 'Advanced', value: 30, color: '#4f46e5' },
+  { name: 'Intermediate', value: 40, color: '#3b82f6' },
+  { name: 'Basic', value: 20, color: '#f59e0b' },
+  { name: 'Proficient', value: 10, color: '#10b981' },
+];
+
+const GAUGE_DATA = [
+  { name: 'Value', value: 60, color: '#3b82f6' },
+  { name: 'Remaining', value: 40, color: '#f1f5f9' },
+];
+
 export default function TeacherDashboard() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('overview');
 
   return (
-    <div className="min-h-screen bg-[#f0f7ff] font-sans">
-      {/* --- Top Navigation --- */}
-      <nav className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-10 shadow-sm sticky top-0 z-50">
-        <div className="flex items-center gap-10">
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1">
-               <div className="w-2 h-2 rounded-full bg-red-500" />
-               <div className="w-2 h-2 rounded-full bg-orange-400" />
-               <div className="w-2 h-2 rounded-full bg-yellow-400" />
-               <div className="w-2 h-2 rounded-full bg-blue-400" />
-            </div>
+    <div className="flex min-h-screen bg-[#F5F7FA] font-sans">
+      {/* --- Sidebar (25% Width Rail) --- */}
+      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 sticky top-0 h-screen z-50">
+        <div className="p-8 flex items-center gap-3">
+           <div className="w-8 h-8 bg-blue-600 rounded-lg flex-center text-white">
+              <GraduationCap className="w-5 h-5" />
+           </div>
+           <span className="text-xl font-black text-slate-900 tracking-tighter italic">HomeworkZone</span>
+        </div>
+        
+        <nav className="flex-1 px-4 space-y-1">
+          <SidebarItem icon={<LayoutDashboard className="w-4 h-4" />} label="Dashboard" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
+          <SidebarItem icon={<PlusCircle className="w-4 h-4" />} label="Create Homework" active={activeTab === 'generate'} onClick={() => setActiveTab('generate')} />
+          <SidebarItem icon={<Users className="w-4 h-4" />} label="Students" />
+          <SidebarItem icon={<ClipboardList className="w-4 h-4" />} label="Assignments" />
+          <SidebarItem icon={<TrendingUp className="w-4 h-4" />} label="Analytics" />
+          <SidebarItem icon={<Settings className="w-4 h-4" />} label="Settings" />
+        </nav>
+
+        {/* Sidebar CTA Card */}
+        <div className="p-6">
+           <div className="bg-blue-600 rounded-2xl p-6 text-white space-y-4 shadow-xl shadow-blue-600/20 relative overflow-hidden">
+              <div className="relative z-10">
+                 <p className="text-sm font-bold">New Version Available</p>
+                 <p className="text-[10px] opacity-70 leading-relaxed font-medium">Check out the new AI grading engine in the dashboard.</p>
+                 <button className="bg-white text-blue-600 w-full py-2.5 rounded-xl text-xs font-black uppercase tracking-widest mt-4">Update Now</button>
+              </div>
+              <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full" />
+           </div>
+        </div>
+      </aside>
+
+      {/* --- Main Content Area --- */}
+      <main className="flex-1 flex flex-col min-w-0">
+        {/* Top Bar */}
+        <header className="h-20 bg-white px-10 flex items-center justify-between shrink-0 border-b border-slate-100 sticky top-0 z-40">
+          <div className="flex items-center gap-4 bg-slate-50 px-6 py-2.5 rounded-xl border border-slate-200 w-[450px]">
+            <Search className="w-4 h-4 text-slate-400" />
+            <input type="text" placeholder="Search class records, students..." className="bg-transparent border-none outline-none text-xs w-full font-medium" />
           </div>
           
           <div className="flex items-center gap-8">
-             <NavItem label="Dashboard" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
-             <NavItem label="Prepare" active={activeTab === 'prepare'} onClick={() => setActiveTab('prepare')} />
-             <NavItem label="Teach" active={activeTab === 'teach'} onClick={() => setActiveTab('teach')} />
-             <NavItem label="Assess" active={activeTab === 'assess'} onClick={() => setActiveTab('assess')} />
-             <NavItem label="Monitor" active={activeTab === 'monitor'} onClick={() => setActiveTab('monitor')} />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-6">
-           <div className="flex items-center gap-2 text-slate-400 hover:text-slate-600 cursor-pointer transition-all">
-              <Search className="w-4 h-4" />
-           </div>
-           <div className="flex items-center gap-2 text-slate-400 hover:text-slate-600 cursor-pointer transition-all">
-              <Bell className="w-4 h-4" />
-              <span className="w-2 h-2 rounded-full bg-red-500 -ml-3 mb-3 border-2 border-white" />
-           </div>
-           <div className="flex items-center gap-3 border-l border-slate-100 pl-6">
-              <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden">
-                 <img src="https://i.pravatar.cc/150?u=teacher" alt="Teacher" />
+            <div className="flex items-center gap-2">
+               <button className="p-2 text-slate-400 hover:text-blue-600 transition-all relative">
+                  <Bell className="w-5 h-5" />
+                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-4 border-white" />
+               </button>
+               <button className="p-2 text-slate-400 hover:text-blue-600 transition-all"><HelpCircle className="w-5 h-5" /></button>
+            </div>
+            <div className="h-8 w-px bg-slate-100" />
+            <div className="flex items-center gap-4 cursor-pointer group">
+              <div className="text-right">
+                <p className="text-sm font-black text-slate-900 group-hover:text-blue-600 transition-colors">Dr. Sarah Jenkins</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Head Teacher</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex-center font-bold text-blue-600 shadow-sm">
+                SJ
               </div>
               <ChevronDown className="w-4 h-4 text-slate-400" />
-           </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Dashboard Grid */}
+        <div className="p-10 space-y-10 overflow-y-auto">
+          {activeTab === 'overview' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 max-w-[1500px] mx-auto">
+              
+              {/* A. Class Statistics */}
+              <DashboardCard title="Class Statistics">
+                 <div className="grid grid-cols-3 gap-6 pt-4">
+                    <KPIMetric label="Total Students" value="28" icon={<Users className="w-5 h-5" />} color="bg-blue-50 text-blue-600" />
+                    <KPIMetric label="Struggling" value="5" icon={<AlertCircle className="w-5 h-5" />} color="bg-orange-50 text-orange-600" />
+                    <KPIMetric label="Excelling" value="8" icon={<CheckCircle2 className="w-5 h-5" />} color="bg-emerald-50 text-emerald-600" />
+                 </div>
+                 <div className="space-y-3 mt-10">
+                    <div className="flex justify-between items-center text-xs font-black text-slate-400 uppercase tracking-widest">
+                       <span>Class Progress</span>
+                       <span className="text-blue-600">30%</span>
+                    </div>
+                    <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-50 shadow-inner">
+                       <div className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full" style={{ width: '30%' }} />
+                    </div>
+                 </div>
+              </DashboardCard>
+
+              {/* B. Overall Class Performance */}
+              <DashboardCard title="Overall Class Performance">
+                 <div className="flex gap-8 items-center h-[280px]">
+                    <div className="w-48 h-full">
+                       <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                             <Pie data={PROFICIENCY_DATA} innerRadius={60} outerRadius={85} paddingAngle={5} dataKey="value">
+                                {PROFICIENCY_DATA.map((entry, index) => (
+                                   <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                             </Pie>
+                             <Tooltip />
+                          </PieChart>
+                       </ResponsiveContainer>
+                    </div>
+                    <div className="flex-1 space-y-3">
+                       {PROFICIENCY_DATA.map(item => (
+                         <div key={item.name} className="flex items-center justify-between group cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-all">
+                            <div className="flex items-center gap-3">
+                               <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                               <span className="text-xs font-bold text-slate-500">{item.name}</span>
+                            </div>
+                            <span className="text-xs font-black text-slate-900">{item.value}%</span>
+                         </div>
+                       ))}
+                    </div>
+                    <div className="w-[1px] h-32 bg-slate-100" />
+                    <div className="flex-1 space-y-4 overflow-y-auto pr-2 max-h-full">
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Top Students</p>
+                       <StudentMiniRow name="Jamie L." status="Ahead" color="text-blue-500 bg-blue-50" />
+                       <StudentMiniRow name="Sarah K." status="Ahead" color="text-blue-500 bg-blue-50" />
+                       <StudentMiniRow name="Marcus T." status="Lagging" color="text-orange-500 bg-orange-50" />
+                    </div>
+                 </div>
+              </DashboardCard>
+
+              {/* C. Struggling & Excelling */}
+              <DashboardCard title="Struggling & Excelling">
+                 <div className="grid grid-cols-2 gap-10 divide-x divide-slate-100">
+                    <section className="space-y-6">
+                       <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Bottom 3 (Intervention)</h4>
+                       <div className="space-y-4">
+                          <InterventionRow name="Marcus T." subject="Physics, Maths" avatar="https://i.pravatar.cc/150?u=m" />
+                          <InterventionRow name="Elena V." subject="Chemistry" avatar="https://i.pravatar.cc/150?u=e" />
+                          <InterventionRow name="Dante P." subject="History" avatar="https://i.pravatar.cc/150?u=d" />
+                       </div>
+                    </section>
+                    <section className="space-y-6 pl-10">
+                       <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Top 3 (Leading)</h4>
+                       <div className="space-y-4">
+                          <InterventionRow name="Jamie L." subject="All Subjects" avatar="https://i.pravatar.cc/150?u=j" />
+                          <InterventionRow name="Sarah K." subject="Maths, Bio" avatar="https://i.pravatar.cc/150?u=s" />
+                          <InterventionRow name="Sabine K." subject="Literature" avatar="https://i.pravatar.cc/150?u=sa" />
+                       </div>
+                    </section>
+                 </div>
+              </DashboardCard>
+
+              {/* D. Performance Summary */}
+              <DashboardCard title="Performance Summary">
+                 <div className="flex flex-col h-full justify-between">
+                    <div className="flex-1 flex flex-col items-center justify-center pt-8">
+                       <div className="w-64 h-40 relative">
+                          <ResponsiveContainer width="100%" height="100%">
+                             <PieChart>
+                                <Pie 
+                                  data={GAUGE_DATA} 
+                                  startAngle={180} 
+                                  endAngle={0} 
+                                  innerRadius={70} 
+                                  outerRadius={100} 
+                                  paddingAngle={0} 
+                                  dataKey="value"
+                                >
+                                   <Cell key="cell-0" fill="#3b82f6" />
+                                   <Cell key="cell-1" fill="#f1f5f9" />
+                                </Pie>
+                             </PieChart>
+                          </ResponsiveContainer>
+                          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center">
+                             <p className="text-3xl font-black text-slate-900">60%</p>
+                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Proficient</p>
+                          </div>
+                       </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-4 gap-4 p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
+                       <GridData label="Advanced" value="20 Students" percent="20%" />
+                       <GridData label="Proficient" value="45 Students" percent="45%" />
+                       <GridData label="Basic" value="15 Students" percent="15%" />
+                       <GridData label="Below" value="20 Students" percent="20%" />
+                    </div>
+                 </div>
+              </DashboardCard>
+
+            </div>
+          )}
+
+          {activeTab === 'generate' && <HomeworkGenerator />}
+          {activeTab === 'analytics' && <TeacherAnalytics />}
         </div>
-      </nav>
-
-      {/* --- Main Content --- */}
-      <main className="container mx-auto py-10 px-8 space-y-12 max-w-[1400px]">
-        
-        {activeTab === 'dashboard' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-10">
-            {/* Header */}
-            <div className="flex items-end justify-between">
-               <div className="space-y-2">
-                  <h1 className="text-4xl font-bold text-slate-800">Dashboard</h1>
-                  <div className="flex items-center gap-4 text-sm font-medium text-slate-500">
-                     <span className="flex items-center gap-2 bg-white px-3 py-1 rounded-full border border-slate-100 shadow-sm">
-                        <Users className="w-4 h-4" /> Class 6A <ChevronDown className="w-4 h-4" />
-                     </span>
-                     <div className="flex -space-x-2">
-                        {[1,2,3,4].map(i => (
-                           <img key={i} className="w-7 h-7 rounded-full border-2 border-white" src={`https://i.pravatar.cc/150?u=kid${i}`} alt="Kid" />
-                        ))}
-                        <div className="w-7 h-7 rounded-full border-2 border-white bg-slate-100 flex-center text-[10px] font-bold text-slate-500">+12</div>
-                     </div>
-                  </div>
-               </div>
-               <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-slate-100 text-xs font-bold text-slate-500 shadow-sm">
-                     <AlertCircle className="w-4 h-4 text-red-500" /> Alerts <span className="w-5 h-5 bg-red-500 text-white rounded-full flex-center text-[10px]">2</span>
-                  </div>
-                  <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-sm text-slate-400">
-                     <LayoutGrid className="w-4 h-4" />
-                  </div>
-               </div>
-            </div>
-
-            {/* Stats Overview Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-               {/* Left Big Card: Overall Score */}
-               <div className="lg:col-span-5 bg-white rounded-[32px] p-10 border border-slate-100 shadow-sm flex items-center justify-between group overflow-hidden relative">
-                  <div className="space-y-6 relative z-10">
-                     <div className="space-y-1">
-                        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Overall Class Score</p>
-                        <p className="text-6xl font-black text-slate-800">68%</p>
-                     </div>
-                     <div className="text-xs font-bold text-slate-400">
-                        Grade average: <span className="text-slate-800">72%</span>
-                     </div>
-                  </div>
-                  <div className="relative z-10 space-y-6 text-right">
-                     <div className="space-y-1">
-                        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Work Assigned</p>
-                        <p className="text-6xl font-black text-slate-800">36</p>
-                     </div>
-                     <div className="text-xs font-bold text-slate-400">
-                        Class average: <span className="text-slate-800">28%</span>
-                     </div>
-                  </div>
-                  {/* Illustrations */}
-                  <div className="absolute top-1/2 left-1/3 -translate-y-1/2 opacity-20 group-hover:scale-110 transition-transform">
-                     <Trophy className="w-40 h-40 text-emerald-500" strokeWidth={1} />
-                  </div>
-                  <div className="absolute top-1/2 right-1/4 -translate-y-1/2 opacity-10 group-hover:rotate-12 transition-transform">
-                     <PieChart className="w-32 h-32 text-orange-400" strokeWidth={1} />
-                  </div>
-               </div>
-
-               {/* Right Section: Proficiency Segments */}
-               <div className="lg:col-span-7 grid grid-cols-3 gap-4">
-                  <ProficiencyBlock count="5" label="20% of class" sub="grade avg: 72%" color="bg-[#99d750]" icon={<CheckCircle2 className="w-6 h-6 text-white/50" />} />
-                  <ProficiencyBlock count="10" label="40% of class" sub="grade avg: 52%" color="bg-[#ffbd33]" icon={<TrendingUp className="w-6 h-6 text-white/50" />} />
-                  <ProficiencyBlock count="5" label="20% of class" sub="grade avg: 22%" color="bg-[#ff8066]" icon={<AlertCircle className="w-6 h-6 text-white/50" />} />
-               </div>
-            </div>
-
-            {/* Students Proficiency Section */}
-            <div className="space-y-6 pt-10">
-               <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-slate-800">Students Proficiency</h2>
-                  <div className="flex items-center gap-6 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                     <span className="flex items-center gap-2 cursor-pointer text-slate-600"><div className="w-3 h-3 rounded-full border-2 border-slate-400" /> Learning Objectives</span>
-                     <span className="cursor-pointer">All Strands</span>
-                  </div>
-               </div>
-
-               <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm">
-                  {/* Table Header */}
-                  <div className="grid grid-cols-12 gap-4 pb-6 px-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
-                     <div className="col-span-3">Full Name</div>
-                     <div className="col-span-2 text-center">Work Completed</div>
-                     <div className="col-span-3 text-center">Average Score</div>
-                     <div className="col-span-1 text-center">Attention</div>
-                     <div className="col-span-2 text-center">Working Towards</div>
-                     <div className="col-span-1 text-center">Mastered</div>
-                  </div>
-
-                  {/* Table Rows */}
-                  <div className="space-y-4">
-                     <StudentRow name="Sabine Klein" completion="33/36" score={23} attention={45} working={8} mastered={7} theme="red" avatar="https://i.pravatar.cc/150?u=s" />
-                     <StudentRow name="Dante Podenzana" completion="31/36" score={53} attention={6} working={35} mastered={19} theme="yellow" avatar="https://i.pravatar.cc/150?u=d" />
-                     <StudentRow name="Susan Chan" completion="27/36" score={82} attention={2} working={14} mastered={45} theme="green" avatar="https://i.pravatar.cc/150?u=c" />
-                  </div>
-               </div>
-            </div>
-          </motion.div>
-        )}
-
-        {activeTab === 'prepare' && <HomeworkGenerator />}
-        {activeTab === 'assess' && <TeacherAnalytics />}
       </main>
     </div>
   );
 }
 
-const NavItem = ({ label, active, onClick }) => (
+const SidebarItem = ({ icon, label, active, onClick }) => (
   <div 
     onClick={onClick}
-    className={`px-4 h-16 flex items-center cursor-pointer font-bold text-sm transition-all border-b-2 ${
-      active ? 'text-slate-800 border-blue-600' : 'text-slate-400 border-transparent hover:text-slate-600'
+    className={`flex items-center gap-4 px-4 py-3.5 rounded-xl cursor-pointer transition-all border-2 ${
+      active 
+        ? 'bg-blue-50 text-blue-600 border-blue-100 font-bold' 
+        : 'text-slate-400 border-transparent hover:bg-slate-50 hover:text-slate-900'
     }`}
   >
-    {label}
+    {icon}
+    <span className="text-sm tracking-tight">{label}</span>
   </div>
 );
 
-const ProficiencyBlock = ({ count, label, sub, color, icon }) => (
-  <div className={`${color} rounded-[40px] p-8 flex flex-col justify-between text-white shadow-lg shadow-black/5 group cursor-pointer hover:scale-[1.02] transition-all`}>
-     <div className="flex justify-between items-start">
-        <div className="w-10 h-10 rounded-full bg-white/20 flex-center overflow-hidden">
-           <img src="https://i.pravatar.cc/150?u=student" alt="Group" className="opacity-80" />
-        </div>
+const DashboardCard = ({ title, children }) => (
+  <section className="bg-white rounded-[24px] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all group flex flex-col h-full">
+     <div className="flex items-center justify-between mb-8">
+        <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">{title}</h3>
+        <button className="p-2 text-slate-300 hover:text-slate-600 transition-colors"><MoreVertical className="w-4 h-4" /></button>
+     </div>
+     <div className="flex-1">
+        {children}
+     </div>
+  </section>
+);
+
+const KPIMetric = ({ label, value, icon, color }) => (
+  <div className="space-y-4 group">
+     <div className={`w-12 h-12 rounded-2xl flex-center ${color} shadow-sm transition-transform group-hover:scale-110`}>
         {icon}
      </div>
      <div className="space-y-1">
-        <p className="text-6xl font-black">{count}</p>
-        <div>
-           <p className="text-sm font-bold opacity-80">{label}</p>
-           <p className="text-[10px] font-bold opacity-60 uppercase tracking-widest">{sub}</p>
-        </div>
+        <p className="text-3xl font-black text-slate-900">{value}</p>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
      </div>
   </div>
 );
 
-const StudentRow = ({ name, completion, score, attention, working, mastered, theme, avatar }) => {
-  const themes = {
-    red: "bg-[#fff2f0]",
-    yellow: "bg-[#fffdf2]",
-    green: "bg-[#f2fcf0]"
-  };
-  const bars = {
-    red: "bg-[#ff8066]",
-    yellow: "bg-[#ffbd33]",
-    green: "#99d750"
-  };
+const StudentMiniRow = ({ name, status, color }) => (
+  <div className="flex items-center justify-between gap-4">
+     <div className="flex items-center gap-3">
+        <div className="w-6 h-6 rounded-lg bg-slate-100 text-[10px] font-black flex-center">{name[0]}</div>
+        <span className="text-[11px] font-bold text-slate-700">{name}</span>
+     </div>
+     <span className={`text-[9px] font-black px-2 py-1 rounded-full uppercase tracking-widest ${color}`}>{status}</span>
+  </div>
+);
 
-  return (
-    <div className={`${themes[theme]} rounded-2xl p-4 grid grid-cols-12 gap-4 items-center group cursor-pointer hover:shadow-md transition-all border border-transparent hover:border-slate-100`}>
-       <div className="col-span-3 flex items-center gap-4">
-          <img src={avatar} className="w-10 h-10 rounded-full" alt={name} />
-          <span className="font-bold text-slate-700">{name}</span>
-       </div>
-       <div className="col-span-2 text-center font-bold text-slate-500">{completion}</div>
-       <div className="col-span-3">
-          <div className="bg-white rounded-lg h-10 flex items-center overflow-hidden border border-slate-100">
-             <div className="h-full flex items-center justify-end pr-3 font-black text-slate-800" style={{ width: `${score}%`, backgroundColor: theme === 'green' ? '#99d750' : theme === 'yellow' ? '#ffbd33' : '#ff8066' }}>
-                {score}%
-             </div>
-          </div>
-       </div>
-       <div className="col-span-1 flex-center">
-          <div className="w-10 h-10 rounded-full bg-[#ff8066] text-white flex-center font-bold text-xs shadow-sm">{attention}</div>
-       </div>
-       <div className="col-span-2 flex-center">
-          <div className="w-10 h-10 rounded-full bg-[#ffbd33] text-white flex-center font-bold text-xs shadow-sm">{working}</div>
-       </div>
-       <div className="col-span-1 flex-center">
-          <div className={`rounded-full bg-[#99d750] text-white flex-center font-bold text-xs shadow-sm ${mastered > 40 ? 'w-14 h-14' : 'w-10 h-10'}`}>
-            {mastered}
-          </div>
-       </div>
-    </div>
-  );
-};
+const InterventionRow = ({ name, subject, avatar }) => (
+  <div className="flex items-center justify-between group hover:bg-slate-50 p-2 rounded-xl transition-all">
+     <div className="flex items-center gap-4">
+        <img src={avatar} className="w-9 h-9 rounded-xl border border-slate-100" alt={name} />
+        <div>
+           <p className="text-xs font-bold text-slate-800">{name}</p>
+           <p className="text-[10px] font-medium text-slate-400">{subject}</p>
+        </div>
+     </div>
+     <button className="text-[10px] font-black text-blue-600 uppercase tracking-widest border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-600 hover:text-white transition-all opacity-0 group-hover:opacity-100">View</button>
+  </div>
+);
 
-const TrendingUp = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+const GridData = ({ label, value, percent }) => (
+  <div className="text-center space-y-1">
+     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</p>
+     <p className="text-xs font-black text-slate-900">{value}</p>
+     <p className="text-[10px] font-bold text-blue-600">{percent}</p>
+  </div>
 );

@@ -34,21 +34,21 @@ h1, h2, h3, .logo-font {
 /* --- The Ribbon Header --- */
 .ribbon-nav {
   background: var(--kiddy-orange);
-  height: 80px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   z-index: 100;
-  box-shadow: 0 6px 0 0 var(--kiddy-orange-dark);
+  box-shadow: 0 4px 0 0 var(--kiddy-orange-dark);
 }
 
 .ribbon-nav::before, .ribbon-nav::after {
   content: '';
   position: absolute;
-  top: 10px;
-  width: 100px;
-  height: 80px;
+  top: 8px;
+  width: 80px;
+  height: 64px;
   background: var(--kiddy-orange-dark);
   z-index: -1;
 }
@@ -58,20 +58,20 @@ h1, h2, h3, .logo-font {
 
 .logo-box {
   background: var(--kiddy-cream);
-  padding: 1rem 2.5rem;
-  border: 6px solid var(--kiddy-yellow);
+  padding: 0.5rem 2rem;
+  border: 4px solid var(--kiddy-yellow);
   border-radius: 12px;
   color: var(--kiddy-orange);
-  font-size: 2rem;
-  transform: translateY(10px);
-  box-shadow: 0 8px 0 0 var(--kiddy-orange-dark);
+  font-size: 1.5rem;
+  transform: translateY(8px);
+  box-shadow: 0 6px 0 0 var(--kiddy-orange-dark);
 }
 
 /* --- Hero Section with Sunburst --- */
 .kiddy-hero {
   background: var(--kiddy-blue);
   background-image: radial-gradient(circle at 50% 20%, rgba(255,255,255,0.3) 0%, transparent 70%);
-  padding: 120px 0 200px 0;
+  padding: 60px 0 120px 0;
   position: relative;
   text-align: center;
   overflow: hidden;
@@ -96,10 +96,10 @@ h1, h2, h3, .logo-font {
 }
 
 .sticker-photo {
-  max-width: 600px;
-  border: 12px solid white;
-  border-radius: 40px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  max-width: 480px;
+  border: 10px solid white;
+  border-radius: 32px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.1);
   position: relative;
   z-index: 2;
 }
@@ -110,7 +110,7 @@ h1, h2, h3, .logo-font {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 100px;
+  height: 60px;
   background: white;
   clip-path: url(#scallop-path);
   z-index: 5;
@@ -119,10 +119,10 @@ h1, h2, h3, .logo-font {
 /* --- Kiddy Cards --- */
 .kiddy-card {
   background: white;
-  border-radius: 100px 100px 40px 40px;
-  padding: 3rem 2rem;
+  border-radius: 60px 60px 32px 32px;
+  padding: 2rem 1.5rem;
   text-align: center;
-  box-shadow: 0 20px 0 0 var(--kiddy-cream);
+  box-shadow: 0 12px 0 0 var(--kiddy-cream);
   border: 4px solid #f8f9fe;
   transition: var(--transition-pop);
 }

@@ -78,20 +78,20 @@ const LandingPage = () => {
       {/* Kiddy Hero */}
       <section className="kiddy-hero">
         <div className="container relative z-10">
-           <div className="flex flex-col md:flex-row items-center gap-16">
-              <div className="flex-1 text-left space-y-8">
-                 <h1 className="text-7xl md:text-8xl text-white leading-[0.9] drop-shadow-lg">
+           <div className="flex flex-col md:flex-row items-center gap-10">
+              <div className="flex-1 text-left space-y-6">
+                 <h1 className="text-6xl md:text-7xl text-white leading-[1] drop-shadow-lg">
                     Welcome to <br />
                     HomeworkZone!
                  </h1>
-                 <p className="text-2xl text-white font-bold max-w-lg drop-shadow-md">
-                    The perfect AI learning center for your students. Tailored for Grade 1-6.
+                 <p className="text-xl text-white font-bold max-w-md drop-shadow-md">
+                    AI learning center for students. Grades 1-6.
                  </p>
                  <button 
                   onClick={() => navigate('/login/student')}
-                  className="kiddy-btn bg-white text-kiddy-blue text-xl px-12 py-5 shadow-[0_8px_0_0_#e1f5fe]"
+                  className="kiddy-btn bg-white text-kiddy-blue text-lg px-10 py-4 shadow-[0_6px_0_0_#e1f5fe]"
                  >
-                   Enter Student Portal
+                   Enter Portal
                  </button>
               </div>
               <div className="flex-1">
@@ -109,41 +109,41 @@ const LandingPage = () => {
         
         {/* Scalloped Edge Divider */}
         <div className="absolute bottom-0 w-full overflow-hidden leading-[0]">
-          <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-[calc(100%+1.3px)] h-[100px]">
+          <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-[calc(100%+1.3px)] h-[60px]">
             <path d="M0,0 C150,110 300,110 450,0 C600,110 750,110 900,0 C1050,110 1200,110 1350,0 V120 H0 Z" fill="#fffde7"></path>
           </svg>
         </div>
       </section>
 
       {/* Services Section */}
-      <section className="py-20 bg-[#fffde7]">
+      <section className="py-12 bg-[#fffde7]">
          <div className="container">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
                <div className="kiddy-card">
-                  <div className="w-20 h-20 bg-blue-50 text-kiddy-blue flex-center rounded-full mx-auto mb-8">
-                    <Gamepad2 className="w-10 h-10" />
+                  <div className="w-16 h-16 bg-blue-50 text-kiddy-blue flex-center rounded-full mx-auto mb-6">
+                    <Gamepad2 className="w-8 h-8" />
                   </div>
-                  <h3 className="text-2xl mb-4 text-kiddy-blue">Interactive</h3>
-                  <p className="text-sm text-slate-500 font-bold mb-8 leading-relaxed">Missions designed to feel like play, not work. Gamified learning for all grades.</p>
-                  <button className="kiddy-btn bg-kiddy-yellow text-slate-700 shadow-[0_6px_0_0_#fbc02d]">Explore</button>
+                  <h3 className="text-xl mb-3 text-kiddy-blue">Interactive</h3>
+                  <p className="text-xs text-slate-500 font-bold mb-6 leading-relaxed">Missions designed to feel like play. Gamified learning.</p>
+                  <button className="kiddy-btn bg-kiddy-yellow text-slate-700 shadow-[0_4px_0_0_#fbc02d]">Explore</button>
                </div>
 
                <div className="kiddy-card">
-                  <div className="w-20 h-20 bg-orange-50 text-kiddy-orange flex-center rounded-full mx-auto mb-8">
-                    <Palette className="w-10 h-10" />
+                  <div className="w-16 h-16 bg-orange-50 text-kiddy-orange flex-center rounded-full mx-auto mb-6">
+                    <Palette className="w-8 h-8" />
                   </div>
-                  <h3 className="text-2xl mb-4 text-kiddy-orange">Creative</h3>
-                  <p className="text-sm text-slate-500 font-bold mb-8 leading-relaxed">AI tailors topics to student interests, making every paper unique and exciting.</p>
-                  <button className="kiddy-btn shadow-[0_6px_0_0_#d35400]">Discover</button>
+                  <h3 className="text-xl mb-3 text-kiddy-orange">Creative</h3>
+                  <p className="text-xs text-slate-500 font-bold mb-6 leading-relaxed">AI tailors topics to student interests. Unique papers.</p>
+                  <button className="kiddy-btn shadow-[0_4px_0_0_#d35400]">Discover</button>
                </div>
 
                <div className="kiddy-card">
-                  <div className="w-20 h-20 bg-emerald-50 text-emerald-500 flex-center rounded-full mx-auto mb-8">
-                    <Library className="w-10 h-10" />
+                  <div className="w-16 h-16 bg-emerald-50 text-emerald-500 flex-center rounded-full mx-auto mb-6">
+                    <Library className="w-8 h-8" />
                   </div>
-                  <h3 className="text-2xl mb-4 text-emerald-500">Education</h3>
-                  <p className="text-sm text-slate-500 font-bold mb-8 leading-relaxed">Curriculum-aligned questions for UK, US, AU and India. Professional standards.</p>
-                  <button className="kiddy-btn bg-kiddy-yellow text-slate-700 shadow-[0_6px_0_0_#fbc02d]">Learn More</button>
+                  <h3 className="text-xl mb-3 text-emerald-500">Education</h3>
+                  <p className="text-xs text-slate-500 font-bold mb-6 leading-relaxed">Curriculum-aligned questions. Professional standards.</p>
+                  <button className="kiddy-btn bg-kiddy-yellow text-slate-700 shadow-[0_4px_0_0_#fbc02d]">Learn More</button>
                </div>
             </div>
          </div>

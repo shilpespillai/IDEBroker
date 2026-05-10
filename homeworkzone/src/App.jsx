@@ -142,35 +142,35 @@ const StudentDashboard = () => {
       {/* --- Main Content Area --- */}
       <main className="flex-1 flex flex-col min-w-0 p-10 space-y-10 overflow-y-auto">
         {/* Header */}
-        <header className="flex items-center justify-between shrink-0">
-           <div>
+        <header className="flex items-center justify-between shrink-0 relative">
+           <div className="z-10">
               <h2 className="text-3xl font-black text-slate-900 tracking-tight">Good morning, Emma!</h2>
               <p className="text-sm font-bold text-slate-400">Ready to boost your Numeracy score today?</p>
            </div>
-           <div className="flex items-center gap-4">
+           <div className="flex items-center gap-4 z-10 mr-12">
               <div className="bg-purple-50 text-purple-600 px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest border border-purple-100 shadow-sm flex items-center gap-2">
                  <div className="w-2 h-2 rounded-full bg-purple-600 animate-pulse" /> eduplan in 18 days
               </div>
               <button className="p-3 bg-white rounded-full shadow-sm border border-slate-100 text-slate-400 hover:text-blue-600 transition-all"><Bell className="w-5 h-5" /></button>
               <button className="flex items-center gap-2 bg-slate-100 px-6 py-3 rounded-2xl text-xs font-black text-slate-600 hover:bg-slate-200 transition-all"><Share2 className="w-4 h-4" /> Share</button>
            </div>
+
+           {/* Overlapping Mascot - Moved to Header root to avoid panel overlap */}
+           <div className="absolute -top-12 -right-20 w-72 z-0 pointer-events-none drop-shadow-2xl animate-float opacity-80">
+              <img 
+                src="/equip_mascot.png" 
+                alt="Mascot" 
+                className="w-full h-auto object-contain mix-blend-multiply" 
+              />
+           </div>
         </header>
 
-        {/* Top Metric Row + Mascot */}
+        {/* Top Metric Row */}
         <div className="relative grid grid-cols-4 gap-8">
            <MetricCard label="Overall Score" value="74%" trend="+5%" icon={<TrendingUp className="w-5 h-5 text-blue-500" />} />
            <MetricCard label="Tests Completed" value="42" icon={<CheckCircle2 className="w-5 h-5 text-purple-500" />} />
            <MetricCard label="Day Streak" value="12 days" icon={<Flame className="w-5 h-5 text-emerald-500" />} active />
            <MetricCard label="Study Time" value="38h" icon={<Clock className="w-5 h-5 text-amber-500" />} />
-           
-           {/* Overlapping Mascot - Repositioned to avoid panel overlap */}
-           <div className="absolute -top-24 -right-16 w-64 z-20 pointer-events-none drop-shadow-2xl animate-float">
-              <img 
-                src="/equip_mascot.png" 
-                alt="Mascot" 
-                className="w-full h-auto object-contain mix-blend-multiply opacity-90" 
-              />
-           </div>
         </div>
 
         {/* Middle Section */}

@@ -156,11 +156,11 @@ const StudentDashboard = () => {
            </div>
         </header>
 
-        {/* Floating Mascot - Tightly Anchored to Bottom Right */}
-        <div className="fixed -bottom-4 -right-8 w-48 z-50 pointer-events-none group">
+        {/* Floating Mascot - Compact Bottom Right */}
+        <div className="fixed -bottom-2 -right-4 w-32 z-50 pointer-events-none group">
            <motion.img 
              animate={{ 
-               y: [0, -6, 0],
+               y: [0, -4, 0],
              }}
              transition={{ 
                duration: 6,
@@ -169,7 +169,7 @@ const StudentDashboard = () => {
              }}
              src="/assets/equip_mascot_final.png" 
              alt="Mascot" 
-             className="w-full h-auto object-contain mix-blend-multiply opacity-90" 
+             className="w-full h-auto object-contain mix-blend-multiply opacity-80" 
            />
         </div>
 

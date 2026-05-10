@@ -156,7 +156,7 @@ const StudentDashboard = () => {
            </div>
         </header>
 
-        {/* Floating Mascot - Transparent Bottom Right Corner */}
+        {/* Floating Mascot - Final Blended Bottom Right Corner */}
         <div className="fixed bottom-0 right-0 w-72 z-50 pointer-events-none group">
            <motion.img 
              animate={{ 
@@ -167,9 +167,9 @@ const StudentDashboard = () => {
                repeat: Infinity,
                ease: "easeInOut"
              }}
-             src="/assets/equip_mascot_new.png" 
+             src="/assets/equip_mascot_final.png" 
              alt="Mascot" 
-             className="w-full h-auto object-contain" 
+             className="w-full h-auto object-contain mix-blend-multiply" 
            />
         </div>
 

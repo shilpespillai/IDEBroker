@@ -335,39 +335,39 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen bg-[#E0F2FE] font-sans overflow-x-hidden pb-20">
       {/* --- Playful Top Header --- */}
-      <header className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between relative z-20">
-         <div className="flex items-center gap-6">
+      <header className="max-w-[95%] mx-auto px-6 py-10 flex items-center justify-between relative z-20">
+         <div className="flex items-center gap-8">
             {/* Owl Mascot sticker */}
             <motion.img 
               initial={{ rotate: -5 }}
               animate={{ rotate: 5 }}
               transition={{ repeat: Infinity, duration: 3, repeatType: 'reverse' }}
               src="/assets/owl_mascot.png" 
-              className="w-24 h-24 drop-shadow-xl" 
+              className="w-32 h-32 drop-shadow-2xl" 
               alt="Owl Mascot" 
             />
             <div className="flex flex-col">
-               <h1 className="text-4xl md:text-5xl font-black text-[#1E293B] tracking-tighter leading-none flex items-center gap-2">
+               <h1 className="text-5xl md:text-7xl font-black text-[#1E293B] tracking-tighter leading-none flex items-center gap-2">
                  HOMEWORK <br /> ZONE
                </h1>
             </div>
          </div>
 
          {/* Playful Header Icons */}
-         <div className="hidden md:flex items-center gap-8">
-            <div className="w-14 h-14 bg-white rounded-2xl border-4 border-[#334155] flex-center shadow-[4px_4px_0_0_#334155] rotate-3 hover:rotate-0 transition-all cursor-pointer">
-               <img src="https://img.icons8.com/color/96/pencil.png" className="w-8 h-8" alt="Pencil" />
+         <div className="hidden md:flex items-center gap-10">
+            <div className="w-20 h-20 bg-white rounded-3xl border-4 border-[#334155] flex-center shadow-[6px_6px_0_0_#334155] rotate-3 hover:rotate-0 transition-all cursor-pointer">
+               <img src="https://img.icons8.com/color/96/pencil.png" className="w-12 h-12" alt="Pencil" />
             </div>
-            <div className="w-14 h-14 bg-white rounded-2xl border-4 border-[#334155] flex-center shadow-[4px_4px_0_0_#334155] -rotate-6 hover:rotate-0 transition-all cursor-pointer">
-               <img src="https://img.icons8.com/color/96/star.png" className="w-8 h-8" alt="Star" />
+            <div className="w-20 h-20 bg-white rounded-3xl border-4 border-[#334155] flex-center shadow-[6px_6px_0_0_#334155] -rotate-6 hover:rotate-0 transition-all cursor-pointer">
+               <img src="https://img.icons8.com/color/96/star.png" className="w-12 h-12" alt="Star" />
             </div>
-            <div className="w-14 h-14 bg-white rounded-2xl border-4 border-[#334155] flex-center shadow-[4px_4px_0_0_#334155] rotate-6 hover:rotate-0 transition-all cursor-pointer">
-               <img src="https://img.icons8.com/color/96/alarm-clock.png" className="w-8 h-8" alt="Clock" />
+            <div className="w-20 h-20 bg-white rounded-3xl border-4 border-[#334155] flex-center shadow-[6px_6px_0_0_#334155] rotate-6 hover:rotate-0 transition-all cursor-pointer">
+               <img src="https://img.icons8.com/color/96/alarm-clock.png" className="w-12 h-12" alt="Clock" />
             </div>
-            <div className="flex flex-col gap-1 ml-4">
-               <div className="flex gap-2">
+            <div className="flex flex-col gap-2 ml-6">
+               <div className="flex gap-3">
                   {[...Array(6)].map((_, i) => (
-                    <div key={i} className={`w-4 h-6 ${['bg-red-400', 'bg-yellow-400', 'bg-blue-400', 'bg-green-400', 'bg-purple-400', 'bg-pink-400'][i]} rounded-b-lg border-2 border-[#334155] shadow-sm`} />
+                    <div key={i} className={`w-6 h-10 ${['bg-red-400', 'bg-yellow-400', 'bg-blue-400', 'bg-green-400', 'bg-purple-400', 'bg-pink-400'][i]} rounded-b-xl border-4 border-[#334155] shadow-md`} />
                   ))}
                </div>
             </div>
@@ -375,29 +375,29 @@ const LandingPage = () => {
       </header>
 
       {/* --- Main Hero Banner Area --- */}
-      <section className="max-w-6xl mx-auto px-6 mt-4">
-         <div className="relative bg-white rounded-[40px] border-8 border-[#334155] shadow-[0_20px_0_0_#334155] overflow-hidden group">
+      <section className="max-w-[95%] mx-auto px-6 mt-8">
+         <div className="relative bg-white rounded-[60px] border-[12px] border-[#334155] shadow-[0_30px_0_0_#334155] overflow-hidden group">
             {/* The Kids & School Illustration */}
-            <div className="relative h-[300px] md:h-[450px]">
+            <div className="relative h-[400px] md:h-[600px]">
                <img src="/assets/hero_banner.png" className="w-full h-full object-cover" alt="Homework Zone Adventure" />
                
                {/* Welcome Banner Overlay */}
-               <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[90%] md:w-auto text-center">
-                  <div className="bg-[#FBBF24] border-4 border-[#334155] px-10 py-4 rounded-3xl shadow-[4px_4px_0_0_#334155] transform -rotate-1">
-                     <h2 className="text-2xl md:text-4xl font-black text-[#1E293B] uppercase tracking-tight leading-tight">
+               <div className="absolute top-16 left-1/2 -translate-x-1/2 w-[90%] md:w-auto text-center">
+                  <div className="bg-[#FBBF24] border-[6px] border-[#334155] px-16 py-8 rounded-[40px] shadow-[8px_8px_0_0_#334155] transform -rotate-1">
+                     <h2 className="text-4xl md:text-6xl font-black text-[#1E293B] uppercase tracking-tight leading-tight">
                         Welcome to your Homework Zone!
                      </h2>
-                     <p className="text-xs md:text-sm font-black text-[#475569] uppercase tracking-widest mt-1">
+                     <p className="text-sm md:text-xl font-black text-[#475569] uppercase tracking-[0.2em] mt-2">
                         Fun places for learning & adventure!
                      </p>
                   </div>
                </div>
 
                {/* Start Homework Button */}
-               <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
+               <div className="absolute bottom-16 left-1/2 -translate-x-1/2">
                   <button 
                     onClick={() => navigate('/login/student')}
-                    className="bg-[#38BDF8] hover:bg-[#0EA5E9] text-white border-4 border-[#334155] px-12 py-5 rounded-3xl font-black text-xl md:text-2xl uppercase tracking-tighter shadow-[0_8px_0_0_#334155] active:translate-y-1 active:shadow-none transition-all"
+                    className="bg-[#38BDF8] hover:bg-[#0EA5E9] text-white border-[6px] border-[#334155] px-20 py-8 rounded-[40px] font-black text-3xl md:text-5xl uppercase tracking-tighter shadow-[0_12px_0_0_#334155] active:translate-y-2 active:shadow-none transition-all"
                   >
                     Start Homework!
                   </button>
@@ -407,12 +407,11 @@ const LandingPage = () => {
       </section>
 
       {/* --- Action Cards Grid --- */}
-      <section className="max-w-6xl mx-auto px-6 mt-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <section className="max-w-[95%] mx-auto px-6 mt-32 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
          <ZoneCard 
             title="Daily Missions" 
             subtitle="Today's Homework!"
             image="/assets/card_daily.png"
-            tag="Today's Homework!"
             color="bg-[#BFDBFE]"
             btnColor="bg-[#F87171]"
             btnText="GO!"
@@ -422,7 +421,6 @@ const LandingPage = () => {
             title="Fun Games" 
             subtitle="Play & Learn!"
             image="/assets/card_games.png"
-            tag="Play & Learn!"
             color="bg-[#FEF9C3]"
             btnColor="bg-[#FB923C]"
             btnText="PLAY!"
@@ -432,7 +430,6 @@ const LandingPage = () => {
             title="Library" 
             subtitle="Read Stories!"
             image="/assets/card_library.png"
-            tag="Read Stories!"
             color="bg-[#DCFCE7]"
             btnColor="bg-[#4ADE80]"
             btnText="GO!"
@@ -442,7 +439,6 @@ const LandingPage = () => {
             title="My Profile" 
             subtitle="Track Progress!"
             image="/assets/card_profile.png"
-            tag="Track Progress!"
             color="bg-[#DBEAFE]"
             btnColor="bg-[#60A5FA]"
             btnText="GO!"
@@ -451,36 +447,36 @@ const LandingPage = () => {
       </section>
 
       {/* --- Simple Footer Icons --- */}
-      <footer className="max-w-6xl mx-auto px-6 mt-16 flex items-center justify-between">
-         <div className="flex items-center gap-6">
-            <FooterBtn icon="https://img.icons8.com/color/96/help.png" label="Help" />
-            <FooterBtn icon="https://img.icons8.com/color/96/parents.png" label="Parent Zone" />
-            <FooterBtn icon="https://img.icons8.com/color/96/settings.png" label="Settings" />
+      <footer className="max-w-[95%] mx-auto px-6 mt-32 flex items-center justify-between py-10 border-t-8 border-white/20">
+         <div className="flex items-center gap-10">
+            <FooterBtn icon="https://img.icons8.com/color/144/help.png" label="Help" />
+            <FooterBtn icon="https://img.icons8.com/color/144/parents.png" label="Parent Zone" />
+            <FooterBtn icon="https://img.icons8.com/color/144/settings.png" label="Settings" />
          </div>
-         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">© 2026 HOMEWORK ZONE rights reserved.</p>
+         <p className="text-xs font-black text-slate-400 uppercase tracking-widest italic">© 2026 HOMEWORK ZONE ALL RIGHTS RESERVED.</p>
       </footer>
     </div>
   );
 };
 
 const ZoneCard = ({ title, subtitle, image, color, btnColor, btnText, onClick }) => (
-  <div className={`group ${color} border-4 border-[#334155] rounded-[32px] overflow-hidden shadow-[0_12px_0_0_#334155] flex flex-col cursor-pointer transition-all hover:-translate-y-2`}>
+  <div className={`group ${color} border-[6px] border-[#334155] rounded-[48px] overflow-hidden shadow-[0_20px_0_0_#334155] flex flex-col cursor-pointer transition-all hover:-translate-y-4`}>
      {/* Card Header */}
-     <div className="bg-white border-b-4 border-[#334155] p-4 flex items-center justify-center gap-3">
-        <h3 className="text-base font-black text-[#1E293B] uppercase tracking-tight">{title}</h3>
+     <div className="bg-white border-b-[6px] border-[#334155] p-8 flex items-center justify-center">
+        <h3 className="text-2xl font-black text-[#1E293B] uppercase tracking-tight">{title}</h3>
      </div>
      
      {/* Card Image */}
-     <div className="flex-1 p-4 flex-center relative overflow-hidden bg-white/40">
-        <img src={image} className="w-full h-full object-contain" alt={title} />
+     <div className="flex-1 p-10 flex-center relative overflow-hidden bg-white/40">
+        <img src={image} className="w-full h-full object-contain drop-shadow-xl transform group-hover:scale-110 transition-transform" alt={title} />
      </div>
 
      {/* Card Footer Content */}
-     <div className="p-4 bg-white space-y-2 text-center">
-        <p className="text-sm font-black text-[#1E293B]">{subtitle}</p>
+     <div className="p-10 bg-white space-y-6 text-center">
+        <p className="text-xl font-black text-[#1E293B]">{subtitle}</p>
         <button 
           onClick={onClick}
-          className={`${btnColor} text-white border-4 border-[#334155] w-full py-2 rounded-2xl font-black text-sm uppercase tracking-widest shadow-[0_4px_0_0_#334155] active:translate-y-1 active:shadow-none transition-all`}
+          className={`${btnColor} text-white border-[6px] border-[#334155] w-full py-5 rounded-[24px] font-black text-xl uppercase tracking-[0.2em] shadow-[0_8px_0_0_#334155] active:translate-y-2 active:shadow-none transition-all`}
         >
           {btnText}
         </button>
@@ -489,11 +485,11 @@ const ZoneCard = ({ title, subtitle, image, color, btnColor, btnText, onClick })
 );
 
 const FooterBtn = ({ icon, label }) => (
-  <div className="flex flex-col items-center gap-1 group cursor-pointer">
-     <div className="w-10 h-10 bg-white rounded-full border-2 border-[#334155] flex-center shadow-[0_2px_0_0_#334155] group-hover:-translate-y-1 transition-all">
-        <img src={icon} className="w-6 h-6" alt={label} />
+  <div className="flex flex-col items-center gap-2 group cursor-pointer">
+     <div className="w-16 h-16 bg-white rounded-[20px] border-4 border-[#334155] flex-center shadow-[4px_4px_0_0_#334155] group-hover:-translate-y-2 transition-all">
+        <img src={icon} className="w-10 h-10" alt={label} />
      </div>
-     <span className="text-[8px] font-black text-[#475569] uppercase tracking-widest">{label}</span>
+     <span className="text-[10px] font-black text-[#475569] uppercase tracking-widest">{label}</span>
   </div>
 );
 

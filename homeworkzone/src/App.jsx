@@ -163,9 +163,13 @@ const StudentDashboard = () => {
            <MetricCard label="Day Streak" value="12 days" icon={<Flame className="w-5 h-5 text-emerald-500" />} active />
            <MetricCard label="Study Time" value="38h" icon={<Clock className="w-5 h-5 text-amber-500" />} />
            
-           {/* Overlapping Mascot */}
-           <div className="absolute -top-16 -right-10 w-80 z-20 pointer-events-none drop-shadow-3xl">
-              <img src="/equip_mascot.png" alt="Mascot" className="w-full drop-shadow-2xl" />
+           {/* Overlapping Mascot - Repositioned to avoid panel overlap */}
+           <div className="absolute -top-24 -right-16 w-64 z-20 pointer-events-none drop-shadow-2xl animate-float">
+              <img 
+                src="/equip_mascot.png" 
+                alt="Mascot" 
+                className="w-full h-auto object-contain mix-blend-multiply opacity-90" 
+              />
            </div>
         </div>
 

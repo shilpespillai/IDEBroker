@@ -316,85 +316,190 @@ const LegendItem = ({ label, value, color }) => (
   </div>
 );
 
-// --- Landing Page ---
+// --- Landing Page (Redesigned from Reference) ---
 const LandingPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Ribbon Header */}
-      <div className="pt-8">
-        <nav className="ribbon-nav">
-          <div className="ribbon-tail left" />
-          <div className="ribbon-main">
-             <div className="ribbon-segment">Home</div>
-             <div className="ribbon-segment">Features</div>
-             <div className="ribbon-segment">Grades</div>
-             <div className="logo-box">HOMEWORKZONE</div>
-             <div className="ribbon-segment">Mission</div>
-             <div onClick={() => navigate('/login/teacher')} className="ribbon-segment">Teacher</div>
-             <div onClick={() => navigate('/login/student')} className="ribbon-segment">Student</div>
-          </div>
-          <div className="ribbon-tail right" />
-        </nav>
-      </div>
+    <div className="min-h-screen bg-[#E0F2FE] font-sans overflow-x-hidden pb-20">
+      {/* --- Playful Top Header --- */}
+      <header className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between relative z-20">
+         <div className="flex items-center gap-6">
+            {/* Owl Mascot sticker */}
+            <motion.img 
+              initial={{ rotate: -5 }}
+              animate={{ rotate: 5 }}
+              transition={{ repeat: Infinity, duration: 3, repeatType: 'reverse' }}
+              src="/assets/owl_mascot.png" 
+              className="w-24 h-24 drop-shadow-xl" 
+              alt="Owl Mascot" 
+            />
+            <div className="flex flex-col">
+               <h1 className="text-4xl md:text-5xl font-black text-[#1E293B] tracking-tighter leading-none flex items-center gap-2">
+                 HOMEWORK <br /> ZONE
+               </h1>
+            </div>
+         </div>
 
-      {/* Kiddy Hero */}
-      <section className="kiddy-hero">
-        <div className="container relative z-10">
-           <div className="flex flex-col md:flex-row items-center gap-10">
-              <div className="flex-1 text-left space-y-6">
-                 <h1 className="text-6xl md:text-7xl text-white leading-[1] drop-shadow-lg">
-                    Welcome to <br />
-                    HomeworkZone!
-                 </h1>
-                 <p className="text-xl text-white font-bold max-w-md drop-shadow-md">
-                    AI learning center for students. Grades 1-6.
-                 </p>
-                 <button 
-                  onClick={() => navigate('/login/student')}
-                  className="kiddy-btn bg-white text-kiddy-blue text-lg px-10 py-4 shadow-[0_6px_0_0_#e1f5fe]"
-                 >
-                   Enter Portal
-                 </button>
-              </div>
-              <div className="flex-1">
-                 <motion.img 
-                  initial={{ rotate: -5, scale: 0.9 }}
-                  animate={{ rotate: 5, scale: 1 }}
-                  transition={{ repeat: Infinity, duration: 4, repeatType: 'reverse' }}
-                  src="/kiddy_hero_kids.png" 
-                  className="sticker-photo" 
-                  alt="Happy Kids" 
-                 />
-              </div>
-           </div>
-        </div>
-        
-        {/* Scalloped Edge Divider */}
-        <div className="absolute bottom-0 w-full overflow-hidden leading-[0]">
-          <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-[calc(100%+1.3px)] h-[60px]">
-            <path d="M0,0 C150,110 300,110 450,0 C600,110 750,110 900,0 C1050,110 1200,110 1350,0 V120 H0 Z" fill="#fffde7"></path>
-          </svg>
-        </div>
+         {/* Playful Header Icons */}
+         <div className="hidden md:flex items-center gap-8">
+            <div className="w-14 h-14 bg-white rounded-2xl border-4 border-[#334155] flex-center shadow-[4px_4px_0_0_#334155] rotate-3 hover:rotate-0 transition-all cursor-pointer">
+               <img src="https://img.icons8.com/color/96/pencil.png" className="w-8 h-8" alt="Pencil" />
+            </div>
+            <div className="w-14 h-14 bg-white rounded-2xl border-4 border-[#334155] flex-center shadow-[4px_4px_0_0_#334155] -rotate-6 hover:rotate-0 transition-all cursor-pointer">
+               <img src="https://img.icons8.com/color/96/star.png" className="w-8 h-8" alt="Star" />
+            </div>
+            <div className="w-14 h-14 bg-white rounded-2xl border-4 border-[#334155] flex-center shadow-[4px_4px_0_0_#334155] rotate-6 hover:rotate-0 transition-all cursor-pointer">
+               <img src="https://img.icons8.com/color/96/alarm-clock.png" className="w-8 h-8" alt="Clock" />
+            </div>
+            <div className="flex flex-col gap-1 ml-4">
+               <div className="flex gap-2">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className={`w-4 h-6 ${['bg-red-400', 'bg-yellow-400', 'bg-blue-400', 'bg-green-400', 'bg-purple-400', 'bg-pink-400'][i]} rounded-b-lg border-2 border-[#334155] shadow-sm`} />
+                  ))}
+               </div>
+            </div>
+         </div>
+      </header>
+
+      {/* --- Main Hero Banner Area --- */}
+      <section className="max-w-6xl mx-auto px-6 mt-4">
+         <div className="relative bg-white rounded-[40px] border-8 border-[#334155] shadow-[0_20px_0_0_#334155] overflow-hidden group">
+            {/* The Kids & School Illustration */}
+            <div className="relative h-[300px] md:h-[450px]">
+               <img src="/assets/hero_banner.png" className="w-full h-full object-cover" alt="Homework Zone Adventure" />
+               
+               {/* Welcome Banner Overlay */}
+               <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[90%] md:w-auto text-center">
+                  <div className="bg-[#FBBF24] border-4 border-[#334155] px-10 py-4 rounded-3xl shadow-[4px_4px_0_0_#334155] transform -rotate-1">
+                     <h2 className="text-2xl md:text-4xl font-black text-[#1E293B] uppercase tracking-tight leading-tight">
+                        Welcome to your Homework Zone!
+                     </h2>
+                     <p className="text-xs md:text-sm font-black text-[#475569] uppercase tracking-widest mt-1">
+                        Fun places for learning & adventure!
+                     </p>
+                  </div>
+               </div>
+
+               {/* Start Homework Button */}
+               <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
+                  <button 
+                    onClick={() => navigate('/login/student')}
+                    className="bg-[#38BDF8] hover:bg-[#0EA5E9] text-white border-4 border-[#334155] px-12 py-5 rounded-3xl font-black text-xl md:text-2xl uppercase tracking-tighter shadow-[0_8px_0_0_#334155] active:translate-y-1 active:shadow-none transition-all"
+                  >
+                    Start Homework!
+                  </button>
+               </div>
+            </div>
+         </div>
       </section>
+
+      {/* --- Action Cards Grid --- */}
+      <section className="max-w-6xl mx-auto px-6 mt-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+         <ZoneCard 
+            title="Daily Missions" 
+            subtitle="Today's Homework!"
+            image="/assets/card_daily.png"
+            tag="Today's Homework!"
+            color="bg-[#BFDBFE]"
+            btnColor="bg-[#F87171]"
+            btnText="GO!"
+            onClick={() => navigate('/login/student')}
+         />
+         <ZoneCard 
+            title="Fun Games" 
+            subtitle="Play & Learn!"
+            image="/assets/card_games.png"
+            tag="Play & Learn!"
+            color="bg-[#FEF9C3]"
+            btnColor="bg-[#FB923C]"
+            btnText="PLAY!"
+            onClick={() => navigate('/login/student')}
+         />
+         <ZoneCard 
+            title="Library" 
+            subtitle="Read Stories!"
+            image="/assets/card_library.png"
+            tag="Read Stories!"
+            color="bg-[#DCFCE7]"
+            btnColor="bg-[#4ADE80]"
+            btnText="GO!"
+            onClick={() => navigate('/login/student')}
+         />
+         <ZoneCard 
+            title="My Profile" 
+            subtitle="Track Progress!"
+            image="/assets/card_profile.png"
+            tag="Track Progress!"
+            color="bg-[#DBEAFE]"
+            btnColor="bg-[#60A5FA]"
+            btnText="GO!"
+            onClick={() => navigate('/login/student')}
+         />
+      </section>
+
+      {/* --- Simple Footer Icons --- */}
+      <footer className="max-w-6xl mx-auto px-6 mt-16 flex items-center justify-between">
+         <div className="flex items-center gap-6">
+            <FooterBtn icon="https://img.icons8.com/color/96/help.png" label="Help" />
+            <FooterBtn icon="https://img.icons8.com/color/96/parents.png" label="Parent Zone" />
+            <FooterBtn icon="https://img.icons8.com/color/96/settings.png" label="Settings" />
+         </div>
+         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">© 2026 HOMEWORK ZONE rights reserved.</p>
+      </footer>
     </div>
   );
 };
+
+const ZoneCard = ({ title, subtitle, image, color, btnColor, btnText, onClick }) => (
+  <div className={`group ${color} border-4 border-[#334155] rounded-[32px] overflow-hidden shadow-[0_12px_0_0_#334155] flex flex-col cursor-pointer transition-all hover:-translate-y-2`}>
+     {/* Card Header */}
+     <div className="bg-white border-b-4 border-[#334155] p-4 flex items-center justify-center gap-3">
+        <h3 className="text-base font-black text-[#1E293B] uppercase tracking-tight">{title}</h3>
+     </div>
+     
+     {/* Card Image */}
+     <div className="flex-1 p-4 flex-center relative overflow-hidden bg-white/40">
+        <img src={image} className="w-full h-full object-contain" alt={title} />
+     </div>
+
+     {/* Card Footer Content */}
+     <div className="p-4 bg-white space-y-2 text-center">
+        <p className="text-sm font-black text-[#1E293B]">{subtitle}</p>
+        <button 
+          onClick={onClick}
+          className={`${btnColor} text-white border-4 border-[#334155] w-full py-2 rounded-2xl font-black text-sm uppercase tracking-widest shadow-[0_4px_0_0_#334155] active:translate-y-1 active:shadow-none transition-all`}
+        >
+          {btnText}
+        </button>
+     </div>
+  </div>
+);
+
+const FooterBtn = ({ icon, label }) => (
+  <div className="flex flex-col items-center gap-1 group cursor-pointer">
+     <div className="w-10 h-10 bg-white rounded-full border-2 border-[#334155] flex-center shadow-[0_2px_0_0_#334155] group-hover:-translate-y-1 transition-all">
+        <img src={icon} className="w-6 h-6" alt={label} />
+     </div>
+     <span className="text-[8px] font-black text-[#475569] uppercase tracking-widest">{label}</span>
+  </div>
+);
 
 // --- Mock Login Pages ---
 const LoginPage = ({ role }) => {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen bg-[#fffde7] flex-center p-6 relative overflow-hidden">
-      <div className="ribbon-nav absolute top-0 w-full">
-         <div className="logo-box">{role === 'teacher' ? 'TEACHER LOGIN' : 'STUDENT PORTAL'}</div>
+    <div className="min-h-screen bg-[#E0F2FE] flex-center p-6 relative overflow-hidden">
+      <div className="absolute top-10 left-1/2 -translate-x-1/2">
+         <div className="bg-[#FBBF24] border-4 border-[#334155] px-10 py-4 rounded-3xl shadow-[4px_4px_0_0_#334155] transform rotate-1">
+            <h2 className="text-2xl font-black text-[#1E293B] uppercase tracking-tight">{role === 'teacher' ? 'TEACHER LOGIN' : 'STUDENT PORTAL'}</h2>
+         </div>
       </div>
       
       <motion.div 
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="kiddy-card max-w-md w-full p-12 space-y-10 border-none bg-white relative z-10"
+        className="max-w-md w-full p-12 space-y-10 bg-white rounded-[40px] border-8 border-[#334155] shadow-[0_20px_0_0_#334155] relative z-10"
       >
         <div className="text-center space-y-3">
           <p className="text-xs text-slate-400 uppercase font-black tracking-[0.25em]">
@@ -404,20 +509,20 @@ const LoginPage = ({ role }) => {
 
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.1em] block text-left ml-2">Email Address</label>
-            <input type="email" placeholder="name@school.com" className="w-full p-4 rounded-2xl border-4 border-slate-50 outline-none" />
+            <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.1em] block text-left ml-4">Email Address</label>
+            <input type="email" placeholder="name@school.com" className="w-full p-4 rounded-2xl border-4 border-slate-100 outline-none focus:border-[#38BDF8] transition-all font-bold" />
           </div>
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.1em] block text-left ml-2">Password</label>
-            <input type="password" placeholder="••••••••" className="w-full p-4 rounded-2xl border-4 border-slate-50 outline-none" />
+            <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.1em] block text-left ml-4">Password</label>
+            <input type="password" placeholder="••••••••" className="w-full p-4 rounded-2xl border-4 border-slate-100 outline-none focus:border-[#38BDF8] transition-all font-bold" />
           </div>
         </div>
 
         <button 
           onClick={() => navigate(role === 'teacher' ? '/dashboard/teacher' : '/dashboard/student')} 
-          className="kiddy-btn w-full py-5 text-xl bg-[#5e5ce6] shadow-[0_8px_0_0_#4a48cc]"
+          className="bg-[#38BDF8] hover:bg-[#0EA5E9] text-white border-4 border-[#334155] w-full py-5 rounded-3xl font-black text-xl uppercase tracking-tighter shadow-[0_8px_0_0_#334155] active:translate-y-1 active:shadow-none transition-all"
         >
-          Lets Go!
+          Let's Go!
         </button>
 
         <p className="text-center text-[10px] text-slate-400 font-black uppercase tracking-widest">

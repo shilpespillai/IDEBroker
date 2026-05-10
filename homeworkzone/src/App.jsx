@@ -156,24 +156,21 @@ const StudentDashboard = () => {
            </div>
         </header>
 
-        {/* Floating Mascot - Bottom Right Corner */}
-        <div className="fixed bottom-10 right-10 w-48 h-48 z-50 pointer-events-none group">
-           <div className="relative w-full h-full overflow-hidden flex items-end justify-end">
-              <motion.img 
-                animate={{ 
-                  y: [0, -10, 0],
-                  rotate: [0, 2, 0]
-                }}
-                transition={{ 
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                src="/equip_mascot.png" 
-                alt="Mascot" 
-                className="w-[150%] h-[150%] max-w-none object-contain mix-blend-multiply translate-x-12 translate-y-12" 
-              />
-           </div>
+        {/* Floating Mascot - Independent Bottom Right Corner */}
+        <div className="fixed bottom-0 right-0 w-64 z-50 pointer-events-none group">
+           <motion.img 
+             animate={{ 
+               y: [0, -8, 0],
+             }}
+             transition={{ 
+               duration: 5,
+               repeat: Infinity,
+               ease: "easeInOut"
+             }}
+             src="/equip_mascot.png" 
+             alt="Mascot" 
+             className="w-full h-auto object-contain mix-blend-multiply" 
+           />
         </div>
 
         {/* Top Metric Row */}

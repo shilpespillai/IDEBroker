@@ -142,28 +142,39 @@ const StudentDashboard = () => {
       {/* --- Main Content Area --- */}
       <main className="flex-1 flex flex-col min-w-0 p-10 space-y-10 overflow-y-auto">
         {/* Header */}
-        <header className="flex items-center justify-between shrink-0 relative">
-           <div className="z-10">
+        <header className="flex items-center justify-between shrink-0">
+           <div>
               <h2 className="text-3xl font-black text-slate-900 tracking-tight">Good morning, Emma!</h2>
               <p className="text-sm font-bold text-slate-400">Ready to boost your Numeracy score today?</p>
            </div>
-           <div className="flex items-center gap-4 z-10 mr-12">
+           <div className="flex items-center gap-4">
               <div className="bg-purple-50 text-purple-600 px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest border border-purple-100 shadow-sm flex items-center gap-2">
                  <div className="w-2 h-2 rounded-full bg-purple-600 animate-pulse" /> eduplan in 18 days
               </div>
               <button className="p-3 bg-white rounded-full shadow-sm border border-slate-100 text-slate-400 hover:text-blue-600 transition-all"><Bell className="w-5 h-5" /></button>
               <button className="flex items-center gap-2 bg-slate-100 px-6 py-3 rounded-2xl text-xs font-black text-slate-600 hover:bg-slate-200 transition-all"><Share2 className="w-4 h-4" /> Share</button>
            </div>
+        </header>
 
-           {/* Overlapping Mascot - Moved to Header root to avoid panel overlap */}
-           <div className="absolute -top-12 -right-20 w-72 z-0 pointer-events-none drop-shadow-2xl animate-float opacity-80">
-              <img 
+        {/* Floating Mascot - Bottom Right Corner */}
+        <div className="fixed bottom-10 right-10 w-48 h-48 z-50 pointer-events-none group">
+           <div className="relative w-full h-full overflow-hidden flex items-end justify-end">
+              <motion.img 
+                animate={{ 
+                  y: [0, -10, 0],
+                  rotate: [0, 2, 0]
+                }}
+                transition={{ 
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
                 src="/equip_mascot.png" 
                 alt="Mascot" 
-                className="w-full h-auto object-contain mix-blend-multiply" 
+                className="w-[150%] h-[150%] max-w-none object-contain mix-blend-multiply translate-x-12 translate-y-12" 
               />
            </div>
-        </header>
+        </div>
 
         {/* Top Metric Row */}
         <div className="relative grid grid-cols-4 gap-8">

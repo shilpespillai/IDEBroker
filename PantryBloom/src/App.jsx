@@ -493,7 +493,7 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-200 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-zinc-200 sm:flex sm:items-center sm:justify-center sm:p-4">
       <div className="phone-container">
         
         {/* Screen Content */}

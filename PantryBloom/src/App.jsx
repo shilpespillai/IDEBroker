@@ -273,7 +273,8 @@ const Dashboard = ({ healthScore, onSelectCategory }) => {
       <button className="text-xs font-bold text-wood-dark underline">View Market Map</button>
     </div>
   </motion.div>
-);
+  );
+};
 
 const HistoryScreen = () => (
   <motion.div 

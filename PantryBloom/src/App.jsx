@@ -16,7 +16,8 @@ import {
   Info,
   Camera,
   X,
-  UserPlus
+  UserPlus,
+  Cloud
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 

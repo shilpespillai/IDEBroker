@@ -190,7 +190,7 @@ const FilteredListView = ({ title, filter, items, onBack }) => {
   );
 };
 
-const Dashboard = ({ healthScore, onSelectCategory }) => {
+const Dashboard = ({ healthScore, onSelectCategory, onShowMarket }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSync, setLastSync] = useState('Just now');
 
@@ -271,7 +271,12 @@ const Dashboard = ({ healthScore, onSelectCategory }) => {
       <ShoppingBag className="absolute -right-4 -bottom-4 w-24 h-24 text-wood/5 rotate-12" />
       <h4 className="text-wood-dark mb-1">Local Farmers Market</h4>
       <p className="text-xs text-wood/60 mb-2 leading-relaxed">Wyndham Vale: Fresh organic avocados available this Saturday in Werribee.</p>
-      <button className="text-xs font-bold text-wood-dark underline">View Market Map</button>
+      <button 
+        onClick={onShowMarket}
+        className="text-xs font-bold text-wood-dark underline"
+      >
+        View Market Map
+      </button>
     </div>
   </motion.div>
   );
@@ -409,6 +414,56 @@ const Scanner = ({ onScan }) => (
   </div>
 );
 
+const MarketMapScreen = ({ onBack }) => {
+  const markets = [
+    { name: 'Wyndham Vale Farmers Market', location: 'Werribee Park', day: 'Saturdays', time: '8:00 AM - 1:00 PM', distance: '1.2 km' },
+    { name: 'Point Cook Seasonal Market', location: 'Murnong St', day: 'Sundays', time: '9:00 AM - 2:00 PM', distance: '4.5 km' },
+    { name: 'Hoppers Crossing Fresh', location: 'Old Geelong Rd', day: 'Daily', time: '7:00 AM - 6:00 PM', distance: '3.1 km' },
+  ];
+
+  return (
+    <motion.div 
+      initial={{ y: 800 }} 
+      animate={{ y: 0 }} 
+      exit={{ y: 800 }}
+      className="absolute inset-0 bg-cream z-[90] flex flex-col"
+    >
+      <div className="p-8 flex items-center gap-4">
+        <button onClick={onBack} className="p-2 bg-white rounded-full shadow-sm"><ChevronRight className="w-5 h-5 rotate-180" /></button>
+        <h2 className="text-3xl">Market Finder</h2>
+      </div>
+
+      <div className="flex-1 px-6 space-y-6 overflow-y-auto pb-32">
+        <div className="w-full h-48 bg-stone-200 rounded-[3rem] relative overflow-hidden shadow-inner border-4 border-white">
+           <div className="absolute inset-0 bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=Werribee,VIC&zoom=13&size=400x200&sensor=false')] bg-cover opacity-50 grayscale" />
+           <motion.div 
+             animate={{ scale: [1, 1.2, 1] }} 
+             transition={{ duration: 2, repeat: Infinity }}
+             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-sage rounded-full border-2 border-white shadow-lg" 
+           />
+        </div>
+
+        {markets.map((market, idx) => (
+          <div key={idx} className="bg-white p-5 rounded-[2rem] border border-stone-100 shadow-sm flex justify-between items-center group">
+            <div>
+              <p className="font-bold text-stone-800">{market.name}</p>
+              <p className="text-[10px] text-stone-400 font-bold uppercase tracking-tighter mb-2">{market.location}</p>
+              <div className="flex gap-2">
+                <span className="px-2 py-0.5 bg-sage/10 text-sage text-[8px] font-bold rounded-full">{market.day}</span>
+                <span className="px-2 py-0.5 bg-stone-50 text-stone-400 text-[8px] font-bold rounded-full">{market.time}</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-xs font-bold text-stone-800">{market.distance}</p>
+              <button className="text-[10px] font-bold text-sage underline mt-1">Get Directions</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
 const Pantry = ({ items }) => {
   const goodItems = items.filter(i => i.score >= 50);
   const badItems = items.filter(i => i.score < 50);
@@ -476,6 +531,7 @@ const App = () => {
   const [scannedItem, setScannedItem] = useState(null);
   const [healthScore, setHealthScore] = useState(74);
   const [activeCategory, setActiveCategory] = useState(null); // { id, title }
+  const [showMarket, setShowMarket] = useState(false);
 
   const pantryItems = [
     { name: 'Organic Black Beans', brand: 'Eden Foods', score: 95, status: 'Excellent', icon: '🥫', expiryDate: 'Oct 12, 2026' },
@@ -503,6 +559,7 @@ const App = () => {
               <Dashboard 
                 healthScore={healthScore} 
                 onSelectCategory={(id, title) => setActiveCategory({ id, title })}
+                onShowMarket={() => setShowMarket(true)}
                 key="dashboard" 
               />
             )}
@@ -521,6 +578,13 @@ const App = () => {
                 items={pantryItems}
                 onBack={() => setActiveCategory(null)}
               />
+            )}
+          </AnimatePresence>
+
+          {/* Market Finder Overlay */}
+          <AnimatePresence>
+            {showMarket && (
+              <MarketMapScreen onBack={() => setShowMarket(false)} />
             )}
           </AnimatePresence>
 

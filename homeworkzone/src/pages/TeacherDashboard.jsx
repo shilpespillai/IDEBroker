@@ -2177,7 +2177,6 @@ const TeacherDashboard = ({ user, onLogout }) => {
             <SidebarItem id="Gradebook" label="Gradebook" icon={<Trophy className="w-5 h-5 text-emerald-500" />} active={activeTab === 'Gradebook'} onClick={setActiveTab} />
             <SidebarItem id="Messages" label="Messages" icon={<img src="/ic-messages.png" className="w-6 h-6 object-contain mix-blend-multiply" alt="Messages" />} active={activeTab === 'Messages'} onClick={setActiveTab} />
             <SidebarItem id="Rewards" label="Rewards" icon={<img src="/ic-rewards.png" className="w-6 h-6 object-contain mix-blend-multiply" alt="Rewards" />} active={activeTab === 'Rewards'} onClick={setActiveTab} />
-            <SidebarItem id="Calendar" label="Calendar" icon={<Calendar className="w-5 h-5 text-indigo-500" />} active={activeTab === 'Calendar'} onClick={setActiveTab} />
             <SidebarItem id="Class Goals" label="Class Goals" icon={<Trophy className="w-5 h-5 text-amber-500" />} active={activeTab === 'Class Goals'} onClick={setActiveTab} />
             <SidebarItem id="AI Insights" label="AI Insights" icon={<Star className="w-5 h-5 text-purple-500" />} active={activeTab === 'AI Insights'} onClick={setActiveTab} />
             <SidebarItem id="AI Hub" label="AI Hub" icon={<Zap className="w-5 h-5 text-purple-500" />} active={showAiSettings} onClick={() => setShowAiSettings(true)} />

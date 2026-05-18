@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle2, 
   ChevronRight, 
@@ -10,90 +10,226 @@ import {
   XCircle,
   Trophy,
   Star,
-  Rocket
+  Rocket,
+  BrainCircuit,
+  MessageSquare,
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { db } from '../firebase';
+import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
-const MOCK_QUIZ = {
-  title: "addition & subtraction mastery",
-  subject: "Maths",
-  questions: [
-    { id: 1, text: "Sarah has 45 apples. She gives 18 to Ben. How many apples does Sarah have left?", options: ["25", "27", "33", "23"], answer: "27" },
-    { id: 2, text: "What is 150 + 275?", options: ["425", "375", "450", "415"], answer: "425" },
-    { id: 3, text: "Which number is even?", options: ["13", "27", "44", "51"], answer: "44" },
-    { id: 4, text: "If a triangle has 3 sides, how many sides do 4 triangles have?", options: ["7", "10", "12", "14"], answer: "12" },
-  ]
-};
-
-export default function StudentQuiz() {
+export default function StudentQuiz({ homeworkId, studentName, teacher, initialSubmission, onComplete }) {
+  const [homework, setHomework] = useState(null);
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [score, setScore] = useState(null);
+  const [answers, setAnswers] = useState(initialSubmission ? initialSubmission.answers : {});
+  const [isSubmitted, setIsSubmitted] = useState(!!initialSubmission);
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [score, setScore] = useState(initialSubmission ? initialSubmission.correctCount : null);
+  const [feedback, setFeedback] = useState(initialSubmission ? initialSubmission.feedback : '');
+  const [loading, setLoading] = useState(true);
 
-  const currentQuestion = MOCK_QUIZ.questions[currentIdx];
-  const progress = ((currentIdx + 1) / MOCK_QUIZ.questions.length) * 100;
+  useEffect(() => {
+    const fetchHomework = async () => {
+      if (!homeworkId) return;
+      try {
+        const docRef = doc(db, 'homeworks', homeworkId);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          setHomework(snap.data());
+        }
+      } catch (err) {
+        console.error("Fetch Homework Error:", err);
+      }
+      setLoading(false);
+    };
+    fetchHomework();
+  }, [homeworkId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex-center bg-[#F9F9FF]">
+        <div className="flex flex-col items-center gap-6">
+          <Rocket className="w-16 h-16 text-orange-500 animate-bounce" />
+          <p className="text-xl font-black text-slate-800 lowercase">Preparing your mission...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!homework) {
+    return (
+      <div className="min-h-screen flex-center bg-[#F9F9FF]">
+        <div className="text-center space-y-6">
+          <div className="w-24 h-24 bg-rose-50 text-rose-500 rounded-full flex-center mx-auto border-4 border-white shadow-xl">
+            <AlertCircle className="w-12 h-12" />
+          </div>
+          <h2 className="text-2xl font-black text-slate-800">Mission Not Found</h2>
+          <button onClick={onComplete} className="btn-bubble btn-primary">Go Back</button>
+        </div>
+      </div>
+    );
+  }
+
+  const currentQuestion = homework.questions[currentIdx];
+  const progress = ((currentIdx + 1) / homework.questions.length) * 100;
 
   const handleSelect = (option) => {
     if (isSubmitted) return;
     setAnswers({ ...answers, [currentQuestion.id]: option });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
     let correctCount = 0;
-    MOCK_QUIZ.questions.forEach(q => {
+    homework.questions.forEach(q => {
       if (answers[q.id] === q.answer) correctCount++;
     });
+    
+    const finalScore = Math.round((correctCount / homework.questions.length) * 100);
     setScore(correctCount);
-    setIsSubmitted(true);
+
+    let aiFeedback = finalScore >= 80 
+      ? "Outstanding work! You've mastered this topic. Keep it up! 🌟" 
+      : finalScore >= 50 
+        ? "Good effort! A bit more practice and you'll be a pro. 📚" 
+        : "Don't give up! Review the core concepts and try again. 🦾";
+
+    const activeModel = localStorage.getItem('hwz_active_ai') || 'gemini';
+    const activeKey = localStorage.getItem(`hwz_${activeModel}_key`);
+
+    if (activeKey) {
+      try {
+        const wrongAnswers = homework.questions.filter(q => answers[q.id] !== q.answer).map(q => `Q: ${q.text}. Student answered: ${answers[q.id]}. Correct: ${q.answer}`).join(" | ");
+        const prompt = `You are an encouraging teacher. The student scored ${finalScore}% on their ${homework.subject} homework. ${wrongAnswers ? "They got these wrong: " + wrongAnswers : "They got everything perfect!"} Write a 2-sentence personalized, encouraging feedback message for the student. Do not use markdown.`;
+
+        if (activeModel.includes('gpt') || activeModel === 'openai') {
+          const res = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${activeKey}` },
+            body: JSON.stringify({
+              model: 'gpt-4o',
+              messages: [{ role: 'user', content: prompt }],
+              temperature: 0.7
+            })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            aiFeedback = data.choices[0].message.content.replace(/["']/g, '');
+          }
+        } else if (activeModel.includes('gemini')) {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.7 }
+            })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            aiFeedback = data.candidates[0].content.parts[0].text.replace(/["']/g, '');
+          }
+        }
+      } catch (err) {
+        console.error("AI Grading Error:", err);
+      }
+    }
+    
+    setFeedback(aiFeedback);
+
+    try {
+      // Save submission to Firestore
+      await addDoc(collection(db, 'submissions'), {
+        homeworkId,
+        studentName,
+        teacherId: teacher.uid,
+        classId: homework.assignedClassId || null,
+        score: finalScore,
+        correctCount,
+        totalQuestions: homework.questions.length,
+        feedback: aiFeedback,
+        answers,
+        submittedAt: serverTimestamp()
+      });
+      
+      setIsSubmitted(true);
+    } catch (err) {
+      console.error("Submit Error:", err);
+      alert("Failed to save your result. Please contact your teacher! 🆘");
+    }
+    setIsSubmitting(false);
   };
 
-  if (isSubmitted) {
-    const percentage = (score / MOCK_QUIZ.questions.length) * 100;
-    return <QuizResults score={score} total={MOCK_QUIZ.questions.length} percentage={percentage} />;
+  if (isSubmitted && !isReviewing) {
+    return (
+      <QuizResults 
+        score={score} 
+        total={homework.questions.length} 
+        percentage={(score / homework.questions.length) * 100} 
+        feedback={feedback}
+        onHome={onComplete}
+        onReview={() => setIsReviewing(true)}
+        onRetake={() => {
+           setIsSubmitted(false);
+           setIsReviewing(false);
+           setAnswers({});
+           setCurrentIdx(0);
+           setScore(null);
+           setFeedback('');
+        }}
+      />
+    );
   }
 
   return (
     <div className="min-h-screen bg-[#f8f9fe] p-6 md:p-12 flex flex-col relative overflow-hidden">
       {/* Playful Background Blobs */}
-      <div className="blob-bg w-[500px] h-[500px] bg-primary/20 -top-64 -left-32 animate-pulse" />
-      <div className="blob-bg w-[400px] h-[400px] bg-maths/20 -bottom-32 -right-32 animate-pulse" style={{ animationDelay: '1s' }} />
+      <div className="absolute w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-3xl -top-64 -left-32 animate-pulse pointer-events-none" />
+      <div className="absolute w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-3xl -bottom-32 -right-32 animate-pulse pointer-events-none" style={{ animationDelay: '1s' }} />
 
       {/* Header & Progress */}
       <header className="max-w-4xl mx-auto w-full space-y-8 mb-12 relative z-10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-maths text-white flex-center rounded-[20px] shadow-[0_6px_0_0_#d35400]">
-              <GraduationCap className="w-8 h-8" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight lowercase">{MOCK_QUIZ.title}</h2>
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-0.5 bg-maths-soft text-maths rounded-full text-[10px] font-black uppercase tracking-widest">{MOCK_QUIZ.subject}</span>
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{MOCK_QUIZ.questions.length} questions</span>
+        <div className="flex flex-col gap-4">
+          <button onClick={isReviewing ? () => setIsReviewing(false) : onComplete} className="flex items-center gap-2 text-slate-400 hover:text-orange-500 w-fit font-black text-sm uppercase tracking-widest transition-colors">
+            <ChevronLeft className="w-4 h-4" /> {isReviewing ? "Back to Results" : "Back to Dashboard"}
+          </button>
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-orange-500 text-white flex-center rounded-[20px] shadow-[0_6px_0_0_#c2410c]">
+                <Sparkles className="w-8 h-8" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight lowercase">{homework.title} {isReviewing && "(Review)"}</h2>
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-0.5 bg-orange-50 text-orange-500 rounded-full text-[10px] font-black uppercase tracking-widest">{homework.subject}</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{homework.questions.length} questions</span>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-slate-100 rounded-full shadow-tactile">
-            <Timer className="w-4 h-4 text-maths" />
-            <span className="text-sm font-black text-slate-700">04:12</span>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-slate-100 rounded-full shadow-tactile">
+              <Timer className="w-4 h-4 text-orange-500" />
+              <span className="text-sm font-black text-slate-700">04:12</span>
+            </div>
           </div>
         </div>
 
         <div className="relative pt-4">
-          <div className="progress-track h-5 bg-white border-2 border-slate-100">
+          <div className="progress-track h-5 bg-white border-2 border-slate-100 rounded-full overflow-hidden">
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
-              className="progress-fill bg-maths shadow-[0_4px_0_0_#d35400]"
+              className="progress-fill h-full bg-orange-500 shadow-[0_4px_0_0_#c2410c]"
             />
           </div>
           <motion.div 
             animate={{ left: `${progress}%` }}
             className="absolute top-0 -ml-4"
           >
-            <div className="w-8 h-8 bg-white border-2 border-maths rounded-full flex-center shadow-lg">
-              <Rocket className="w-4 h-4 text-maths -rotate-45" />
+            <div className="w-8 h-8 bg-white border-2 border-orange-500 rounded-full flex-center shadow-lg">
+              <Rocket className="w-4 h-4 text-orange-500 -rotate-45" />
             </div>
           </motion.div>
         </div>
@@ -111,7 +247,7 @@ export default function StudentQuiz() {
           >
             <div className="space-y-4 text-center">
               <div className="inline-flex items-center gap-2 px-4 py-1 bg-white border-2 border-slate-100 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                Question {currentIdx + 1} of {MOCK_QUIZ.questions.length}
+                Question {currentIdx + 1} of {homework.questions.length}
               </div>
               <h1 className="text-4xl font-black text-slate-900 leading-tight">
                 {currentQuestion.text}
@@ -121,29 +257,53 @@ export default function StudentQuiz() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {currentQuestion.options.map((option, i) => {
                 const isSelected = answers[currentQuestion.id] === option;
+                const isCorrectOption = currentQuestion.answer === option;
+                
+                let optionClass = "border-white bg-white hover:border-slate-200 shadow-[0_8px_0_0_#f1f2f6]";
+                let iconClass = "bg-slate-100 text-slate-400 group-hover:rotate-6";
+                let textClass = "text-slate-700";
+                let showIcon = null;
+
+                if (isReviewing) {
+                  if (isCorrectOption) {
+                    optionClass = "border-emerald-500 bg-emerald-50 shadow-[0_8px_0_0_#059669]";
+                    iconClass = "bg-emerald-500 text-white rotate-12";
+                    textClass = "text-emerald-700";
+                    showIcon = <CheckCircle2 className="w-8 h-8 text-emerald-500" />;
+                  } else if (isSelected) {
+                    optionClass = "border-rose-500 bg-rose-50 shadow-[0_8px_0_0_#e11d48]";
+                    iconClass = "bg-rose-500 text-white rotate-12";
+                    textClass = "text-rose-700";
+                    showIcon = <XCircle className="w-8 h-8 text-rose-500" />;
+                  } else {
+                    optionClass = "border-slate-100 bg-white opacity-50";
+                  }
+                } else {
+                  if (isSelected) {
+                    optionClass = "border-orange-500 bg-orange-50 shadow-[0_8px_0_0_#c2410c]";
+                    iconClass = "bg-orange-500 text-white rotate-12";
+                    textClass = "text-orange-500";
+                    showIcon = <CheckCircle2 className="w-8 h-8 text-orange-500" />;
+                  }
+                }
+
                 return (
                   <button
                     key={option}
-                    onClick={() => handleSelect(option)}
-                    className={`group relative p-8 text-left rounded-[32px] border-2 transition-all active:scale-[0.95] flex items-center justify-between overflow-hidden ${
-                      isSelected 
-                        ? 'border-maths bg-maths-soft shadow-[0_8px_0_0_#d35400]' 
-                        : 'border-white bg-white hover:border-slate-200 shadow-[0_8px_0_0_#f1f2f6]'
-                    }`}
+                    onClick={() => { if (!isReviewing) handleSelect(option); }}
+                    className={`group relative p-8 text-left rounded-[32px] border-2 transition-all flex items-center justify-between overflow-hidden ${isReviewing ? 'cursor-default' : 'active:scale-[0.95]'} ${optionClass}`}
                   >
                     <div className="flex items-center gap-6">
-                      <div className={`w-12 h-12 flex-center rounded-2xl text-lg font-black transition-all ${
-                        isSelected ? 'bg-maths text-white rotate-12' : 'bg-slate-100 text-slate-400 group-hover:rotate-6'
-                      }`}>
+                      <div className={`w-12 h-12 flex-center rounded-2xl text-lg font-black transition-all ${iconClass}`}>
                         {String.fromCharCode(65 + i)}
                       </div>
-                      <span className={`text-xl font-black ${isSelected ? 'text-maths' : 'text-slate-700'}`}>
+                      <span className={`text-xl font-black ${textClass}`}>
                         {option}
                       </span>
                     </div>
-                    {isSelected && (
+                    {showIcon && (
                       <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                        <CheckCircle2 className="w-8 h-8 text-maths" />
+                        {showIcon}
                       </motion.div>
                     )}
                   </button>
@@ -164,32 +324,45 @@ export default function StudentQuiz() {
           <ChevronLeft className="w-6 h-6" /> back
         </button>
 
-        {currentIdx === MOCK_QUIZ.questions.length - 1 ? (
-          <button 
-            onClick={handleSubmit}
-            className="btn-bubble btn-maths px-16 text-xl"
-          >
-            submit exam! <Star className="w-6 h-6 text-yellow-300 fill-yellow-300" />
-          </button>
+        {isReviewing ? (
+           currentIdx === homework.questions.length - 1 ? (
+             <button onClick={() => setIsReviewing(false)} className="btn-bubble bg-orange-500 text-white px-16 text-xl shadow-[0_8px_0_0_#c2410c]">
+               finish review <CheckCircle2 className="w-6 h-6" />
+             </button>
+           ) : (
+             <button onClick={() => setCurrentIdx(prev => Math.min(homework.questions.length - 1, prev + 1))} className="btn-bubble bg-orange-500 text-white px-16 text-xl shadow-[0_8px_0_0_#c2410c]">
+               next <ChevronRight className="w-6 h-6" />
+             </button>
+           )
         ) : (
-          <button 
-            onClick={() => setCurrentIdx(prev => Math.min(MOCK_QUIZ.questions.length - 1, prev + 1))}
-            className="btn-bubble btn-primary px-16 text-xl"
-          >
-            next quest! <ChevronRight className="w-6 h-6" />
-          </button>
+          currentIdx === homework.questions.length - 1 ? (
+            <button 
+              onClick={handleSubmit}
+              disabled={isSubmitting || !answers[currentQuestion.id]}
+              className="btn-bubble bg-orange-500 text-white px-16 text-xl shadow-[0_8px_0_0_#c2410c]"
+            >
+              {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <>submit mission! <Star className="w-6 h-6 text-yellow-300 fill-yellow-300" /></>}
+            </button>
+          ) : (
+            <button 
+              onClick={() => setCurrentIdx(prev => Math.min(homework.questions.length - 1, prev + 1))}
+              className="btn-bubble bg-orange-500 text-white px-16 text-xl shadow-[0_8px_0_0_#c2410c]"
+            >
+              next quest! <ChevronRight className="w-6 h-6" />
+            </button>
+          )
         )}
       </footer>
     </div>
   );
 }
 
-const QuizResults = ({ score, total, percentage }) => {
+const QuizResults = ({ score, total, percentage, feedback, onHome, onReview, onRetake }) => {
   const isPassed = percentage >= 70;
 
   return (
     <div className="min-h-screen bg-[#f8f9fe] flex-center p-6 relative overflow-hidden">
-      <div className="blob-bg w-[600px] h-[600px] bg-accent/20 -top-32 -right-32 animate-pulse" />
+      <div className="blob-bg w-[600px] h-[600px] bg-orange-500/20 -top-32 -right-32 animate-pulse" />
       
       <motion.div 
         initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
@@ -200,7 +373,7 @@ const QuizResults = ({ score, total, percentage }) => {
           <motion.div 
             animate={{ rotate: [0, 10, -10, 0] }}
             transition={{ repeat: Infinity, duration: 4 }}
-            className={`w-full h-full flex-center rounded-[48px] shadow-2xl ${isPassed ? 'bg-accent' : 'bg-rose-500'}`}
+            className={`w-full h-full flex-center rounded-[48px] shadow-2xl ${isPassed ? 'bg-orange-500' : 'bg-rose-500'}`}
           >
             {isPassed ? <Trophy className="w-20 h-20 text-white" /> : <AlertCircle className="w-20 h-20 text-white" />}
           </motion.div>
@@ -211,9 +384,17 @@ const QuizResults = ({ score, total, percentage }) => {
 
         <div className="space-y-3">
           <h1 className="text-5xl font-black tracking-tight text-slate-900 lowercase">
-            {isPassed ? 'awesome job!' : 'keep trying!'}
+            {isPassed ? 'mission cleared!' : 'keep trying!'}
           </h1>
-          <p className="text-lg text-slate-500 font-bold lowercase">You crushed the math mastery exam!</p>
+          <div className="bg-slate-50 p-6 rounded-[32px] border-2 border-slate-100 flex gap-4 text-left">
+            <div className="w-12 h-12 bg-white rounded-2xl flex-center shadow-sm shrink-0">
+               <BrainCircuit className="w-6 h-6 text-orange-500" />
+            </div>
+            <div>
+               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Smart Feedback</p>
+               <h3 className="text-sm font-bold text-slate-800 leading-relaxed mt-1">{feedback}</h3>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center justify-center gap-12 py-10 bg-slate-50 rounded-[32px]">
@@ -224,13 +405,16 @@ const QuizResults = ({ score, total, percentage }) => {
           <div className="w-px h-16 bg-slate-200"></div>
           <div className="text-center">
             <p className="text-5xl font-black text-slate-900">{Math.round(percentage)}%</p>
-            <p className="text-xs font-black uppercase tracking-widest text-slate-400 mt-2">Accuracy</p>
+            <p className="text-xs font-black uppercase tracking-widest text-slate-400 mt-2">Score</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6 pt-4">
-          <button className="btn-bubble bg-white border-4 border-slate-100 text-slate-500 shadow-[0_8px_0_0_#f1f2f6]" onClick={() => window.location.reload()}>try again</button>
-          <button className="btn-bubble btn-primary" onClick={() => window.location.href = '/dashboard/student'}>go home</button>
+        <div className="pt-4 flex flex-col gap-4">
+          <div className="flex gap-4">
+             <button onClick={onReview} className="flex-1 bg-orange-100 hover:bg-orange-200 text-orange-700 py-4 rounded-[24px] font-black text-lg transition-all shadow-[0_4px_0_0_#fed7aa] active:translate-y-1 active:shadow-none">Review Answers</button>
+             <button onClick={onRetake} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-4 rounded-[24px] font-black text-lg transition-all shadow-[0_4px_0_0_#e2e8f0] active:translate-y-1 active:shadow-none">Retake Mission</button>
+          </div>
+          <button onClick={onHome} className="w-full bg-orange-500 hover:bg-orange-400 text-white py-4 rounded-[24px] font-black text-xl transition-all shadow-[0_6px_0_0_#c2410c] active:translate-y-1 active:shadow-none mt-2">Back to Dashboard</button>
         </div>
       </motion.div>
     </div>

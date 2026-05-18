@@ -360,9 +360,10 @@ const TeacherDashboard = ({ user, onLogout }) => {
   useEffect(() => {
     const now = new Date();
     let cutoffDate = new Date();
-    if (dashboardTimeFilter === 'Weekly') cutoffDate.setDate(now.getDate() - 7);
-    else if (dashboardTimeFilter === 'Monthly') cutoffDate.setMonth(now.getMonth() - 1);
-    else cutoffDate.setDate(now.getDate() - 1); // Daily
+    if (dashboardTimeFilter === 'Daily') cutoffDate.setDate(now.getDate() - 7); // Daily shows every day of the week
+    else if (dashboardTimeFilter === 'Weekly') cutoffDate.setMonth(now.getMonth() - 1); // Weekly shows every week of the month
+    else if (dashboardTimeFilter === 'Monthly') cutoffDate.setFullYear(now.getFullYear() - 1); // Monthly shows every month of the year
+    else cutoffDate.setDate(now.getDate() - 1); // fallback
 
     const filtered = allSubmissions.filter(s => {
       const subDate = s.submittedAt?.toDate ? s.submittedAt.toDate() : new Date(s.submittedAt);
@@ -602,17 +603,6 @@ const TeacherDashboard = ({ user, onLogout }) => {
              let chartData = [];
              
              if (dashboardTimeFilter === 'Daily') {
-                chartLabels = ['Morning', 'Noon', 'Afternoon', 'Evening'];
-                chartData = [[], [], [], []];
-                timeFilteredSubmissions.forEach(sub => {
-                   const subDate = sub.submittedAt?.toDate ? sub.submittedAt.toDate() : new Date(sub.submittedAt);
-                   const hours = subDate.getHours();
-                   if (hours >= 6 && hours < 12) chartData[0].push(sub.score);
-                   else if (hours >= 12 && hours < 18) chartData[1].push(sub.score);
-                   else if (hours >= 18 && hours < 24) chartData[2].push(sub.score);
-                   else chartData[3].push(sub.score);
-                });
-             } else if (dashboardTimeFilter === 'Weekly') {
                 const getDayLabel = (daysAgo) => {
                    const d = new Date();
                    d.setDate(d.getDate() - daysAgo);
@@ -628,7 +618,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                       chartData[6 - diffDays].push(sub.score);
                    }
                 });
-             } else {
+             } else if (dashboardTimeFilter === 'Weekly') {
                 chartLabels = ['Wk1', 'Wk2', 'Wk3', 'Wk4'];
                 chartData = [[], [], [], []];
                 const now = new Date();
@@ -639,10 +629,31 @@ const TeacherDashboard = ({ user, onLogout }) => {
                       chartData[3 - diffWeeks].push(sub.score);
                    }
                 });
+             } else {
+                const getMonthLabel = (monthsAgo) => {
+                   const d = new Date();
+                   d.setMonth(d.getMonth() - monthsAgo);
+                   return d.toLocaleDateString('en-US', { month: 'short' });
+                };
+                chartLabels = [
+                   getMonthLabel(11), getMonthLabel(10), getMonthLabel(9), getMonthLabel(8),
+                   getMonthLabel(7), getMonthLabel(6), getMonthLabel(5), getMonthLabel(4),
+                   getMonthLabel(3), getMonthLabel(2), getMonthLabel(1), getMonthLabel(0)
+                ];
+                chartData = [[], [], [], [], [], [], [], [], [], [], [], []];
+                const now = new Date();
+                timeFilteredSubmissions.forEach(sub => {
+                   const subDate = sub.submittedAt?.toDate ? sub.submittedAt.toDate() : new Date(sub.submittedAt);
+                   const diffMonths = (now.getFullYear() - subDate.getFullYear()) * 12 + (now.getMonth() - subDate.getMonth());
+                   if (diffMonths >= 0 && diffMonths < 12) {
+                      chartData[11 - diffMonths].push(sub.score);
+                   }
+                });
              }
 
              const chartAverages = chartData.map(bucket => bucket.length > 0 ? Math.round(bucket.reduce((a,b)=>a+b,0)/bucket.length) : 0);
              const chartCounts = chartData.map(bucket => bucket.length);
+             const timePeriodLabel = dashboardTimeFilter === 'Daily' ? 'week' : (dashboardTimeFilter === 'Weekly' ? 'month' : 'year');
 
              return (
                 <div className="px-6 py-6 space-y-6 pb-20 relative min-h-[calc(100vh-64px)] bg-[#FAF9FF]">
@@ -670,7 +681,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                       <RewardKPICard title="Total Roster" value={activeClassroom ? students.length : allStudents.length} subtitle={activeClassroom ? "Class Active Roster" : "Global Roster"} bgColor="bg-[#FAF2FF] border-[#E8C6FF]" textColor="text-[#7828B4]" />
                       <RewardKPICard title="Average Grade" value={`${avgScoreTotal}%`} subtitle="Class Diagnostic Avg" bgColor="bg-[#EAFBF7] border-[#BCEEE2]" textColor="text-[#1E8A74]" />
                       <RewardKPICard title="Team Points Goal" value={`${progressPercent}%`} subtitle={`${currentClassPoints} / ${targetGoal} pts`} bgColor="bg-[#FFF0EB] border-[#FFD2C4]" textColor="text-[#C64F33]" />
-                      <RewardKPICard title="Submissions" value={timeFilteredSubmissions.length} subtitle={`Completed this ${dashboardTimeFilter.toLowerCase()}`} bgColor="bg-[#FFFCE8] border-[#FCEE9D]" textColor="text-[#8C761E]" />
+                      <RewardKPICard title="Submissions" value={timeFilteredSubmissions.length} subtitle={`Completed this ${timePeriodLabel}`} bgColor="bg-[#FFFCE8] border-[#FCEE9D]" textColor="text-[#8C761E]" />
                    </div>
 
                    {/* Split Row: Performance vs Goals / AI Hub */}

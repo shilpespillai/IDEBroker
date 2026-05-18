@@ -760,6 +760,193 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
   const [activeNav, setActiveNav] = useState('Dashboard');
   const [activeMission, setActiveMission] = useState(null);
 
+  const [homeworks, setHomeworks] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+     const fetchData = async () => {
+        try {
+           const savedStudent = JSON.parse(localStorage.getItem('hwz_active_student'));
+           const actualClassroom = classroom || savedStudent?.classroom;
+           
+           if (actualClassroom?.id) {
+              // Fetch homeworks for this class
+              const hwQ = query(collection(db, 'homeworks'), where('assignedClassId', '==', actualClassroom.id));
+              const hwSnap = await getDocs(hwQ);
+              const hwList = hwSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+              setHomeworks(hwList);
+           }
+           
+           // Fetch all submissions to build leaderboard and recent feedback
+           const subQ = query(collection(db, 'submissions'));
+           const subSnap = await getDocs(subQ);
+           const subList = subSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+           setSubmissions(subList);
+        } catch (err) {
+           console.error("Dashboard Fetch Data Error:", err);
+        }
+        setLoading(false);
+     };
+     fetchData();
+  }, [studentName, classroom]);
+
+  // Compute dynamic variables
+  const mySubmissions = submissions.filter(s => s.studentName?.toLowerCase() === studentName?.toLowerCase());
+  const completedHwIds = new Set(mySubmissions.map(s => s.homeworkId));
+  const pendingHws = homeworks.filter(hw => !completedHwIds.has(hw.id));
+  const recentlyGraded = mySubmissions.filter(s => s.feedback).sort((a,b) => b.submittedAt - a.submittedAt);
+
+  // 1. Dynamic To-Do List
+  const todoItems = [];
+  pendingHws.forEach(hw => {
+     todoItems.push({
+        title: hw.title,
+        subtitle: `${hw.subject || 'Homework'} - ${hw.questionCount || 5} Questions`,
+        btnText: "Start Mission 🚀",
+        icon: <BookOpen className="w-5 h-5 text-purple-500" />,
+        color: "bg-[#F5F3FF]",
+        btnColor: "bg-[#8A70FF]",
+        onClick: () => setActiveMission({ id: hw.id })
+     });
+  });
+
+  recentlyGraded.slice(0, 2).forEach(sub => {
+     const correspondingHw = homeworks.find(hw => hw.id === sub.homeworkId);
+     todoItems.push({
+        title: correspondingHw ? `Review: ${correspondingHw.title}` : "Review Feedback",
+        subtitle: `AI Teacher gave encouragement!`,
+        btnText: "View Feedback 💬",
+        icon: <MessageSquare className="w-5 h-5 text-amber-500" />,
+        color: "bg-amber-50",
+        btnColor: "bg-amber-500",
+        onClick: () => setActiveNav('Mission Reports')
+     });
+  });
+
+  if (todoItems.length === 0) {
+     todoItems.push({
+        title: "All Missions Completed! 🎉",
+        subtitle: "Awesome job, superstar! You are completely up to date.",
+        btnText: "My Rewards 🎁",
+        icon: <Trophy className="w-5 h-5 text-emerald-500" />,
+        color: "bg-emerald-50",
+        btnColor: "bg-emerald-500",
+        onClick: () => setActiveNav('My Rewards')
+     });
+  }
+
+  // 2. Dynamic Learning Path (Grade 2 has Music and Arts, others have standard subjects)
+  const subjects = classroom?.selectedSubjects || ['Maths', 'English', 'Science'];
+  const learningPath = subjects.map((subName, index) => {
+     const hwInSub = homeworks.filter(hw => hw.subject?.toLowerCase() === subName.toLowerCase());
+     const completedInSub = hwInSub.filter(hw => completedHwIds.has(hw.id));
+     const progress = hwInSub.length > 0 ? Math.round((completedInSub.length / hwInSub.length) * 100) : 0;
+     
+     const subsInSub = mySubmissions.filter(s => {
+        const correspondingHw = homeworks.find(hw => hw.id === s.homeworkId);
+        return correspondingHw?.subject?.toLowerCase() === subName.toLowerCase();
+     });
+     const avgScore = subsInSub.length > 0 ? (subsInSub.reduce((acc, s) => acc + (s.score || 0), 0) / subsInSub.length) : 0;
+     const stars = avgScore > 0 ? Math.max(1, Math.min(5, Math.ceil(avgScore / 20))) : 0;
+
+     const colors = ["bg-[#F5F3FF]", "bg-amber-50", "bg-emerald-50", "bg-rose-50", "bg-cyan-50"];
+     const color = colors[index % colors.length];
+
+     return {
+        title: subName,
+        progress,
+        stars,
+        color,
+        active: index === 0
+     };
+  });
+
+  // 3. Dynamic Ranks & Achievements
+  const studentScores = {};
+  submissions.forEach(sub => {
+     if (sub.classId === classroom?.id || !classroom?.id) {
+        const name = sub.studentName || "Student";
+        const points = (sub.correctCount || 0) * 10;
+        studentScores[name] = (studentScores[name] || 0) + points;
+     }
+  });
+
+  if (!studentScores[studentName]) {
+     studentScores[studentName] = 0;
+  }
+
+  const sortedStudents = Object.keys(studentScores)
+     .map(name => ({ name, points: studentScores[name] }))
+     .sort((a,b) => b.points - a.points);
+
+  const activeStudentRankIdx = sortedStudents.findIndex(s => s.name?.toLowerCase() === studentName?.toLowerCase());
+  const activeStudentRank = activeStudentRankIdx !== -1 ? activeStudentRankIdx + 1 : 1;
+
+  const leaderStudent = sortedStudents[0] || { name: studentName, points: 0 };
+  const currentStudentScore = studentScores[studentName] || 0;
+
+  // Standings
+  const standings = sortedStudents.slice(0, 3).map((st, idx) => ({
+     rank: idx + 1,
+     name: st.name,
+     students: st.points,
+     progress: idx === 0 ? "+25" : idx === 1 ? "+15" : "+5",
+     color: "text-emerald-500"
+  }));
+
+  if (standings.length < 3) {
+     const mockPeers = [
+        { rank: 1, name: "Vansh Pillai", students: 120, progress: "+20", color: "text-emerald-500" },
+        { rank: 2, name: "Ved Pillai", students: 80, progress: "+10", color: "text-emerald-500" },
+        { rank: 3, name: studentName, students: currentStudentScore, progress: "+5", color: "text-[#8A70FF]" }
+     ];
+     mockPeers.forEach(peer => {
+        if (peer.name !== studentName && !standings.some(s => s.name === peer.name)) {
+           standings.push(peer);
+        }
+     });
+     standings.sort((a,b) => b.students - a.students);
+     standings.forEach((s, i) => s.rank = i + 1);
+  }
+
+  // Dynamic Badges
+  const badges = [
+     { icon: "🐦", label: "Early Bird", color: mySubmissions.length >= 1 ? "bg-amber-100" : "bg-slate-50 opacity-40" },
+     { icon: "🧮", label: "Math Wizard", color: (mySubmissions.filter(s => {
+        const correspondingHw = homeworks.find(hw => hw.id === s.homeworkId);
+        return correspondingHw?.subject === 'Maths';
+     }).reduce((acc, s) => acc + s.score, 0) / Math.max(1, mySubmissions.filter(s => {
+        const correspondingHw = homeworks.find(hw => hw.id === s.homeworkId);
+        return correspondingHw?.subject === 'Maths';
+     }).length)) >= 80 ? "bg-purple-100" : "bg-slate-50 opacity-40" },
+     { icon: "⭐", label: "Star Scholar", color: mySubmissions.some(s => s.score === 100) ? "bg-emerald-100" : "bg-slate-50 opacity-40" },
+     { icon: "🏆", label: "Knowledge Champ", color: mySubmissions.length >= 3 ? "bg-rose-100" : "bg-slate-50 opacity-40" }
+  ];
+
+  // Dynamic Calendar HW due dates
+  const calendarHW = {};
+  pendingHws.forEach((hw, idx) => {
+     const dayOffset = (idx * 5) + 3;
+     calendarHW[dayOffset % 31] = hw.subject;
+  });
+
+  // Dynamic Feed reminder
+  const feedPosts = [
+     {
+        author: teacher?.name || "AI Coach",
+        time: "Today",
+        content: pendingHws.length > 0 
+           ? `Hey ${studentName.split(' ')[0]}! You have ${pendingHws.length} fun learning missions waiting for you. Let's start one today! 🚀` 
+           : `Wow, superstar! You've completed all of your active missions. Excellent job! 🌟`
+     },
+     {
+        author: "System Bot",
+        time: "Yesterday",
+        content: "Welcome to the Homework Zone dashboard! Complete missions to earn points and shop in the Reward store! 🎉"
+     }
+  ];
+
   if (activeMission) {
      return (
         <StudentQuiz 
@@ -846,35 +1033,23 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
           <main className="flex-1 overflow-y-auto no-scrollbar px-8 py-8">
             <div className="max-w-[100%] mx-auto w-full">
            {activeNav === 'Dashboard' && (
-              <div className="grid grid-cols-12 gap-6">
+              <div className="grid grid-cols-12 gap-6 animate-in fade-in duration-300">
                  {/* Row 1 Left: To-Do List */}
                  <div className="col-span-12 lg:col-span-5 bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm space-y-6">
                     <h2 className="text-xl font-semibold text-[#2D3748]">To-Do List</h2>
                     <div className="space-y-3">
-                       <TodoCard 
-                          title="Homework: Grade 58" 
-                          subtitle="English - Submit by May 5" 
-                          btnText="Start Homework" 
-                          icon={<BookOpen className="w-5 h-5 text-blue-400" />}
-                          color="bg-[#F5F3FF]"
-                          btnColor="bg-[#8A70FF]"
-                       />
-                       <TodoCard 
-                          title="Upcoming Test" 
-                          subtitle="Science - Planets, May 7" 
-                          btnText="Prepare" 
-                          icon={<Target className="w-5 h-5 text-blue-400" />}
-                          color="bg-[#F5F3FF]"
-                          btnColor="bg-[#F5F3FF]0"
-                       />
-                       <TodoCard 
-                          title="Review" 
-                          subtitle="Teacher Feedback on Maths Quiz" 
-                          btnText="View Feedback" 
-                          icon={<MessageSquare className="w-5 h-5 text-amber-400" />}
-                          color="bg-amber-50"
-                          btnColor="bg-amber-500"
-                       />
+                       {todoItems.slice(0, 3).map((item, idx) => (
+                          <TodoCard 
+                             key={idx}
+                             title={item.title} 
+                             subtitle={item.subtitle} 
+                             btnText={item.btnText} 
+                             icon={item.icon}
+                             color={item.color}
+                             btnColor={item.btnColor}
+                             onClick={item.onClick}
+                          />
+                       ))}
                     </div>
                  </div>
 
@@ -883,25 +1058,16 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
                     <h2 className="text-xl font-semibold text-[#2D3748]">My Learning Path</h2>
                     <div className="flex items-center gap-4 relative">
                        <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-100 -translate-y-1/2 z-0" />
-                       <LearningPathCard 
-                          title="English Grammar 1" 
-                          progress={10} 
-                          stars={3} 
-                          color="bg-[#F5F3FF]" 
-                          active 
-                       />
-                       <LearningPathCard 
-                          title="Maths: Division Basics" 
-                          progress={50} 
-                          stars={3} 
-                          color="bg-amber-50" 
-                       />
-                       <LearningPathCard 
-                          title="Science: Plants" 
-                          progress={50} 
-                          stars={4} 
-                          color="bg-emerald-50" 
-                       />
+                       {learningPath.map((pathItem, idx) => (
+                          <LearningPathCard 
+                             key={idx}
+                             title={pathItem.title} 
+                             progress={pathItem.progress} 
+                             stars={pathItem.stars} 
+                             color={pathItem.color} 
+                             active={pathItem.active} 
+                          />
+                       ))}
                     </div>
                  </div>
 
@@ -910,17 +1076,16 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
                     <h2 className="text-xl font-semibold text-[#2D3748]">My Recent Achievements</h2>
                     <div className="grid grid-cols-12 gap-6 items-center">
                        <div className="col-span-7 grid grid-cols-4 gap-3">
-                          <AchievementBadge icon="🐝" label="Spelling Bee" color="bg-amber-50" />
-                          <AchievementBadge icon="🧮" label="Math Wizard" color="bg-[#F5F3FF]" />
-                          <AchievementBadge icon="⭐" label="Star Reader" color="bg-[#F5F3FF]" />
-                          <AchievementBadge icon="🦁" label="Helpful" color="bg-emerald-50" />
+                          {badges.map((badge, idx) => (
+                             <AchievementBadge key={idx} icon={badge.icon} label={badge.label} color={badge.color} />
+                          ))}
                           <div className="col-span-4 pt-2">
-                             <button className="bg-[#8A70FF] text-white px-6 py-2 rounded-xl font-semibold text-[10px] shadow-lg hover:scale-105 transition-all">View All Badges</button>
+                             <button onClick={() => setActiveNav('My Rewards')} className="bg-[#8A70FF] text-white px-6 py-2 rounded-xl font-semibold text-[10px] shadow-lg hover:scale-105 transition-all">View All Badges</button>
                           </div>
                        </div>
                        <div className="col-span-5 flex gap-3">
-                          <RankCard rank={1} name="Virsan Shanna" detail="Grade 1" isAlt={false} />
-                          <RankCard rank={3} name="Vimen Single" detail="Leader" isAlt={true} />
+                          <RankCard rank={1} name={leaderStudent.name} detail="Class Leader" isAlt={false} />
+                          <RankCard rank={activeStudentRank} name={studentName} detail={`${currentStudentScore} Points`} isAlt={true} />
                        </div>
                     </div>
                  </div>
@@ -929,9 +1094,16 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
                  <div className="col-span-12 lg:col-span-4 bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm space-y-6">
                     <h2 className="text-xl font-semibold text-[#2D3748]">Class Standings</h2>
                     <div className="space-y-4">
-                       <StandingRow rank={1} name="Vhsen Oopla" students={64} progress="+5" color="text-emerald-500" />
-                       <StandingRow rank={2} name="Aronya Bhanna" students={64} progress="+20" color="text-emerald-500" />
-                       <StandingRow rank={3} name="Brohin Hetel" students={64} progress="-2" color="text-rose-500" />
+                       {standings.map((row, idx) => (
+                          <StandingRow 
+                             key={idx}
+                             rank={row.rank} 
+                             name={row.name} 
+                             students={row.students} 
+                             progress={row.progress} 
+                             color={row.color} 
+                          />
+                       ))}
                     </div>
                  </div>
 
@@ -945,12 +1117,14 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
                     <div className="grid grid-cols-7 gap-1">
                        {[...Array(35)].map((_, i) => {
                           const day = (i % 31) + 1;
+                          const hwDue = calendarHW[day];
                           return (
                              <div key={i} className={`h-16 border border-slate-50 rounded-xl p-1.5 relative group hover:bg-slate-50 transition-all ${i === 3 ? 'bg-[#F5F3FF]/50' : ''}`}>
                                 <span className="text-[10px] font-semibold text-slate-400">{day}</span>
-                                {i === 3 && <div className="absolute top-1.5 right-1.5 w-3 h-3 rounded-full bg-orange-400 border-2 border-white" />}
-                                {i === 11 && <div className="mt-1 bg-rose-50 text-rose-500 text-[7px] font-semibold p-0.5 rounded-md">Due Test</div>}
-                                {i === 18 && <div className="mt-1 bg-[#F5F3FF] text-[#8A70FF] text-[7px] font-semibold p-0.5 rounded-md">Due HW</div>}
+                                {i === 3 && <div className="absolute top-1.5 right-1.5 w-3 h-3 rounded-full bg-orange-400 border-2 border-white animate-ping" />}
+                                {hwDue && (
+                                   <div className="mt-1 bg-[#F5F3FF] text-[#8A70FF] text-[6px] font-black p-0.5 rounded-md truncate uppercase tracking-tighter">Due {hwDue}</div>
+                                )}
                              </div>
                           );
                        })}
@@ -961,16 +1135,14 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
                  <div className="col-span-12 lg:col-span-4 bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm space-y-6">
                     <h2 className="text-xl font-semibold text-[#2D3748]">Teacher Feed</h2>
                     <div className="space-y-6">
-                       <FeedPost 
-                          author="Asrey Summum" 
-                          time="1 day ago" 
-                          content="Today we explored the solar system! Don't forget to check your assignments." 
-                       />
-                       <FeedPost 
-                          author="Ngeo Raghi" 
-                          time="2 days ago" 
-                          content="Great job on the Science quiz! Keep up the work." 
-                       />
+                       {feedPosts.map((post, idx) => (
+                          <FeedPost 
+                             key={idx}
+                             author={post.author} 
+                             time={post.time} 
+                             content={post.content} 
+                          />
+                       ))}
                     </div>
                  </div>
               </div>
@@ -1022,7 +1194,7 @@ const SidebarNavItem = ({ icon, label, active, color, onClick }) => (
   </div>
 );
 
-const TodoCard = ({ title, subtitle, btnText, icon, color, btnColor }) => (
+const TodoCard = ({ title, subtitle, btnText, icon, color, btnColor, onClick }) => (
    <div className={`${color} p-6 rounded-[32px] flex items-center justify-between group transition-all hover:scale-[1.02] border border-white/50 shadow-sm`}>
       <div className="flex items-center gap-6">
          <div className="w-14 h-14 bg-white rounded-2xl flex-center shadow-sm group-hover:scale-110 transition-transform">{icon}</div>
@@ -1031,7 +1203,7 @@ const TodoCard = ({ title, subtitle, btnText, icon, color, btnColor }) => (
             <p className="text-[10px] font-semibold text-slate-400 italic">{subtitle}</p>
          </div>
       </div>
-      <button className={`${btnColor} text-white px-6 py-3 rounded-2xl font-semibold text-xs shadow-lg hover:brightness-110 transition-all`}>{btnText}</button>
+      <button onClick={onClick} className={`${btnColor} text-white px-6 py-3 rounded-2xl font-semibold text-xs shadow-lg hover:brightness-110 transition-all`}>{btnText}</button>
    </div>
 );
 

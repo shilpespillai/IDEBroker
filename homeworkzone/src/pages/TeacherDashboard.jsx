@@ -788,7 +788,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                          </div>
 
                          {/* Classroom Collaborative Goal Thermometer */}
-                         {activeClassroom && (
+                         {false && activeClassroom && (
                             <div className="bg-white rounded-[32px] border border-[#E9E4FF] shadow-sm p-6 space-y-4">
                                <div className="flex justify-between items-center">
                                   <div className="space-y-1">
@@ -984,85 +984,223 @@ const TeacherDashboard = ({ user, onLogout }) => {
                       </div>
                    </div>
 
-                   {/* Classroom Journey & Activities Calendar (May 2026) */}
-                   <div className="max-w-2xl bg-gradient-to-br from-[#FCF8FF] to-[#F3EFFF] border border-[#E5DFFF] rounded-[24px] p-5 space-y-4 shadow-sm">
-                      <div className="flex justify-between items-center border-b border-[#EBE4FF] pb-3">
-                         <div className="space-y-0.5">
-                            <h3 className="text-base font-black text-[#3B2B85] tracking-tight flex items-center gap-1.5">
-                               <span>📅</span> Learning Calendar & Reminder Center
-                            </h3>
-                            <p className="text-[10px] font-bold text-[#7A69D6]">Click active quiz dates to review submissions and send reminder pings.</p>
-                         </div>
-                         <div className="bg-[#FFF0FA] border border-[#FFDDF5] rounded-xl px-3 py-1.5 flex items-center gap-1.5">
-                            <span className="text-[#C23C9F] text-[10px] font-black uppercase tracking-wider">May 2026</span>
-                         </div>
-                      </div>
+                    {/* Collaborative Goal & Calendar Side-by-Side Section */}
+                    {activeClassroom && (
+                       <div className="grid grid-cols-12 gap-6">
+                          {/* Left: Dino Pizza Party Collaborative Goal (col-span-5) */}
+                          <div className="col-span-5 bg-white rounded-[32px] border border-[#E9E4FF] shadow-sm p-6 flex flex-col justify-between space-y-4">
+                             <div className="space-y-3">
+                                <div className="flex justify-between items-start">
+                                   <div className="space-y-0.5">
+                                      <span className="text-[9px] font-black uppercase text-[#FFAB91] tracking-wider block">Collaborative Goal</span>
+                                      <h3 className="text-lg font-black text-[#3C2E75] leading-snug">{targetTitle}</h3>
+                                   </div>
+                                   <button 
+                                      onClick={() => {
+                                         setNewGoalTitle(targetTitle);
+                                         setNewGoalTarget(targetGoal);
+                                         setIsEditingGoal(true);
+                                      }}
+                                      className="px-3 py-1.5 border border-[#FFE0D6] hover:border-[#FFAB91] text-[#C64F33] rounded-xl text-[10px] font-black transition-all bg-white hover:bg-orange-50/20 shrink-0"
+                                   >
+                                      Change Goal ✏️
+                                   </button>
+                                </div>
 
-                      {/* Calendar Grid */}
-                      <div className="grid grid-cols-7 gap-2">
-                         {/* Day headers */}
-                         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => (
-                            <div key={day} className={`text-center text-[9px] font-black uppercase tracking-wider py-1 rounded-lg ${idx >= 5 ? 'bg-[#FFF0FA] text-[#C23C9F]' : 'bg-[#EEECFF] text-[#553EC9]'}`}>{day}</div>
-                         ))}
+                                <div className="flex items-center justify-between text-xs font-black text-[#3C2E75] pt-1">
+                                   <span className="text-[#8C83B5]">Combined Points</span>
+                                   <span className="text-[#FF7043] bg-[#FFF0EB] px-2.5 py-1 rounded-lg border border-[#FFD2C4]">{currentClassPoints} / {targetGoal} pts</span>
+                                </div>
+                             </div>
 
-                         {/* Empty spacer days (May 1, 2026 was a Friday, so Mon-Thu empty) */}
-                         {Array.from({ length: 4 }).map((_, idx) => (
-                            <div key={`empty-${idx}`} className="aspect-square bg-[#FFF9F9]/40 border border-dashed border-[#FFE3E3] rounded-2xl" />
-                         ))}
+                             {/* Premium Round Pizza Progress Visual */}
+                             <div className="relative py-4 flex items-center justify-center">
+                                <div className="relative w-40 h-40 flex items-center justify-center bg-amber-50/10 border-4 border-dashed border-[#FAF9FF] rounded-full p-2 shadow-inner">
+                                   <div className="absolute inset-0.5 rounded-full border-4 border-[#8A70FF]/10 bg-[#FAF9FF] shadow-md flex items-center justify-center overflow-hidden">
+                                      {/* Pizza slices container */}
+                                      <div 
+                                         className="absolute inset-0 rounded-full transition-all duration-1000"
+                                         style={{
+                                            background: `conic-gradient(
+                                               #FFA726 0% ${progressPercent}%, 
+                                               #F4EFFF ${progressPercent}% 100%
+                                            )`
+                                         }}
+                                      />
+                                      
+                                      {/* Crust outer shadow/ring */}
+                                      <div 
+                                         className="absolute inset-0 rounded-full border-[8px] transition-all duration-1000 pointer-events-none"
+                                         style={{
+                                            borderColor: '#E65100',
+                                            opacity: 0.15
+                                         }}
+                                      />
 
-                         {/* Calendar days */}
-                         {Array.from({ length: 31 }, (_, i) => i + 1).map(day => {
-                            const dayStr = day < 10 ? `0${day}` : `${day}`;
-                            const activeHw = classHomeworks.find(hw => {
-                               const hwDueDate = hw.dueDate || '';
-                               return hwDueDate.includes(`-05-${dayStr}`) || hwDueDate.includes(`-5-${day}`);
-                            });
+                                      {/* Outer golden-brown crust for only the filled portion! */}
+                                      <div 
+                                         className="absolute inset-0 rounded-full border-[8px] transition-all duration-1000 pointer-events-none"
+                                         style={{
+                                            background: `conic-gradient(
+                                               #E65100 0% ${progressPercent}%, 
+                                               transparent ${progressPercent}% 100%
+                                            )`,
+                                            WebkitMaskImage: 'radial-gradient(circle, transparent 78%, black 78%)',
+                                            maskImage: 'radial-gradient(circle, transparent 78%, black 78%)',
+                                         }}
+                                      />
 
-                            // Vibrant kid-friendly pastel coloring by subject
-                            let dayCardStyle = "bg-white border border-[#E9E4FF] text-[#5C4D9F] hover:bg-[#F9F8FF] hover:border-[#BA68C8]";
-                            let tagStyle = "";
+                                      {/* Cheesy base with toasted spots inside the filled portion! */}
+                                      <div 
+                                         className="absolute inset-2 rounded-full transition-all duration-1000 pointer-events-none"
+                                         style={{
+                                            background: `conic-gradient(
+                                               #FFD54F 0% ${progressPercent}%, 
+                                               transparent ${progressPercent}% 100%
+                                            )`
+                                         }}
+                                      />
+                                      
+                                      {/* Toppings (Pepperoni) distributed dynamically based on progress! */}
+                                      {[
+                                         { top: '22%', left: '42%', pct: 5 },
+                                         { top: '35%', left: '22%', pct: 15 },
+                                         { top: '65%', left: '26%', pct: 30 },
+                                         { top: '75%', left: '50%', pct: 45 },
+                                         { top: '60%', left: '72%', pct: 60 },
+                                         { top: '32%', left: '70%', pct: 75 },
+                                         { top: '48%', left: '48%', pct: 85 },
+                                         { top: '25%', left: '58%', pct: 95 }
+                                      ].map((top, i) => {
+                                         if (progressPercent < top.pct) return null;
+                                         return (
+                                            <div 
+                                               key={i}
+                                               className="absolute w-4 h-4 rounded-full bg-gradient-to-br from-[#E53935] to-[#B71C1C] border border-[#880E4F] shadow-sm animate-in zoom-in duration-300"
+                                               style={{ top: top.top, left: top.left }}
+                                            >
+                                               {/* Topping shine */}
+                                               <div className="absolute top-0.5 left-0.5 w-1 h-1 rounded-full bg-white/40" />
+                                            </div>
+                                         );
+                                      })}
 
-                            if (activeHw) {
-                               const subj = activeHw.subject || 'General';
-                               if (subj === 'Maths') {
-                                  dayCardStyle = "bg-gradient-to-br from-[#FFF0EB] to-[#FFE0D6] border-[#FFCCBC] text-[#A83D23] shadow-md shadow-orange-50/50";
-                                  tagStyle = "bg-[#FFCCBC] text-[#A83D23]";
-                               } else if (subj === 'Science') {
-                                  dayCardStyle = "bg-gradient-to-br from-[#EAFBF7] to-[#D1F7EC] border-[#BCEEE2] text-[#1E8A74] shadow-md shadow-teal-50/50";
-                                  tagStyle = "bg-[#BCEEE2] text-[#1E8A74]";
-                               } else if (subj === 'English') {
-                                  dayCardStyle = "bg-gradient-to-br from-[#FFFCE8] to-[#FFF9C4] border-[#FCEE9D] text-[#8C761E] shadow-md shadow-yellow-50/50";
-                                  tagStyle = "bg-[#FCEE9D] text-[#8C761E]";
-                               } else {
-                                  dayCardStyle = "bg-gradient-to-br from-[#FAF2FF] to-[#F1E0FF] border-[#E8C6FF] text-[#7828B4] shadow-md shadow-purple-50/50";
-                                  tagStyle = "bg-[#E8C6FF] text-[#7828B4]";
-                               }
-                            }
+                                      {/* Slice lines to represent 8 pre-cut slices */}
+                                      <div className="absolute inset-0 opacity-10 pointer-events-none">
+                                         <div className="absolute inset-y-0 left-1/2 w-px bg-amber-955" />
+                                         <div className="absolute inset-x-0 top-1/2 h-px bg-amber-955" />
+                                         <div className="absolute inset-0 rotate-45 flex items-center justify-center">
+                                            <div className="w-full h-px bg-amber-955" />
+                                         </div>
+                                         <div className="absolute inset-0 -rotate-45 flex items-center justify-center">
+                                            <div className="w-full h-px bg-amber-955" />
+                                         </div>
+                                      </div>
 
-                            return (
-                               <div 
-                                  key={day} 
-                                  className={`aspect-square rounded-2xl p-2 flex flex-col justify-between transition-all duration-300 cursor-pointer relative overflow-hidden group hover:scale-[1.04] ${dayCardStyle}`}
-                                  onClick={() => {
-                                     if (activeHw) {
-                                        setSelectedCalendarHw(activeHw);
-                                        setShowCalendarModal(true);
-                                     }
-                                  }}
-                               >
-                                  <span className="text-xs font-black">{day}</span>
-                                  
-                                  {activeHw && (
-                                     <div className={`px-1.5 py-0.5 rounded-lg text-[8px] font-black truncate shadow-sm mt-1 flex items-center gap-1 ${tagStyle}`}>
-                                        <span className="w-1 h-1 rounded-full bg-current shrink-0" />
-                                        {activeHw.subject}
-                                     </div>
-                                  )}
-                               </div>
-                            );
-                         })}
-                      </div>
-                   </div>
+                                      {/* Center floating badge */}
+                                      <div className="absolute z-20 bg-white/95 backdrop-blur-sm border border-[#E9E4FF] px-2.5 py-1 rounded-xl shadow-md flex flex-col items-center">
+                                         <span className="text-xs font-black text-[#3C2E75] leading-none">{progressPercent}%</span>
+                                         <span className="text-[6px] font-black text-rose-500 uppercase tracking-widest mt-0.5">BAKED!</span>
+                                      </div>
+                                   </div>
+                                </div>
+                             </div>
+
+                             {/* Compact Reward Message */}
+                             <div className="bg-[#FAF2FF] rounded-2xl p-4 border border-[#E8C6FF]/35 flex items-center gap-3">
+                                <span className="text-2xl">🦖</span>
+                                <div className="min-w-0 flex-1">
+                                   <p className="text-[10px] font-black text-[#3C2E75] uppercase tracking-wider mb-0.5">Mascot Party Reward</p>
+                                   <p className="text-[11px] font-bold text-[#5C4D9F] leading-snug">
+                                      {progressPercent >= 100 
+                                         ? `Fantastic! Dino Pizza Party is unlocked! 🎈🍕`
+                                         : `Need ${targetGoal - currentClassPoints} more points to bake the pizza party!`}
+                                   </p>
+                                </div>
+                             </div>
+                          </div>
+
+                          {/* Right: Learning Calendar & Reminder Center (col-span-7) */}
+                          <div className="col-span-7 bg-gradient-to-br from-[#FCF8FF] to-[#F3EFFF] border border-[#E5DFFF] rounded-[32px] p-6 space-y-4 shadow-sm flex flex-col justify-between">
+                             <div className="flex justify-between items-center border-b border-[#EBE4FF] pb-3">
+                                <div className="space-y-0.5">
+                                   <h3 className="text-base font-black text-[#3B2B85] tracking-tight flex items-center gap-1.5">
+                                      <span>📅</span> Learning Calendar & Reminder Center
+                                   </h3>
+                                   <p className="text-[10px] font-bold text-[#7A69D6]">Click active quiz dates to review submissions and send reminder pings.</p>
+                                </div>
+                                <div className="bg-[#FFF0FA] border border-[#FFDDF5] rounded-xl px-3 py-1.5 flex items-center gap-1.5 shrink-0">
+                                   <span className="text-[#C23C9F] text-[10px] font-black uppercase tracking-wider">May 2026</span>
+                                </div>
+                             </div>
+
+                             {/* Calendar Grid */}
+                             <div className="grid grid-cols-7 gap-2 flex-1 pt-2">
+                                {/* Day headers */}
+                                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => (
+                                   <div key={day} className={`text-center text-[9px] font-black uppercase tracking-wider py-1 rounded-lg ${idx >= 5 ? 'bg-[#FFF0FA] text-[#C23C9F]' : 'bg-[#EEECFF] text-[#553EC9]'}`}>{day}</div>
+                                ))}
+
+                                {/* Empty spacer days (May 1, 2026 was a Friday, so Mon-Thu empty) */}
+                                {Array.from({ length: 4 }).map((_, idx) => (
+                                   <div key={`empty-${idx}`} className="aspect-square bg-[#FFF9F9]/40 border border-dashed border-[#FFE3E3] rounded-2xl" />
+                                ))}
+
+                                {/* Calendar days */}
+                                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => {
+                                   const dayStr = day < 10 ? `0${day}` : `${day}`;
+                                   const activeHw = classHomeworks.find(hw => {
+                                      const hwDueDate = hw.dueDate || '';
+                                      return hwDueDate.includes(`-05-${dayStr}`) || hwDueDate.includes(`-5-${day}`);
+                                   });
+
+                                   // Vibrant kid-friendly pastel coloring by subject
+                                   let dayCardStyle = "bg-white border border-[#E9E4FF] text-[#5C4D9F] hover:bg-[#F9F8FF] hover:border-[#BA68C8]";
+                                   let tagStyle = "";
+
+                                   if (activeHw) {
+                                      const subj = activeHw.subject || 'General';
+                                      if (subj === 'Maths') {
+                                         dayCardStyle = "bg-gradient-to-br from-[#FFF0EB] to-[#FFE0D6] border-[#FFCCBC] text-[#A83D23] shadow-md shadow-orange-50/50";
+                                         tagStyle = "bg-[#FFCCBC] text-[#A83D23]";
+                                      } else if (subj === 'Science') {
+                                         dayCardStyle = "bg-gradient-to-br from-[#EAFBF7] to-[#D1F7EC] border-[#BCEEE2] text-[#1E8A74] shadow-md shadow-teal-50/50";
+                                         tagStyle = "bg-[#BCEEE2] text-[#1E8A74]";
+                                      } else if (subj === 'English') {
+                                         dayCardStyle = "bg-gradient-to-br from-[#FFFCE8] to-[#FFF9C4] border-[#FCEE9D] text-[#8C761E] shadow-md shadow-yellow-50/50";
+                                         tagStyle = "bg-[#FCEE9D] text-[#8C761E]";
+                                      } else {
+                                         dayCardStyle = "bg-gradient-to-br from-[#FAF2FF] to-[#F1E0FF] border-[#E8C6FF] text-[#7828B4] shadow-md shadow-purple-50/50";
+                                         tagStyle = "bg-[#E8C6FF] text-[#7828B4]";
+                                      }
+                                   }
+
+                                   return (
+                                      <div 
+                                         key={day} 
+                                         className={`aspect-square rounded-2xl p-2 flex flex-col justify-between transition-all duration-300 cursor-pointer relative overflow-hidden group hover:scale-[1.04] ${dayCardStyle}`}
+                                         onClick={() => {
+                                            if (activeHw) {
+                                               setSelectedCalendarHw(activeHw);
+                                               setShowCalendarModal(true);
+                                            }
+                                         }}
+                                      >
+                                         <span className="text-xs font-black">{day}</span>
+                                         
+                                         {activeHw && (
+                                            <div className={`px-1.5 py-0.5 rounded-lg text-[8px] font-black truncate shadow-sm mt-1 flex items-center gap-1 ${tagStyle}`}>
+                                               <span className="w-1 h-1 rounded-full bg-current shrink-0" />
+                                               {activeHw.subject}
+                                            </div>
+                                         )}
+                                      </div>
+                                   );
+                                })}
+                             </div>
+                          </div>
+                       </div>
+                    )}
                 </div>
              );
           }

@@ -111,12 +111,13 @@ const StudentProfile = ({ studentName, teacher, classroom }) => {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    // Load existing profile data from Firestore
+    // Load existing profile data from Firestore with safe auth fallback
     const fetchProfile = async () => {
        const savedStudent = JSON.parse(localStorage.getItem('hwz_active_student'));
        const actualClass = classroom || savedStudent?.classroom;
-       if (savedStudent && actualClass && teacher) {
-          const studentRef = doc(db, 'teachers', teacher.uid, 'classrooms', actualClass.id, 'students', studentName.toLowerCase());
+       const actualTeacher = teacher || savedStudent?.teacher;
+       if (savedStudent && actualClass && actualTeacher) {
+          const studentRef = doc(db, 'teachers', actualTeacher.uid, 'classrooms', actualClass.id, 'students', studentName.toLowerCase());
           const snap = await getDoc(studentRef);
           if (snap.exists()) {
              const data = snap.data();
@@ -136,13 +137,21 @@ const StudentProfile = ({ studentName, teacher, classroom }) => {
      try {
         const savedStudent = JSON.parse(localStorage.getItem('hwz_active_student'));
         const actualClass = classroom || savedStudent?.classroom;
-        if (savedStudent && actualClass && teacher) {
-           const studentRef = doc(db, 'teachers', teacher.uid, 'classrooms', actualClass.id, 'students', studentName.toLowerCase());
-           await updateDoc(studentRef, {
+        const actualTeacher = teacher || savedStudent?.teacher;
+        
+        if (savedStudent && actualClass && actualTeacher) {
+           const studentRef = doc(db, 'teachers', actualTeacher.uid, 'classrooms', actualClass.id, 'students', studentName.toLowerCase());
+           
+           // Use setDoc with { merge: true } so it safely creates the document if it doesn't exist yet
+           await setDoc(studentRef, {
               ...profile,
               updatedAt: new Date().toISOString()
-           });
-           alert("Profile saved! Your teacher can now see your updates. ✨");
+           }, { merge: true });
+           
+           alert("Profile saved successfully! Your teacher can now see your updates. ✨");
+        } else {
+           console.error("Auth context missing on profile save:", { savedStudent, actualClass, actualTeacher });
+           alert("Could not save: Missing login context. Please log out and log back in! 🔒");
         }
      } catch (err) {
         console.error("Save Profile Error:", err);

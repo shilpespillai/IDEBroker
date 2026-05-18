@@ -109,8 +109,6 @@ const StudentProfile = ({ studentName, teacher, classroom }) => {
     contact: ''
   });
   const [isSaving, setIsSaving] = useState(false);
-  const [submissions, setSubmissions] = useState([]);
-  const [homeworks, setHomeworks] = useState([]);
 
   useEffect(() => {
     // Load existing profile data from Firestore
@@ -133,22 +131,6 @@ const StudentProfile = ({ studentName, teacher, classroom }) => {
     fetchProfile();
   }, [studentName, teacher, classroom]);
 
-  useEffect(() => {
-     const fetchSubmissionsAndHw = async () => {
-        try {
-           const subSnap = await getDocs(query(collection(db, 'submissions')));
-           const subList = subSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-           setSubmissions(subList.filter(s => s.studentName?.toLowerCase() === studentName?.toLowerCase()));
-
-           const hwSnap = await getDocs(query(collection(db, 'homeworks')));
-           setHomeworks(hwSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        } catch (err) {
-           console.error("Profile Submissions Error:", err);
-        }
-     };
-     fetchSubmissionsAndHw();
-  }, [studentName]);
-
   const handleSave = async () => {
      setIsSaving(true);
      try {
@@ -168,89 +150,6 @@ const StudentProfile = ({ studentName, teacher, classroom }) => {
      }
      setIsSaving(false);
   };
-
-  // Profile Badges and Skills dynamic calculation
-  const hasMaths = submissions.some(s => {
-     const hw = homeworks.find(h => h.id === s.homeworkId);
-     return hw?.subject?.toLowerCase() === 'maths';
-  });
-  const hasEnglish = submissions.some(s => {
-     const hw = homeworks.find(h => h.id === s.homeworkId);
-     return hw?.subject?.toLowerCase() === 'english';
-  });
-  const hasScience = submissions.some(s => {
-     const hw = homeworks.find(h => h.id === s.homeworkId);
-     return hw?.subject?.toLowerCase() === 'science';
-  });
-  const hasMusicOrArts = submissions.some(s => {
-     const hw = homeworks.find(h => h.id === s.homeworkId);
-     return hw?.subject?.toLowerCase() === 'music' || hw?.subject?.toLowerCase() === 'arts';
-  });
-
-  const profileBadges = [
-     { icon: "🐦", label: "Early Bird", color: "bg-amber-100", unlocked: submissions.length >= 1 },
-     { icon: "🧮", label: "Number Ninja", color: "bg-emerald-100", unlocked: hasMaths },
-     { icon: "🧙", label: "Grammar Wizard", color: "bg-purple-100", unlocked: hasEnglish },
-     { icon: "🔬", label: "Little Einstein", color: "bg-blue-100", unlocked: hasScience }
-  ];
-
-  const skillsList = [];
-  if (hasMaths) {
-     const mathSubs = submissions.filter(s => {
-        const hw = homeworks.find(h => h.id === s.homeworkId);
-        return hw?.subject?.toLowerCase() === 'maths';
-     });
-     const avgMath = Math.round(mathSubs.reduce((acc, s) => acc + s.score, 0) / mathSubs.length);
-     skillsList.push({
-        icon: <GraduationCap className="w-8 h-8 text-[#52B788]" />,
-        bg: "bg-[#52B788]/20",
-        title: "Math Prodigy 🧮",
-        desc: `Completed ${mathSubs.length} Math mission(s) with an average of ${avgMath}%!`
-     });
-  }
-  if (hasEnglish) {
-     const engSubs = submissions.filter(s => {
-        const hw = homeworks.find(h => h.id === s.homeworkId);
-        return hw?.subject?.toLowerCase() === 'english';
-     });
-     const avgEng = Math.round(engSubs.reduce((acc, s) => acc + s.score, 0) / engSubs.length);
-     skillsList.push({
-        icon: <Trophy className="w-8 h-8 text-[#8A70FF]" />,
-        bg: "bg-[#8A70FF]/20",
-        title: "Grammar & Reading Champ 📚",
-        desc: `Solved ${engSubs.length} English quiz(zes) with ${avgEng}% mastery!`
-     });
-  }
-  if (hasScience) {
-     const sciSubs = submissions.filter(s => {
-        const hw = homeworks.find(h => h.id === s.homeworkId);
-        return hw?.subject?.toLowerCase() === 'science';
-     });
-     const avgSci = Math.round(sciSubs.reduce((acc, s) => acc + s.score, 0) / sciSubs.length);
-     skillsList.push({
-        icon: <Star className="w-8 h-8 text-[#38BDF8]" />,
-        bg: "bg-[#38BDF8]/20",
-        title: "Science Explorer 🔬",
-        desc: `Completed Science homework with ${avgSci}% average score!`
-     });
-  }
-  if (hasMusicOrArts) {
-     skillsList.push({
-        icon: <Trophy className="w-8 h-8 text-[#FF5A79]" />,
-        bg: "bg-[#FF5A79]/20",
-        title: "Artistic Superstar 🎨",
-        desc: "Creative and expressive art assignments successfully submitted!"
-     });
-  }
-
-  if (skillsList.length === 0) {
-     skillsList.push({
-        icon: <GraduationCap className="w-8 h-8 text-slate-400" />,
-        bg: "bg-slate-100",
-        title: "Aspiring Scholar 🌟",
-        desc: "Complete your first homework mission to start showcasing your skills!"
-     });
-  }
 
   return (
     <motion.div 
@@ -330,47 +229,8 @@ const StudentProfile = ({ studentName, teacher, classroom }) => {
          </div>
       </div>
 
-      {/* Achievements & Skills Box */}
-      <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm space-y-6 mt-4">
-         <h2 className="text-2xl font-semibold text-[#2D3748]">Achievements & Skills</h2>
-         
-         <div className="space-y-8">
-            {/* Badges Row */}
-            <div className="grid grid-cols-4 gap-4">
-               {profileBadges.map((badge, idx) => (
-                  <div key={idx} className={`flex flex-col items-center gap-2 ${badge.unlocked ? '' : 'opacity-40 grayscale'}`}>
-                     <div className={`w-16 h-16 ${badge.color} rounded-full flex-center shadow-lg hover:scale-110 transition-transform relative`}>
-                        <span className="text-3xl">{badge.icon}</span>
-                        {!badge.unlocked && (
-                           <div className="absolute inset-0 bg-slate-900/10 rounded-full flex-center">
-                              <span className="text-xs">🔒</span>
-                           </div>
-                        )}
-                     </div>
-                     <span className="text-[10px] font-black text-[#2D3748] text-center uppercase tracking-tight">{badge.label}</span>
-                  </div>
-               ))}
-            </div>
-
-            {/* Skills List */}
-            <div className="space-y-4 pt-2">
-               {skillsList.map((skill, idx) => (
-                  <div key={idx} className="flex items-center gap-4 group">
-                     <div className={`w-14 h-14 ${skill.bg} rounded-full flex-center shrink-0 shadow-sm group-hover:scale-110 transition-transform`}>
-                        {skill.icon}
-                     </div>
-                     <div>
-                        <h4 className="text-base font-semibold text-[#2D3748]">{skill.title}</h4>
-                        <p className="text-xs font-semibold text-slate-400">{skill.desc}</p>
-                     </div>
-                  </div>
-               ))}
-            </div>
-         </div>
-      </div>
-
       {/* Save Button Floating */}
-      <div className="flex justify-center pt-2">
+      <div className="flex justify-center pt-6">
          <button 
             onClick={handleSave}
             disabled={isSaving}

@@ -207,21 +207,22 @@ const StudentProfile = ({ studentName, teacher, classroom }) => {
 
          <div className="grid grid-cols-12 gap-4 items-center">
             <label className="col-span-3 text-lg font-semibold text-[#2D3748]">Class</label>
-            <div className="col-span-9 relative">
-               <div className="w-full bg-slate-50 border border-slate-200 p-3.5 rounded-2xl text-base font-semibold text-[#475569] shadow-sm text-left opacity-80 cursor-not-allowed">
-                  {classroom?.name || profile.grade}
-               </div>
-            </div>
+            <input 
+               type="text" 
+               value={profile.grade || ''}
+               onChange={(e) => setProfile({...profile, grade: e.target.value})}
+               className="col-span-9 bg-white border border-slate-200 p-3.5 rounded-2xl text-base font-semibold text-[#475569] shadow-sm focus:border-[#8A70FF] outline-none transition-all"
+            />
          </div>
 
          <div className="grid grid-cols-12 gap-4 items-center">
             <label className="col-span-3 text-lg font-semibold text-[#2D3748]">Birthdate</label>
             <div className="col-span-9 relative">
                <input 
-                  type="text" 
-                  value="May 11, 2020"
-                  readOnly
-                  className="w-full bg-white border border-slate-200 p-3.5 rounded-2xl text-base font-semibold text-[#475569] shadow-sm outline-none transition-all pr-12"
+                  type="date" 
+                  value={profile.birthdate || '2020-05-11'}
+                  onChange={(e) => setProfile({...profile, birthdate: e.target.value})}
+                  className="w-full bg-white border border-slate-200 p-3.5 rounded-2xl text-base font-semibold text-[#475569] shadow-sm focus:border-[#8A70FF] outline-none transition-all pr-12"
                />
                <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
             </div>

@@ -96,6 +96,38 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
   const [expandedHomeworkId, setExpandedHomeworkId] = useState(null);
   const [questionCount, setQuestionCount] = useState(5);
 
+  // Dynamic subjects matching based on classroom selections
+  const selectedClass = classrooms.find(c => c.id === formData.classId) || (activeClassroom?.id === formData.classId ? activeClassroom : null);
+  
+  const allowedSubjects = SUBJECTS.filter(sub => {
+    if (!selectedClass || !selectedClass.subjects || selectedClass.subjects.length === 0) {
+      return true; // Backwards compatibility: show all if no subjects restriction is set
+    }
+    return selectedClass.subjects.some(s => s.toLowerCase() === sub.id.toLowerCase());
+  });
+
+  // Automatically select a valid subject when the class changes
+  useEffect(() => {
+    if (selectedClass && selectedClass.subjects && selectedClass.subjects.length > 0) {
+      const isAllowed = selectedClass.subjects.some(s => s.toLowerCase() === formData.subject.toLowerCase());
+      if (!isAllowed) {
+        const firstAllowed = SUBJECTS.find(sub => 
+          selectedClass.subjects.some(s => s.toLowerCase() === sub.id.toLowerCase())
+        );
+        if (firstAllowed) {
+          setFormData(prev => ({ ...prev, subject: firstAllowed.id }));
+        }
+      }
+    }
+  }, [formData.classId, classrooms, activeClassroom]);
+
+  // Sync active classroom into the form on mount / change
+  useEffect(() => {
+    if (activeClassroom && !formData.classId) {
+      setFormData(prev => ({ ...prev, classId: activeClassroom.id }));
+    }
+  }, [activeClassroom]);
+
   const fetchPastHomeworks = async () => {
     if (!user?.uid) return;
     setIsLoadingHistory(true);
@@ -319,7 +351,7 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {SUBJECTS.map((sub) => (
+          {allowedSubjects.map((sub) => (
             <div 
               key={sub.id}
               onClick={() => setFormData({...formData, subject: sub.id})}

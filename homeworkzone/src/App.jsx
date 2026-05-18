@@ -115,6 +115,34 @@ const StudentProfile = ({ studentName, teacher, classroom, onProfileUpdate }) =>
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState('');
 
+  const handleSaveAvatar = async (avatarUrlToSave) => {
+     try {
+        const savedStudent = JSON.parse(localStorage.getItem('hwz_active_student'));
+        const actualClass = classroom || savedStudent?.classroom;
+        const actualTeacher = teacher || savedStudent?.teacher;
+        
+        if (savedStudent && actualClass && actualTeacher) {
+           const studentRef = doc(db, 'teachers', actualTeacher.uid, 'classrooms', actualClass.id, 'students', studentName.toLowerCase());
+           
+           // Instantly write new avatar choice to Firestore
+           await setDoc(studentRef, {
+              avatarUrl: avatarUrlToSave,
+              updatedAt: new Date().toISOString()
+           }, { merge: true });
+           
+           // Sync state instantly
+           setProfile(prev => ({ ...prev, avatarUrl: avatarUrlToSave }));
+           
+           // Notify parent dashboard to reload rosters
+           if (onProfileUpdate) {
+              onProfileUpdate();
+           }
+        }
+     } catch (err) {
+        console.error("Instant Save Avatar Error:", err);
+     }
+  };
+
   const animatedMascots = [
      { name: "Owl 🦉", url: "https://img.icons8.com/fluency/96/owl.png" },
      { name: "Fox 🦊", url: "https://img.icons8.com/fluency/96/fox.png" },
@@ -172,7 +200,7 @@ const StudentProfile = ({ studentName, teacher, classroom, onProfileUpdate }) =>
            
            const base64Url = canvas.toDataURL('image/jpeg', 0.85);
            setSelectedAvatar(base64Url);
-           setProfile(prev => ({ ...prev, avatarUrl: base64Url }));
+           handleSaveAvatar(base64Url);
            setIsAvatarModalOpen(false);
         };
         img.src = event.target.result;
@@ -307,7 +335,7 @@ const StudentProfile = ({ studentName, teacher, classroom, onProfileUpdate }) =>
                <div className="flex items-center gap-3 pt-2">
                   <button 
                      onClick={() => {
-                        setProfile({ ...profile, avatarUrl: selectedAvatar });
+                        handleSaveAvatar(selectedAvatar);
                         setIsAvatarModalOpen(false);
                      }}
                      className="flex-1 bg-[#8A70FF] text-white py-3.5 rounded-2xl font-semibold text-sm shadow-lg shadow-purple-100 hover:scale-105 active:scale-95 transition-all"
@@ -985,7 +1013,7 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
 
   useEffect(() => {
      fetchData();
-  }, [studentName, classroom]);
+  }, [studentName, classroom, activeNav, teacher]);
 
   const getStudentAvatar = (name) => {
      const st = classroomStudents.find(s => s.name?.toLowerCase() === name?.toLowerCase());

@@ -154,7 +154,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
     if (user?.uid && activeClassroom) {
       fetchStudents();
     }
-  }, [user, activeClassroom]);
+  }, [user, activeClassroom, activeTab]);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -406,7 +406,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
     if (user && classrooms.length > 0) {
        fetchAllStudents();
     }
-  }, [user, classrooms]);
+  }, [user, classrooms, activeTab]);
 
   const handleDeleteStudent = async (e, studentId, studentName, classId) => {
     e.stopPropagation();

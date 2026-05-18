@@ -541,11 +541,17 @@ const MyHomework = ({ studentName, teacher, onStartMission }) => {
                const hwList = hwSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                setHomeworks(hwList);
 
-               // Fetch submissions
-               const subQ = query(collection(db, 'submissions'));
-                const subSnap = await getDocs(subQ);
-                const allSubList = subSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                const subList = allSubList.filter(s => s.studentName?.toLowerCase() === studentName?.toLowerCase());
+                // Server-filtered parallel queries - massive scaling win!
+                const cleanName = studentName?.trim();
+                const subQ1 = query(collection(db, 'submissions'), where('studentName', '==', cleanName));
+                const subQ2 = query(collection(db, 'submissions'), where('studentName', '==', toTitleCase(cleanName)));
+                
+                const [snap1, snap2] = await Promise.all([getDocs(subQ1), getDocs(subQ2)]);
+                const combinedMap = {};
+                snap1.docs.forEach(doc => combinedMap[doc.id] = { id: doc.id, ...doc.data() });
+                snap2.docs.forEach(doc => combinedMap[doc.id] = { id: doc.id, ...doc.data() });
+                
+                const subList = Object.values(combinedMap);
                 setSubmissions(subList);
             } catch (err) {
                console.error("Fetch Data Error:", err);
@@ -673,14 +679,16 @@ const MissionReports = ({ studentName, teacher }) => {
    useEffect(() => {
       const fetchSubmissions = async () => {
          try {
-            const q = query(
-               collection(db, 'submissions')
-            );
-            const snap = await getDocs(q);
-            const allSubList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
-            // Filter client-side case-insensitively to bypass database discrepancy
-            const subList = allSubList.filter(s => s.studentName?.toLowerCase() === studentName?.toLowerCase());
+             const cleanName = studentName?.trim();
+             const q1 = query(collection(db, 'submissions'), where('studentName', '==', cleanName));
+             const q2 = query(collection(db, 'submissions'), where('studentName', '==', toTitleCase(cleanName)));
+             
+             const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+             const combinedMap = {};
+             snap1.docs.forEach(doc => combinedMap[doc.id] = { id: doc.id, ...doc.data() });
+             snap2.docs.forEach(doc => combinedMap[doc.id] = { id: doc.id, ...doc.data() });
+             
+             const subList = Object.values(combinedMap);
             
             // Sort client-side in memory to bypass Firebase composite index requirement
             subList.sort((a, b) => {
@@ -1021,11 +1029,24 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
            }
         }
         
-        // Fetch all submissions to build leaderboard and recent feedback
-        const subQ = query(collection(db, 'submissions'));
-        const subSnap = await getDocs(subQ);
-        const subList = subSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setSubmissions(subList);
+         // 🚀 Hardened Scalable Query: Parallel class-filtered and student-filtered queries!
+         if (actualClassroom?.id) {
+            const cleanName = studentName?.trim();
+            const subQ1 = query(collection(db, 'submissions'), where('classId', '==', actualClassroom.id));
+            const subQ2 = query(collection(db, 'submissions'), where('studentName', '==', cleanName));
+            const subQ3 = query(collection(db, 'submissions'), where('studentName', '==', toTitleCase(cleanName)));
+            
+            const [snap1, snap2, snap3] = await Promise.all([getDocs(subQ1), getDocs(subQ2), getDocs(subQ3)]);
+            const combinedMap = {};
+            snap1.docs.forEach(doc => combinedMap[doc.id] = { id: doc.id, ...doc.data() });
+            snap2.docs.forEach(doc => combinedMap[doc.id] = { id: doc.id, ...doc.data() });
+            snap3.docs.forEach(doc => combinedMap[doc.id] = { id: doc.id, ...doc.data() });
+            
+            const subList = Object.values(combinedMap);
+            setSubmissions(subList);
+         } else {
+            setSubmissions([]);
+         }
      } catch (err) {
         console.error("Dashboard Fetch Data Error:", err);
      }

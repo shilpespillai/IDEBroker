@@ -1663,24 +1663,15 @@ const LandingPage = () => {
             </div>
          </div>
 
-         {/* Playful Header Icons */}
-         <div className="hidden md:flex items-center gap-10">
-            <div className="w-20 h-20 bg-white rounded-3xl border-4 border-[#2D3748] flex-center shadow-[6px_6px_0_0_#2D3748] rotate-3 hover:rotate-0 transition-all cursor-pointer">
-               <img src="https://img.icons8.com/color/96/pencil.png" className="w-12 h-12" alt="Pencil" />
-            </div>
-            <div className="w-20 h-20 bg-white rounded-3xl border-4 border-[#2D3748] flex-center shadow-[6px_6px_0_0_#2D3748] -rotate-6 hover:rotate-0 transition-all cursor-pointer">
-               <img src="https://img.icons8.com/color/96/star.png" className="w-12 h-12" alt="Star" />
-            </div>
-            <div className="w-20 h-20 bg-white rounded-3xl border-4 border-[#2D3748] flex-center shadow-[6px_6px_0_0_#2D3748] rotate-6 hover:rotate-0 transition-all cursor-pointer">
-               <img src="https://img.icons8.com/color/96/alarm-clock.png" className="w-12 h-12" alt="Clock" />
-            </div>
-            <div className="flex flex-col gap-2 ml-6">
-               <div className="flex gap-3">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className={`w-6 h-10 ${['bg-red-400', 'bg-yellow-400', 'bg-blue-400', 'bg-green-400', 'bg-purple-400', 'bg-pink-400'][i]} rounded-b-xl border-4 border-[#2D3748] shadow-md`} />
-                  ))}
-               </div>
-            </div>
+         {/* Playful Header Icons (Help, Parent Zone, Settings moved to the top!) */}
+         <div className="flex items-center gap-10">
+            <FooterBtn icon="https://img.icons8.com/fluency/144/help.png" label="Help" />
+            <FooterBtn 
+              icon="https://img.icons8.com/fluency/144/family.png" 
+              label="Parent Zone" 
+              onClick={() => navigate('/login/teacher')}
+            />
+            <FooterBtn icon="https://img.icons8.com/fluency/144/settings.png" label="Settings" />
          </div>
       </header>
 
@@ -1718,15 +1709,7 @@ const LandingPage = () => {
 
       {/* --- Simple Footer Icons --- */}
       <footer className="max-w-[95%] mx-auto px-6 mt-32 flex items-center justify-between py-10 border-t-8 border-white/20">
-         <div className="flex items-center gap-10">
-            <FooterBtn icon="https://img.icons8.com/fluency/144/help.png" label="Help" />
-            <FooterBtn 
-              icon="https://img.icons8.com/fluency/144/family.png" 
-              label="Parent Zone" 
-              onClick={() => navigate('/login/teacher')}
-            />
-            <FooterBtn icon="https://img.icons8.com/fluency/144/settings.png" label="Settings" />
-         </div>
+         <div />
          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest italic">© 2026 HOMEWORK ZONE ALL RIGHTS RESERVED.</p>
       </footer>
     </div>

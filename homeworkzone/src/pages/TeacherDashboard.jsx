@@ -206,7 +206,20 @@ const TeacherDashboard = ({ user, onLogout }) => {
         };
       }));
 
-      console.log("TeacherDashboard: Classrooms updated:", list.length);
+      const getGradeNumber = (name) => {
+        if (!name) return 999;
+        const match = name.match(/\d+/);
+        return match ? parseInt(match[0], 10) : 999;
+      };
+
+      list.sort((a, b) => {
+        const gradeA = getGradeNumber(a.name);
+        const gradeB = getGradeNumber(b.name);
+        if (gradeA !== gradeB) return gradeA - gradeB;
+        return (a.name || '').localeCompare(b.name || '');
+      });
+
+      console.log("TeacherDashboard: Classrooms updated & sorted:", list.length);
       setClassrooms([...list]); // Use spread to force new reference
       
       if (list.length > 0 && !activeClassroom) {

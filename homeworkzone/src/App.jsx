@@ -1641,6 +1641,7 @@ const LegendItem = ({ label, value, color }) => (
 // --- Landing Page (Redesigned from Reference) ---
 const LandingPage = () => {
   const navigate = useNavigate();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#E0F2FE] font-sans overflow-x-hidden pb-20">
@@ -1668,12 +1669,71 @@ const LandingPage = () => {
             <FooterBtn icon="https://img.icons8.com/fluency/144/help.png" label="Help" />
             <FooterBtn 
               icon="https://img.icons8.com/fluency/144/family.png" 
-              label="Parent Zone" 
+              label="Parental Controls" 
               onClick={() => navigate('/login/teacher')}
             />
             <FooterBtn icon="https://img.icons8.com/fluency/144/settings.png" label="Settings" />
          </div>
       </header>
+      {/* --- Expandable Login Bar --- */}
+      <section className="max-w-[95%] mx-auto px-6 mb-10 relative z-30">
+         <AnimatePresence mode="wait">
+            {!isExpanded ? (
+               <motion.button
+                  layoutId="login-bar"
+                  onClick={() => setIsExpanded(true)}
+                  className="w-full bg-[#38BDF8] hover:bg-[#8A70FF] text-white border-[6px] border-[#2D3748] py-6 px-10 rounded-[32px] font-semibold text-2xl md:text-4xl uppercase tracking-wider shadow-[0_10px_0_0_#2D3748] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-4 cursor-pointer"
+               >
+                  <span>🔑 Click to Enter Your Homework Zone!</span>
+                  <motion.span animate={{ x: [0, 5, 0] }} transition={{ repeat: Infinity, duration: 1.5 }}>🚀</motion.span>
+               </motion.button>
+            ) : (
+               <motion.div
+                  layoutId="login-bar"
+                  className="w-full bg-white border-[8px] border-[#2D3748] p-10 rounded-[48px] shadow-[0_20px_0_0_#2D3748] space-y-8 relative"
+               >
+                  <button 
+                     onClick={() => setIsExpanded(false)}
+                     className="absolute top-6 right-6 w-12 h-12 bg-slate-50 border-4 border-[#2D3748] rounded-full flex-center text-[#2D3748] hover:bg-slate-100 font-black text-xl shadow-[2px_2px_0_0_#2D3748] active:translate-y-0.5 active:shadow-none transition-all"
+                  >
+                     ✕
+                  </button>
+                  <div className="text-center space-y-2">
+                     <h3 className="text-3xl font-semibold text-[#2D3748] uppercase tracking-tight">Select your portal to start! 🚀</h3>
+                     <p className="text-sm font-semibold uppercase text-slate-400 tracking-wider">Are you a student or a teacher/parent?</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                     <div 
+                        onClick={() => navigate('/login/student')}
+                        className="group bg-[#E0F2FE] hover:bg-[#BAE6FD] border-6 border-[#2D3748] rounded-[36px] p-8 text-center cursor-pointer transition-all hover:-translate-y-2 shadow-[0_10px_0_0_#2D3748] active:translate-y-1 active:shadow-none"
+                     >
+                        <div className="w-20 h-20 bg-white rounded-3xl border-4 border-[#2D3748] flex-center mx-auto shadow-[4px_4px_0_0_#2D3748] mb-6 group-hover:rotate-6 transition-all">
+                           <span className="text-4xl">🎒</span>
+                        </div>
+                        <h4 className="text-2xl font-semibold text-[#2D3748] uppercase mb-2">Student Portal</h4>
+                        <p className="text-xs font-semibold text-[#475569] uppercase tracking-wider mb-6">Start your learning missions & earn points!</p>
+                        <button className="bg-[#38BDF8] text-white border-4 border-[#2D3748] px-8 py-3 rounded-2xl font-bold uppercase tracking-wider shadow-[0_4px_0_0_#2D3748] group-hover:bg-[#8A70FF] transition-all">
+                           Let's Go!
+                        </button>
+                     </div>
+                     <div 
+                        onClick={() => navigate('/login/teacher')}
+                        className="group bg-[#FEF3C7] hover:bg-[#FDE68A] border-6 border-[#2D3748] rounded-[36px] p-8 text-center cursor-pointer transition-all hover:-translate-y-2 shadow-[0_10px_0_0_#2D3748] active:translate-y-1 active:shadow-none"
+                     >
+                        <div className="w-20 h-20 bg-white rounded-3xl border-4 border-[#2D3748] flex-center mx-auto shadow-[4px_4px_0_0_#2D3748] mb-6 group-hover:-rotate-6 transition-all">
+                           <span className="text-4xl">🍎</span>
+                        </div>
+                        <h4 className="text-2xl font-semibold text-[#2D3748] uppercase mb-2">Teacher & Parent Zone</h4>
+                        <p className="text-xs font-semibold text-[#475569] uppercase tracking-wider mb-6">Create homework, manage classes & grades!</p>
+                        <button className="bg-[#F59E0B] text-white border-4 border-[#2D3748] px-8 py-3 rounded-2xl font-bold uppercase tracking-wider shadow-[0_4px_0_0_#2D3748] group-hover:bg-[#D97706] transition-all">
+                           Sign In
+                        </button>
+                     </div>
+                  </div>
+               </motion.div>
+            )}
+         </AnimatePresence>
+      </section>
 
       {/* --- Main Hero Banner Area --- */}
       <section className="max-w-[95%] mx-auto px-6 mt-8">
@@ -1692,16 +1752,6 @@ const LandingPage = () => {
                         Fun places for learning & adventure!
                      </p>
                   </div>
-               </div>
-
-               {/* Start Homework Button */}
-               <div className="absolute bottom-16 left-1/2 -translate-x-1/2">
-                  <button 
-                    onClick={() => navigate('/login/student')}
-                    className="bg-[#38BDF8] hover:bg-[#8A70FF] text-white border-[6px] border-[#2D3748] px-20 py-8 rounded-[40px] font-semibold text-3xl md:text-5xl uppercase tracking-tighter shadow-[0_12px_0_0_#2D3748] active:translate-y-2 active:shadow-none transition-all"
-                  >
-                    Start Homework!
-                  </button>
                </div>
             </div>
          </div>

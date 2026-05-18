@@ -61,6 +61,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
   const [showAiSettings, setShowAiSettings] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
   const [showAddClassModal, setShowAddClassModal] = useState(false);
+  const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [allStudents, setAllStudents] = useState([]);
   const [filterClass, setFilterClass] = useState('All Classes');
   const [searchQuery, setSearchQuery] = useState('');
@@ -213,6 +214,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
       
       console.log("Class created successfully:", classId);
       setNewClassName('');
+      setSelectedSubjects([]);
       await fetchClassrooms();
       setShowAddClassModal(false);
       alert("Class created successfully! 🎨✨");

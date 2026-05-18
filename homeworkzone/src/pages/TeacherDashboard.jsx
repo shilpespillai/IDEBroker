@@ -2209,7 +2209,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
       {/* --- Executive Hub Sidebar --- */}
       <aside className="w-80 bg-white border-r border-slate-100/60 flex flex-col shrink-0 h-screen sticky top-0 overflow-hidden">
          <div className="p-8 pb-4 mb-2 flex flex-col items-center border-b border-slate-100/60">
-            <img src="/logo.png" className="w-[85%] h-24 object-contain mix-blend-multiply mb-4" alt="Homework Zone" />
+            <img src="/logo.png" className="w-full h-36 object-contain mix-blend-multiply mb-2" alt="Homework Zone" />
 
             <div className="bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2 flex flex-col items-center w-full">
                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Teacher Code</span>

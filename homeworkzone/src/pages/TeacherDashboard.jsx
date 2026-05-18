@@ -433,147 +433,358 @@ const TeacherDashboard = ({ user, onLogout }) => {
 
   const renderContent = () => {
       switch (activeTab) {
-         case 'Dashboard': {
-            const uniqueSubmitters = new Set(timeFilteredSubmissions.map(s => s.studentName)).size;
-            const avgScoreTotal = timeFilteredSubmissions.length > 0 
-               ? Math.round(timeFilteredSubmissions.reduce((acc, sub) => acc + sub.score, 0) / timeFilteredSubmissions.length)
-               : 0;
+          case 'Dashboard': {
+             const uniqueSubmitters = new Set(timeFilteredSubmissions.map(s => s.studentName)).size;
+             const avgScoreTotal = timeFilteredSubmissions.length > 0 
+                ? Math.round(timeFilteredSubmissions.reduce((acc, sub) => acc + sub.score, 0) / timeFilteredSubmissions.length)
+                : 0;
 
-            const studentAvgScores = {};
-            timeFilteredSubmissions.forEach(sub => {
-               if (!studentAvgScores[sub.studentName]) studentAvgScores[sub.studentName] = { total: 0, count: 0 };
-               studentAvgScores[sub.studentName].total += sub.score;
-               studentAvgScores[sub.studentName].count += 1;
-            });
+             // Classrooms student point math
+             const classStudents = allStudents.filter(s => !activeClassroom || s.classId === activeClassroom.id);
+             const classHomeworks = allHomeworks.filter(hw => !activeClassroom || hw.assignedClassId === activeClassroom.id);
+             const classSubmissions = allSubmissions.filter(sub => !activeClassroom || sub.classId === activeClassroom.id);
 
-            const topPerformers = Object.entries(studentAvgScores)
-               .map(([name, data]) => ({ name, avgScore: Math.round(data.total / data.count), count: data.count }))
-               .sort((a, b) => b.avgScore - a.avgScore)
-               .slice(0, 3);
+             const computedStudents = classStudents.map(student => {
+                const studentSubs = allSubmissions.filter(sub => 
+                   sub.studentName?.toLowerCase() === student.name?.toLowerCase()
+                );
+                const completedCount = studentSubs.length;
+                const totalScore = studentSubs.reduce((acc, sub) => acc + (sub.score || 0), 0);
+                const basePoints = 100;
+                return {
+                   ...student,
+                   points: basePoints + (completedCount * 50) + totalScore,
+                   completedCount
+                };
+             });
 
-            let chartLabels = [];
-            let chartData = [];
-            
-            if (dashboardTimeFilter === 'Weekly') {
-               chartLabels = ['Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon'];
-               chartData = [[], [], [], [], [], [], []];
-               const now = new Date();
-               timeFilteredSubmissions.forEach(sub => {
-                  const subDate = sub.submittedAt?.toDate ? sub.submittedAt.toDate() : new Date(sub.submittedAt);
-                  const diffDays = Math.floor((now - subDate) / (1000 * 60 * 60 * 24));
-                  if (diffDays >= 0 && diffDays < 7) {
-                     chartData[6 - diffDays].push(sub.score);
-                  }
-               });
-            } else {
-               chartLabels = ['Wk1', 'Wk2', 'Wk3', 'Wk4'];
-               chartData = [[], [], [], []];
-               const now = new Date();
-               timeFilteredSubmissions.forEach(sub => {
-                  const subDate = sub.submittedAt?.toDate ? sub.submittedAt.toDate() : new Date(sub.submittedAt);
-                  const diffWeeks = Math.floor((now - subDate) / (1000 * 60 * 60 * 24 * 7));
-                  if (diffWeeks >= 0 && diffWeeks < 4) {
-                     chartData[3 - diffWeeks].push(sub.score);
-                  }
-               });
-            }
+             const currentClassPoints = computedStudents.reduce((acc, s) => acc + s.points, 0);
+             const targetTitle = activeClassroom?.goalTitle || 'Dino Pizza Party! 🍕';
+             const targetGoal = activeClassroom?.goalTarget || 1500;
+             const progressPercent = Math.min(Math.round((currentClassPoints / targetGoal) * 100), 100);
 
-            const chartAverages = chartData.map(bucket => bucket.length > 0 ? Math.round(bucket.reduce((a,b)=>a+b,0)/bucket.length) : 0);
-            const chartCounts = chartData.map(bucket => bucket.length);
+             // Calculate subject averages
+             const subjectStats = {};
+             classSubmissions.forEach(sub => {
+                const hw = allHomeworks.find(h => h.id === sub.homeworkId);
+                const subject = hw ? hw.subject : 'General';
+                if (!subjectStats[subject]) subjectStats[subject] = { total: 0, count: 0 };
+                subjectStats[subject].total += sub.score || 0;
+                subjectStats[subject].count += 1;
+             });
 
-            return (
-               <div className="px-10 py-10 space-y-12 pb-40 relative min-h-[calc(100vh-64px)]">
-                  <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                         <h1 className="text-3xl font-black text-slate-800 tracking-tight">Daily Summary</h1>
-                         <p className="text-sm font-bold text-slate-400">Real-time performance metrics across your active classrooms.</p>
-                      </div>
-                      <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl">
-                         {['Daily', 'Weekly', 'Monthly'].map(f => (
-                            <button 
-                               key={f}
-                               onClick={() => setDashboardTimeFilter(f)}
-                               className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${dashboardTimeFilter === f ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                            >
-                               {f}
-                            </button>
-                         ))}
-                      </div>
+             const subjectAverages = Object.entries(subjectStats).map(([subj, data]) => ({
+                subject: subj,
+                average: Math.round(data.total / data.count),
+                count: data.count
+             }));
+
+             const sortedByAvg = [...subjectAverages].sort((a, b) => a.average - b.average);
+             const weakness = sortedByAvg[0] || { subject: 'None yet', average: 100 };
+
+             const studentAverages = {};
+             classStudents.forEach(student => {
+                const subs = classSubmissions.filter(sub => sub.studentName?.toLowerCase() === student.name?.toLowerCase());
+                if (subs.length > 0) {
+                   const total = subs.reduce((acc, sub) => acc + (sub.score || 0), 0);
+                   studentAverages[student.name] = {
+                      avg: Math.round(total / subs.length),
+                      count: subs.length
+                   };
+                }
+             });
+
+             const struggling = Object.entries(studentAverages)
+                .filter(([name, data]) => data.avg < 60)
+                .map(([name, data]) => ({ name, ...data }));
+
+             const risingStars = Object.entries(studentAverages)
+                .filter(([name, data]) => data.avg >= 85 && data.count >= 1)
+                .map(([name, data]) => ({ name, ...data }));
+
+             let chartLabels = [];
+             let chartData = [];
+             
+             if (dashboardTimeFilter === 'Weekly') {
+                chartLabels = ['Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon'];
+                chartData = [[], [], [], [], [], [], []];
+                const now = new Date();
+                timeFilteredSubmissions.forEach(sub => {
+                   const subDate = sub.submittedAt?.toDate ? sub.submittedAt.toDate() : new Date(sub.submittedAt);
+                   const diffDays = Math.floor((now - subDate) / (1000 * 60 * 60 * 24));
+                   if (diffDays >= 0 && diffDays < 7) {
+                      chartData[6 - diffDays].push(sub.score);
+                   }
+                });
+             } else {
+                chartLabels = ['Wk1', 'Wk2', 'Wk3', 'Wk4'];
+                chartData = [[], [], [], []];
+                const now = new Date();
+                timeFilteredSubmissions.forEach(sub => {
+                   const subDate = sub.submittedAt?.toDate ? sub.submittedAt.toDate() : new Date(sub.submittedAt);
+                   const diffWeeks = Math.floor((now - subDate) / (1000 * 60 * 60 * 24 * 7));
+                   if (diffWeeks >= 0 && diffWeeks < 4) {
+                      chartData[3 - diffWeeks].push(sub.score);
+                   }
+                });
+             }
+
+             const chartAverages = chartData.map(bucket => bucket.length > 0 ? Math.round(bucket.reduce((a,b)=>a+b,0)/bucket.length) : 0);
+             const chartCounts = chartData.map(bucket => bucket.length);
+
+             return (
+                <div className="px-10 py-10 space-y-12 pb-40 relative min-h-[calc(100vh-64px)] bg-[#FAF9FF]">
+                   {/* Top Summary Banner */}
+                   <div className="flex items-center justify-between">
+                       <div className="space-y-1">
+                          <h1 className="text-3xl font-black text-[#3C2E75] tracking-tight">Daily Summary Hub</h1>
+                          <p className="text-sm font-bold text-[#8C83B5]">Real-time learning diagnostic metrics across your classrooms.</p>
+                       </div>
+                       <div className="flex items-center gap-2 bg-[#FFF0FA] p-1.5 rounded-2xl border border-[#FFDDF5]">
+                          {['Daily', 'Weekly', 'Monthly'].map(f => (
+                             <button 
+                                key={f}
+                                onClick={() => setDashboardTimeFilter(f)}
+                                className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${dashboardTimeFilter === f ? 'bg-white text-[#C23C9F] shadow-sm' : 'text-[#C23C9F]/60 hover:text-[#C23C9F]'}`}
+                             >
+                                {f}
+                             </button>
+                          ))}
+                       </div>
+                    </div>
+
+                   {/* Colorful KPI Metrics (Curated Pastels) */}
+                   <div className="grid grid-cols-4 gap-6">
+                      <RewardKPICard title="Total Roster" value={activeClassroom ? students.length : allStudents.length} subtitle={activeClassroom ? "Class Active Roster" : "Global Roster"} bgColor="bg-[#FAF2FF] border-[#E8C6FF]" textColor="text-[#7828B4]" />
+                      <RewardKPICard title="Average Grade" value={`${avgScoreTotal}%`} subtitle="Class Diagnostic Avg" bgColor="bg-[#EAFBF7] border-[#BCEEE2]" textColor="text-[#1E8A74]" />
+                      <RewardKPICard title="Team Points Goal" value={`${progressPercent}%`} subtitle={`${currentClassPoints} / ${targetGoal} pts`} bgColor="bg-[#FFF0EB] border-[#FFD2C4]" textColor="text-[#C64F33]" />
+                      <RewardKPICard title="Submissions" value={timeFilteredSubmissions.length} subtitle={`Completed this ${dashboardTimeFilter.toLowerCase()}`} bgColor="bg-[#FFFCE8] border-[#FCEE9D]" textColor="text-[#8C761E]" />
                    </div>
 
-                  <div className="grid grid-cols-4 gap-6">
-                     <RewardKPICard title="Total Students" value={activeClassroom ? students.length : allStudents.length} subtitle={activeClassroom ? "Class Roster" : "Global Roster"} bgColor="bg-slate-50/50" textColor="text-slate-800" />
-                     <RewardKPICard title="Average Score" value={`${avgScoreTotal}%`} subtitle="Across all subjects" bgColor="bg-emerald-50/50" textColor="text-emerald-600" />
-                     <RewardKPICard title="Participation" value={(activeClassroom ? students.length : allStudents.length) > 0 ? Math.round((uniqueSubmitters/(activeClassroom ? students.length : allStudents.length))*100) + '%' : '0%'} subtitle="Missions complete" bgColor="bg-amber-50/50" textColor="text-amber-600" />
-                     <RewardKPICard title="Submissions" value={timeFilteredSubmissions.length} subtitle={`This ${dashboardTimeFilter.toLowerCase()}`} bgColor="bg-indigo-50/50" textColor="text-indigo-600" />
-                  </div>
+                   {/* Split Row: Performance vs Goals / AI Hub */}
+                   <div className="grid grid-cols-12 gap-10">
+                      {/* Left: Class Performance & Team Goal Thermometer */}
+                      <div className="col-span-8 space-y-10">
+                         {/* Class Performance Graph */}
+                         <div className="bg-white rounded-[40px] border border-[#E9E4FF] shadow-sm p-10 space-y-8">
+                            <div>
+                               <h3 className="text-xl font-black text-[#3C2E75] tracking-tight">Class Academic Progress</h3>
+                               <p className="text-[10px] font-black text-[#8C83B5] uppercase tracking-widest">{dashboardTimeFilter} progress across core subjects</p>
+                            </div>
 
-                  <div className="grid grid-cols-12 gap-10">
-                      <div className="col-span-8 bg-white rounded-[40px] border border-slate-100/60 shadow-sm p-8 space-y-8">
-                         <div>
-                            <h3 className="text-xl font-bold text-slate-800 tracking-tight">Class Performance</h3>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{dashboardTimeFilter} progress across core subjects</p>
-                         </div>
+                            <div className="h-64 flex items-end justify-between gap-2 pr-4 pb-8 border-b border-[#FAF2FF] relative">
+                               {/* Y-Axis Guidelines */}
+                               <div className="absolute inset-x-0 top-0 bottom-8 flex flex-col justify-between pointer-events-none z-0">
+                                  {[100, 75, 50, 25, 0].map((val, i) => (
+                                     <div key={i} className="w-full flex items-center gap-4">
+                                        <span className="text-[10px] font-black text-[#B0A7D4] w-8 text-right">{val}%</span>
+                                        <div className="flex-1 h-px bg-[#8A70FF] opacity-[0.08]" />
+                                     </div>
+                                  ))}
+                               </div>
+                               
+                               <div className="w-8 shrink-0 hidden md:block" />
 
-                         <div className="h-64 flex items-end justify-between gap-2 pr-4 pb-8 border-b border-slate-50 relative">
-                            {/* Y-Axis Guidelines */}
-                            <div className="absolute inset-x-0 top-0 bottom-8 flex flex-col justify-between pointer-events-none z-0">
-                               {[100, 75, 50, 25, 0].map((val, i) => (
-                                  <div key={i} className="w-full flex items-center gap-4">
-                                     <span className="text-[10px] font-bold text-slate-300 w-8 text-right">{val}%</span>
-                                     <div className="flex-1 h-px bg-slate-900 opacity-[0.04]" />
+                               {chartLabels.map((label, i) => (
+                                  <div key={i} className="flex flex-col items-center gap-4 flex-1 group relative h-full pt-4 z-10">
+                                     <div className="flex-1 flex items-end gap-3 relative w-full h-full justify-center">
+                                        {chartAverages[i] > 0 && (
+                                            <div className="absolute -top-8 flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <span className="text-[11px] font-black text-[#C23C9F] bg-[#FFF0FA] px-2 py-0.5 rounded-full shadow-sm">{chartAverages[i]}%</span>
+                                                <span className="text-[9px] font-bold text-slate-400 mt-1 whitespace-nowrap">{chartCounts[i]} items</span>
+                                            </div>
+                                        )}
+                                        {/* Colorful soft purple bar */}
+                                        <div className="w-12 bg-gradient-to-t from-[#8A70FF] to-[#CE93D8] rounded-t-xl shadow-lg shadow-purple-50 transition-all duration-1000 ease-out absolute bottom-0" style={{ height: `${Math.max(2, chartAverages[i] || 0)}%` }} />
+                                     </div>
+                                     <span className="text-[10px] font-black text-[#5C4D9F]">{label}</span>
                                   </div>
                                ))}
                             </div>
-                            
-                            <div className="w-8 shrink-0 hidden md:block" />
+                         </div>
 
-                            {chartLabels.map((label, i) => (
-                               <div key={i} className="flex flex-col items-center gap-4 flex-1 group relative h-full pt-4 z-10">
-                                  <div className="flex-1 flex items-end gap-3 relative w-full h-full justify-center">
-                                     {chartAverages[i] > 0 && (
-                                         <div className="absolute -top-8 flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                             <span className="text-[11px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full shadow-sm">{chartAverages[i]}%</span>
-                                             <span className="text-[9px] font-bold text-slate-400 mt-1 whitespace-nowrap">{chartCounts[i]} items</span>
-                                         </div>
-                                     )}
-                                     <div className="w-12 bg-indigo-500 rounded-t-lg shadow-lg shadow-indigo-100 transition-all duration-1000 ease-out absolute bottom-0" style={{ height: `${Math.max(2, chartAverages[i] || 0)}%` }} />
+                         {/* Classroom Collaborative Goal Thermometer */}
+                         {activeClassroom && (
+                            <div className="bg-white rounded-[40px] border border-[#E9E4FF] shadow-sm p-10 space-y-6">
+                               <div className="flex justify-between items-center">
+                                  <div className="space-y-1">
+                                     <span className="text-[10px] font-black uppercase text-[#FFAB91] tracking-wider">Active Classroom Collaborative Goal</span>
+                                     <h3 className="text-2xl font-black text-[#3C2E75]">{targetTitle}</h3>
                                   </div>
-                                  <span className="text-[10px] font-bold text-slate-800">{label}</span>
+                                  <button 
+                                     onClick={() => {
+                                        setNewGoalTitle(targetTitle);
+                                        setNewGoalTarget(targetGoal);
+                                        setIsEditingGoal(true);
+                                     }}
+                                     className="px-5 py-2.5 border-2 border-[#FFE0D6] hover:border-[#FFAB91] text-[#C64F33] rounded-2xl text-xs font-black transition-all bg-white"
+                                  >
+                                     Change Goal ✏️
+                                  </button>
                                </div>
-                            ))}
+
+                               <div className="space-y-4 pt-2">
+                                  <div className="flex justify-between text-sm font-black text-[#3C2E75]">
+                                     <span>Class Combined Journey Points</span>
+                                     <span className="text-[#FF7043]">{currentClassPoints} / {targetGoal} Points</span>
+                                  </div>
+                                  
+                                  {/* Beautiful Pink Thermometer Progress Bar */}
+                                  <div className="h-8 w-full bg-[#FFF9F9] border border-[#FFE3E3] rounded-3xl overflow-hidden p-1 shadow-inner relative flex items-center">
+                                     <div 
+                                        className="h-full rounded-2xl bg-gradient-to-r from-[#FF7043] to-pink-400 transition-all duration-1000 flex items-center justify-end pr-4 shadow-[0_0_12px_rgba(255,112,67,0.35)]"
+                                        style={{ width: `${progressPercent}%` }}
+                                     >
+                                        <span className="text-[10px] font-black text-white uppercase tracking-wider">{progressPercent}%</span>
+                                     </div>
+                                  </div>
+                               </div>
+                            </div>
+                         )}
+                      </div>
+
+                      {/* Right: AI Teaching Co-Pilot Diagnostic Card */}
+                      <div className="col-span-4 space-y-10">
+                         {/* AI Co-Pilot Intervention */}
+                         <div className="bg-gradient-to-br from-[#FAF2FF] to-[#F1E0FF] rounded-[40px] border border-[#E8C6FF] shadow-sm p-10 flex flex-col justify-between h-[360px]">
+                            <div className="space-y-6">
+                               <div className="flex items-center gap-3">
+                                  <span className="text-3xl">🤖</span>
+                                  <h3 className="text-xl font-black text-[#3C2E75] tracking-tight">AI Co-Pilot Diagnosis</h3>
+                               </div>
+                               <div className="bg-white/80 backdrop-blur-sm border border-[#E9E4FF] p-6 rounded-3xl space-y-4">
+                                  <p className="text-sm font-black text-[#5C4D9F] leading-relaxed">
+                                     {weakness.subject !== 'None yet' && weakness.average < 75 ? (
+                                        <span>Learning gaps detected in <strong>{weakness.subject}</strong> (avg: {weakness.average}%). They would benefit from a revision challenge.</span>
+                                     ) : (
+                                        <span>Class averages are healthy! Mastery levels are high across subjects. Keep going!</span>
+                                     )}
+                                  </p>
+                                  <div className="bg-[#FAF2FF] rounded-2xl p-4 border border-[#E8C6FF]/40">
+                                     <span className="text-[9px] font-black uppercase text-purple-400 tracking-wider block mb-1">Recommended Mission</span>
+                                     <p className="text-xs font-black text-purple-600 leading-tight">
+                                        {weakness.subject !== 'None yet' && weakness.average < 75 
+                                           ? `Assign a 5-question conceptual review on ${weakness.subject}.`
+                                           : `Assign a creative multidisciplinary challenge quest!`
+                                        }
+                                     </p>
+                                  </div>
+                               </div>
+                            </div>
+                            <button 
+                               onClick={() => setActiveTab('Homework')}
+                               className="w-full bg-[#8A70FF] text-white py-4 rounded-3xl font-black text-xs hover:bg-[#7455FF] transition-all shadow-lg shadow-purple-100"
+                            >
+                               Generate Revision Mission 🚀
+                            </button>
+                         </div>
+
+                         {/* Attention Needed & High Flyers summary mini-roster */}
+                         <div className="bg-white rounded-[40px] border border-[#E9E4FF] shadow-sm p-8 space-y-6">
+                            <h3 className="text-base font-black text-[#3C2E75] tracking-tight flex items-center gap-2">
+                               <span>⚠️</span> Class Support Roster
+                            </h3>
+                            <div className="space-y-4 max-h-[220px] overflow-y-auto no-scrollbar">
+                               {struggling.slice(0, 3).map(st => (
+                                  <div key={st.name} className="flex items-center justify-between border-b border-[#FAF2FF] pb-2">
+                                     <div className="flex items-center gap-3">
+                                        <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${st.name}`} className="w-8 h-8 rounded-full border border-slate-100 bg-white" />
+                                        <span className="text-xs font-black text-[#5C4D9F]">{st.name}</span>
+                                     </div>
+                                     <span className="text-xs font-black text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full">{st.avg}% avg</span>
+                                  </div>
+                               ))}
+                               {struggling.length === 0 && (
+                                  <div className="text-xs text-emerald-500 font-black italic text-center py-4">All students scoring above 60%! 🎉</div>
+                                )}
+                            </div>
+                         </div>
+                      </div>
+                   </div>
+
+                   {/* Classroom Journey & Activities Calendar (May 2026) */}
+                   <div className="bg-gradient-to-br from-[#FCF8FF] to-[#F3EFFF] border border-[#E5DFFF] rounded-[40px] p-10 space-y-8 shadow-sm">
+                      <div className="flex justify-between items-center border-b border-[#EBE4FF] pb-6">
+                         <div className="space-y-1">
+                            <h3 className="text-2xl font-black text-[#3B2B85] tracking-tight flex items-center gap-2">
+                               <span>📅</span> Learning Calendar & Reminder Center
+                            </h3>
+                            <p className="text-xs font-bold text-[#7A69D6]">Click any active quiz date to review submissions and send reminder pings.</p>
+                         </div>
+                         <div className="bg-[#FFF0FA] border border-[#FFDDF5] rounded-2xl px-5 py-2.5 flex items-center gap-2">
+                            <span className="text-[#C23C9F] text-xs font-black uppercase tracking-wider">May 2026</span>
                          </div>
                       </div>
 
-                     <div className="col-span-4 bg-white rounded-[40px] border border-blue-50 shadow-sm p-8 flex flex-col justify-between">
-                        <div className="space-y-6">
-                           <h3 className="text-xl font-black text-[#1E3A8A] tracking-tight">Top Performers</h3>
-                           <div className="space-y-4">
-                              {topPerformers.length > 0 ? topPerformers.map((s, idx) => (
-                                 <div key={idx} className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-2xl transition-colors">
-                                    <div className="flex items-center gap-4">
-                                       <span className="text-sm font-black text-blue-200">{idx + 1}.</span>
-                                       <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${s.name}`} className="w-10 h-10 rounded-full bg-blue-50" alt={s.name} />
-                                       <div className="flex flex-col">
-                                          <span className="text-sm font-black text-[#1E3A8A]">{s.name}</span>
-                                          <span className="text-[10px] font-bold text-slate-400">{s.count} Missions Completed</span>
-                                       </div>
-                                    </div>
-                                    <div className="flex flex-col items-end">
-                                       <span className="text-sm font-black text-blue-400">{s.avgScore}%</span>
-                                       <span className="text-[9px] font-bold text-slate-300 uppercase tracking-wider">Avg Score</span>
-                                    </div>
-                                 </div>
-                              )) : (
-                                 <div className="text-xs font-bold text-slate-400 text-center py-4">No data this period</div>
-                              )}
-                           </div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-            );
-         }
+                      {/* Calendar Grid */}
+                      <div className="grid grid-cols-7 gap-4">
+                         {/* Day headers */}
+                         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => (
+                            <div key={day} className={`text-center text-[10px] font-black uppercase tracking-widest py-2 rounded-xl ${idx >= 5 ? 'bg-[#FFF0FA] text-[#C23C9F]' : 'bg-[#EEECFF] text-[#553EC9]'}`}>{day}</div>
+                         ))}
+
+                         {/* Empty spacer days (May 1, 2026 was a Friday, so Mon-Thu empty) */}
+                         {Array.from({ length: 4 }).map((_, idx) => (
+                            <div key={`empty-${idx}`} className="aspect-square bg-[#FFF9F9]/40 border border-dashed border-[#FFE3E3] rounded-3xl" />
+                         ))}
+
+                         {/* Calendar days */}
+                         {Array.from({ length: 31 }, (_, i) => i + 1).map(day => {
+                            const dayStr = day < 10 ? `0${day}` : `${day}`;
+                            const activeHw = classHomeworks.find(hw => {
+                               const hwDueDate = hw.dueDate || '';
+                               return hwDueDate.includes(`-05-${dayStr}`) || hwDueDate.includes(`-5-${day}`);
+                            });
+
+                            // Vibrant kid-friendly pastel coloring by subject
+                            let dayCardStyle = "bg-white border border-[#E9E4FF] text-[#5C4D9F] hover:bg-[#F9F8FF] hover:border-[#BA68C8]";
+                            let tagStyle = "";
+
+                            if (activeHw) {
+                               const subj = activeHw.subject || 'General';
+                               if (subj === 'Maths') {
+                                  dayCardStyle = "bg-gradient-to-br from-[#FFF0EB] to-[#FFE0D6] border-[#FFCCBC] text-[#A83D23] shadow-md shadow-orange-50/50";
+                                  tagStyle = "bg-[#FFCCBC] text-[#A83D23]";
+                               } else if (subj === 'Science') {
+                                  dayCardStyle = "bg-gradient-to-br from-[#EAFBF7] to-[#D1F7EC] border-[#BCEEE2] text-[#1E8A74] shadow-md shadow-teal-50/50";
+                                  tagStyle = "bg-[#BCEEE2] text-[#1E8A74]";
+                               } else if (subj === 'English') {
+                                  dayCardStyle = "bg-gradient-to-br from-[#FFFCE8] to-[#FFF9C4] border-[#FCEE9D] text-[#8C761E] shadow-md shadow-yellow-50/50";
+                                  tagStyle = "bg-[#FCEE9D] text-[#8C761E]";
+                               } else {
+                                  dayCardStyle = "bg-gradient-to-br from-[#FAF2FF] to-[#F1E0FF] border-[#E8C6FF] text-[#7828B4] shadow-md shadow-purple-50/50";
+                                  tagStyle = "bg-[#E8C6FF] text-[#7828B4]";
+                               }
+                            }
+
+                            return (
+                               <div 
+                                  key={day} 
+                                  className={`aspect-square rounded-[28px] p-4 flex flex-col justify-between transition-all duration-300 cursor-pointer relative overflow-hidden group hover:scale-[1.04] ${dayCardStyle}`}
+                                  onClick={() => {
+                                     if (activeHw) {
+                                        setSelectedCalendarHw(activeHw);
+                                        setShowCalendarModal(true);
+                                     }
+                                  }}
+                               >
+                                  <span className="text-sm font-black">{day}</span>
+                                  
+                                  {activeHw && (
+                                     <div className={`px-2.5 py-1 rounded-xl text-[9px] font-black truncate shadow-sm mt-2 flex items-center gap-1 ${tagStyle}`}>
+                                        <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />
+                                        {activeHw.subject}: {activeHw.title}
+                                     </div>
+                                  )}
+                               </div>
+                            );
+                         })}
+                      </div>
+                   </div>
+                </div>
+             );
+          }
+
          case 'My Classes':
             return (
                <div className="px-10 py-10 space-y-12 relative min-h-[calc(100vh-64px)] pb-40">
@@ -1937,95 +2148,6 @@ const TeacherDashboard = ({ user, onLogout }) => {
                          })}
                       </div>
                    </div>
-
-                   {/* Calendar Quick Action Drawer/Modal */}
-                   {showCalendarModal && selectedCalendarHw && (() => {
-                      const submissions = classSubmissions.filter(s => s.homeworkId === selectedCalendarHw.id);
-                      const classStudents = allStudents.filter(s => s.classId === selectedCalendarHw.assignedClassId);
-                      const submittedStudentNames = new Set(submissions.map(s => s.studentName?.toLowerCase()));
-                      const pendingStudents = classStudents.filter(s => !submittedStudentNames.has(s.name?.toLowerCase()));
-
-                      const handleSendReminderPing = async (student) => {
-                         try {
-                            await addDoc(collection(db, 'messages'), {
-                               teacherId: user.uid,
-                               senderId: user.uid,
-                               senderName: user.displayName || 'Teacher',
-                               senderRole: 'teacher',
-                               recipientType: 'student',
-                               recipientId: student.name,
-                               recipientName: student.name,
-                               subject: `⚠️ Reminder: ${selectedCalendarHw.title}`,
-                               content: `Hi ${student.name}! Friendly reminder to finish your ${selectedCalendarHw.subject} quiz on "${selectedCalendarHw.title}" as soon as possible! 🚀`,
-                               createdAt: new Date().toISOString()
-                            });
-                            alert(`Reminder sent live to ${student.name}! 🚀`);
-                         } catch (err) {
-                            console.error(err);
-                            alert("Failed to send reminder.");
-                         }
-                      };
-
-                      return (
-                         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[200] flex-center p-6">
-                            <div className="max-w-2xl w-full bg-white rounded-[40px] p-10 space-y-8 shadow-2xl border border-blue-50 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
-                               <div className="flex justify-between items-start">
-                                  <div>
-                                     <span className="text-[9px] font-black uppercase text-purple-400 tracking-wider">Mission Details</span>
-                                     <h3 className="text-2xl font-black text-[#1E3A8A]">{selectedCalendarHw.title}</h3>
-                                     <p className="text-xs font-bold text-blue-300 italic">{selectedCalendarHw.subject} • Due: {selectedCalendarHw.dueDate}</p>
-                                  </div>
-                                  <button onClick={() => setShowCalendarModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
-                                     <X size={20} strokeWidth={3} />
-                                  </button>
-                               </div>
-
-                               <div className="grid grid-cols-2 gap-8 pt-4">
-                                  {/* Submitted List */}
-                                  <div className="space-y-4">
-                                     <h4 className="text-sm font-black text-emerald-500 uppercase tracking-widest flex items-center gap-2">
-                                        <span>✅</span> Submitted ({submissions.length})
-                                     </h4>
-                                     <div className="space-y-2 max-h-[250px] overflow-y-auto no-scrollbar">
-                                        {submissions.map(sub => (
-                                           <div key={sub.id} className="flex justify-between items-center bg-emerald-50/30 border border-emerald-50 p-3 rounded-2xl text-xs font-bold text-[#1E3A8A]">
-                                              <span>{sub.studentName}</span>
-                                              <span className="font-black text-emerald-500">{sub.score}%</span>
-                                           </div>
-                                        ))}
-                                        {submissions.length === 0 && (
-                                           <span className="text-xs text-blue-300 italic">No submissions yet.</span>
-                                        )}
-                                     </div>
-                                  </div>
-
-                                  {/* Pending List */}
-                                  <div className="space-y-4">
-                                     <h4 className="text-sm font-black text-amber-500 uppercase tracking-widest flex items-center gap-2">
-                                        <span>⏳</span> Pending ({pendingStudents.length})
-                                     </h4>
-                                     <div className="space-y-2 max-h-[250px] overflow-y-auto no-scrollbar">
-                                        {pendingStudents.map(student => (
-                                           <div key={student.id} className="flex justify-between items-center bg-amber-50/30 border border-amber-50 p-3 rounded-2xl text-xs font-bold text-[#1E3A8A]">
-                                              <span>{student.name}</span>
-                                              <button 
-                                                 onClick={() => handleSendReminderPing(student)}
-                                                 className="px-2.5 py-1 bg-amber-400 hover:bg-amber-500 text-white rounded-lg text-[9px] font-black transition-colors"
-                                              >
-                                                 Send Ping 🔔
-                                              </button>
-                                           </div>
-                                        ))}
-                                        {pendingStudents.length === 0 && (
-                                           <span className="text-xs text-emerald-500 font-black italic">Excellent! Everyone has submitted! 🎉</span>
-                                        )}
-                                     </div>
-                                  </div>
-                               </div>
-                            </div>
-                         </div>
-                      );
-                   })()}
                 </div>
              );
           }
@@ -2153,7 +2275,96 @@ const TeacherDashboard = ({ user, onLogout }) => {
             </header>
          )}
 
-      {renderContent()}
+            {renderContent()}
+
+      {/* Global Calendar Reminder Modal */}
+      {showCalendarModal && selectedCalendarHw && (() => {
+         const submissions = allSubmissions.filter(s => s.homeworkId === selectedCalendarHw.id && (!activeClassroom || s.classId === activeClassroom.id));
+         const classStudents = allStudents.filter(s => s.classId === selectedCalendarHw.assignedClassId);
+         const submittedStudentNames = new Set(submissions.map(s => s.studentName?.toLowerCase()));
+         const pendingStudents = classStudents.filter(s => !submittedStudentNames.has(s.name?.toLowerCase()));
+
+         const handleSendReminderPing = async (student) => {
+            try {
+               await addDoc(collection(db, 'messages'), {
+                  teacherId: user.uid,
+                  senderId: user.uid,
+                  senderName: user.displayName || 'Teacher',
+                  senderRole: 'teacher',
+                  recipientType: 'student',
+                  recipientId: student.name,
+                  recipientName: student.name,
+                  subject: `⚠️ Reminder: ${selectedCalendarHw.title}`,
+                  content: `Hi ${student.name}! Friendly reminder to finish your ${selectedCalendarHw.subject} quiz on "${selectedCalendarHw.title}" as soon as possible! 🚀`,
+                  createdAt: new Date().toISOString()
+               });
+               alert(`Reminder sent live to ${student.name}! 🚀`);
+            } catch (err) {
+               console.error(err);
+               alert("Failed to send reminder.");
+            }
+         };
+
+         return (
+            <div className="fixed inset-0 bg-[#3C2E75]/40 backdrop-blur-sm z-[200] flex-center p-6">
+               <div className="max-w-2xl w-full bg-white rounded-[40px] p-10 space-y-8 shadow-2xl border-8 border-[#F3EFFF] relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+                  <div className="flex justify-between items-start">
+                     <div>
+                        <span className="text-[9px] font-black uppercase text-[#806BFF] tracking-wider">Mission Details</span>
+                        <h3 className="text-2xl font-black text-[#3B2B85]">${selectedCalendarHw.title}</h3>
+                        <p className="text-xs font-bold text-[#7A69D6] italic">${selectedCalendarHw.subject} • Due: ${selectedCalendarHw.dueDate}</p>
+                     </div>
+                     <button onClick={() => setShowCalendarModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                        <X size={20} strokeWidth={3} />
+                     </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-8 pt-4">
+                     {/* Submitted List */}
+                     <div className="space-y-4">
+                        <h4 className="text-sm font-black text-emerald-500 uppercase tracking-widest flex items-center gap-2">
+                           <span>✅</span> Submitted (${submissions.length})
+                        </h4>
+                        <div className="space-y-2 max-h-[250px] overflow-y-auto no-scrollbar">
+                           {submissions.map(sub => (
+                              <div key={sub.id} className="flex justify-between items-center bg-emerald-50/30 border border-emerald-50 p-3 rounded-2xl text-xs font-bold text-[#5C4D9F]">
+                                 <span>{sub.studentName}</span>
+                                 <span className="font-black text-emerald-500">{sub.score}%</span>
+                              </div>
+                           ))}
+                           {submissions.length === 0 && (
+                              <span className="text-xs text-blue-300 italic">No submissions yet.</span>
+                           )}
+                        </div>
+                     </div>
+
+                     {/* Pending List */}
+                     <div className="space-y-4">
+                        <h4 className="text-sm font-black text-amber-500 uppercase tracking-widest flex items-center gap-2">
+                           <span>⏳</span> Pending (${pendingStudents.length})
+                        </h4>
+                        <div className="space-y-2 max-h-[250px] overflow-y-auto no-scrollbar">
+                           {pendingStudents.map(student => (
+                              <div key={student.id} className="flex justify-between items-center bg-amber-50/30 border border-amber-50 p-3 rounded-2xl text-xs font-bold text-[#5C4D9F]">
+                                 <span>{student.name}</span>
+                                 <button 
+                                    onClick={() => handleSendReminderPing(student)}
+                                    className="px-2.5 py-1 bg-amber-400 hover:bg-amber-500 text-white rounded-lg text-[9px] font-black transition-colors"
+                                 >
+                                    Send Ping 🔔
+                                 </button>
+                              </div>
+                           ))}
+                           {pendingStudents.length === 0 && (
+                              <span className="text-xs text-emerald-500 font-black italic">Excellent! Everyone has submitted! 🎉</span>
+                           )}
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         );
+      })()}
 
       {/* --- Add Class Modal --- */}
       <AnimatePresence>

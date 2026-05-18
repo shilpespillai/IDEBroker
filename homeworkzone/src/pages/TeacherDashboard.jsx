@@ -75,6 +75,14 @@ const TeacherDashboard = ({ user, onLogout }) => {
   const [newMsgRecipientId, setNewMsgRecipientId] = useState('');
   const [newMsgSubject, setNewMsgSubject] = useState('');
   const [newMsgBody, setNewMsgBody] = useState('');
+  const getStudentAvatar = (name) => {
+     const st = allStudents.find(s => s.name?.toLowerCase() === name?.toLowerCase());
+     if (st?.avatarUrl) {
+        return st.avatarUrl;
+     }
+     return `https://api.dicebear.com/7.x/adventurer/svg?seed=${name || 'student'}`;
+  };
+
   const [homeworkSubject, setHomeworkSubject] = useState('English');
   const [homeworkTitle, setHomeworkTitle] = useState('');
   const [homeworkInstructions, setHomeworkInstructions] = useState('');
@@ -897,7 +905,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                                   struggling.map(st => (
                                      <div key={st.name} className="flex items-center justify-between border-b border-[#FAF2FF] pb-2">
                                         <div className="flex items-center gap-2">
-                                           <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${st.name}`} className="w-8 h-8 rounded-full border border-slate-100 bg-white" />
+                                           <img src={getStudentAvatar(st.name)} className="w-8 h-8 rounded-full border border-slate-100 bg-white" />
                                            <span className="text-xs font-black text-[#5C4D9F]">{st.name}</span>
                                         </div>
                                         <span className="text-xs font-black text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full">{st.avg}% avg</span>
@@ -1127,7 +1135,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                            return (
                               <div key={idx} className="grid grid-cols-12 px-8 py-6 items-center hover:bg-blue-50/10 transition-all group">
                                  <div className="col-span-3 flex items-center gap-4">
-                                    <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${student.name}`} className="w-10 h-10 rounded-full border-2 border-white shadow-sm bg-white p-0.5" alt={student.name} />
+                                    <img src={getStudentAvatar(student.name)} className="w-10 h-10 rounded-full border-2 border-white shadow-sm bg-white p-0.5" alt={student.name} />
                                     <span className="text-sm font-black text-[#1E3A8A]">{student.name}</span>
                                  </div>
                                  <div className="col-span-2">
@@ -1233,7 +1241,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                            (activeClassroom ? allSubmissions.filter(s => s.classId === activeClassroom.id) : allSubmissions).sort((a,b) => b.submittedAt - a.submittedAt).map((sub, idx) => (
                               <div key={sub.id || idx} className="grid grid-cols-12 px-8 py-6 items-center hover:bg-blue-50/10 transition-all">
                                  <div className="col-span-6 flex items-center gap-4">
-                                    <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${sub.studentName}`} className="w-10 h-10 rounded-full border-2 border-white shadow-sm" alt={sub.studentName} />
+                                    <img src={getStudentAvatar(sub.studentName)} className="w-10 h-10 rounded-full border-2 border-white shadow-sm" alt={sub.studentName} />
                                     <span className="text-sm font-black text-[#1E3A8A]">{sub.studentName}</span>
                                  </div>
                                  <div className="col-span-3 text-center">
@@ -1454,7 +1462,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                                     onClick={() => setActiveChat(msg)}
                                     className={`w-full text-left p-6 flex items-center gap-4 transition-all ${currentChat?.id === msg.id ? 'bg-blue-50/50' : 'hover:bg-blue-50/30'}`}
                                  >
-                                    <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${msg.senderName}`} className="w-12 h-12 rounded-full border-2 border-white shadow-sm bg-white p-0.5" alt="avatar" />
+                                    <img src={getStudentAvatar(msg.senderName)} className="w-12 h-12 rounded-full border-2 border-white shadow-sm bg-white p-0.5" alt="avatar" />
                                     <div className="flex-1 min-w-0">
                                        <div className="flex items-center justify-between">
                                           <p className="text-sm font-black text-[#1E3A8A] truncate">
@@ -1892,7 +1900,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                                        <div className="flex flex-wrap gap-2 pt-1">
                                           {earners.map(earner => (
                                              <span key={earner.id} className="bg-slate-50 text-slate-700 text-[10px] font-black px-3.5 py-2 rounded-full border border-slate-100 flex items-center gap-2">
-                                                <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${earner.name}`} className="w-5 h-5 rounded-full bg-white border border-slate-200 p-0.5" alt="earner" />
+                                                <img src={getStudentAvatar(earner.name)} className="w-5 h-5 rounded-full bg-white border border-slate-200 p-0.5" alt="earner" />
                                                 {earner.name}
                                              </span>
                                           ))}
@@ -2498,7 +2506,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
               >
                  <div className="px-10 py-8 bg-blue-50/30 border-b border-blue-50 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-6">
-                       <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${selectedSubmission.studentName}`} className="w-16 h-16 rounded-full border-4 border-white shadow-md bg-blue-100" alt="Student" />
+                       <img src={getStudentAvatar(selectedSubmission.studentName)} className="w-16 h-16 rounded-full border-4 border-white shadow-md bg-blue-100" alt="Student" />
                        <div>
                           <h2 className="text-3xl font-black text-[#1E3A8A]">{selectedSubmission.studentName}'s Report</h2>
                           <div className="flex items-center gap-4 mt-2">

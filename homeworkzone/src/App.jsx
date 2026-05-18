@@ -40,6 +40,8 @@ import {
   Home,
   Users,
   User,
+  Camera,
+  Upload,
   Check,
   Cloud,
   Filter,
@@ -101,14 +103,28 @@ const BlobChart = ({ value }) => (
 );
 
 // --- Student Profile Component (High Fidelity) ---
-const StudentProfile = ({ studentName, teacher, classroom }) => {
+const StudentProfile = ({ studentName, teacher, classroom, onProfileUpdate }) => {
   const [profile, setProfile] = useState({
     name: studentName || '',
     grade: classroom?.name || 'Grade 08',
     birthdate: '2010-05-11',
-    contact: ''
+    contact: '',
+    avatarUrl: ''
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState('');
+
+  const animatedMascots = [
+     { name: "Owl 🦉", url: "https://img.icons8.com/fluency/96/owl.png" },
+     { name: "Fox 🦊", url: "https://img.icons8.com/fluency/96/fox.png" },
+     { name: "Panda 🐼", url: "https://img.icons8.com/fluency/96/panda.png" },
+     { name: "Lion 🦁", url: "https://img.icons8.com/fluency/96/lion-head.png" },
+     { name: "Koala 🐨", url: "https://img.icons8.com/fluency/96/koala.png" },
+     { name: "Dino 🦖", url: "https://img.icons8.com/fluency/96/dinosaur.png" },
+     { name: "Unicorn 🦄", url: "https://img.icons8.com/fluency/96/unicorn.png" },
+     { name: "Tiger 🐯", url: "https://img.icons8.com/fluency/96/tiger.png" }
+  ];
 
   useEffect(() => {
     // Load existing profile data from Firestore with safe auth fallback
@@ -126,11 +142,43 @@ const StudentProfile = ({ studentName, teacher, classroom }) => {
                 ...data,
                 name: data.name || studentName
              }));
+             if (data.avatarUrl) {
+                setSelectedAvatar(data.avatarUrl);
+             }
           }
        }
     };
     fetchProfile();
   }, [studentName, teacher, classroom]);
+
+  const handleCustomPhotoUpload = (e) => {
+     const file = e.target.files?.[0];
+     if (!file) return;
+
+     const reader = new FileReader();
+     reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+           const canvas = document.createElement('canvas');
+           const ctx = canvas.getContext('2d');
+           canvas.width = 256;
+           canvas.height = 256;
+           
+           const minDim = Math.min(img.width, img.height);
+           const sx = (img.width - minDim) / 2;
+           const sy = (img.height - minDim) / 2;
+           
+           ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, 256, 256);
+           
+           const base64Url = canvas.toDataURL('image/jpeg', 0.85);
+           setSelectedAvatar(base64Url);
+           setProfile(prev => ({ ...prev, avatarUrl: base64Url }));
+           setIsAvatarModalOpen(false);
+        };
+        img.src = event.target.result;
+     };
+     reader.readAsDataURL(file);
+  };
 
   const handleSave = async () => {
      setIsSaving(true);
@@ -149,6 +197,9 @@ const StudentProfile = ({ studentName, teacher, classroom }) => {
            }, { merge: true });
            
            alert("Profile saved successfully! Your teacher can now see your updates. ✨");
+           if (onProfileUpdate) {
+              onProfileUpdate();
+           }
         } else {
            console.error("Auth context missing on profile save:", { savedStudent, actualClass, actualTeacher });
            alert("Could not save: Missing login context. Please log out and log back in! 🔒");
@@ -188,10 +239,92 @@ const StudentProfile = ({ studentName, teacher, classroom }) => {
       {/* Top Section: Avatar & Name */}
       <div className="flex flex-col items-center gap-2">
          <div className="w-32 h-32 bg-[#FFE4D6] rounded-full p-1 shadow-lg relative group transition-transform hover:scale-105">
-            <img src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${profile.name}`} className="w-full h-full rounded-full object-cover" alt="Avatar" />
+            <img src={profile.avatarUrl || `https://api.dicebear.com/7.x/lorelei/svg?seed=${profile.name}`} className="w-full h-full rounded-full object-cover" alt="Avatar" />
+            <button 
+               onClick={() => {
+                  setSelectedAvatar(profile.avatarUrl);
+                  setIsAvatarModalOpen(true);
+               }}
+               className="absolute bottom-0 right-0 w-10 h-10 bg-[#8A70FF] text-white rounded-full flex-center shadow-lg border-2 border-white hover:scale-110 active:scale-95 transition-all"
+            >
+               <Camera size={18} />
+            </button>
          </div>
          <h2 className="text-2xl font-semibold text-[#2D3748] mt-2">{profile.name}</h2>
       </div>
+
+      {/* Premium Avatar & Mascot Picker Modal */}
+      {isAvatarModalOpen && (
+         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex-center p-4">
+            <div className="bg-white rounded-[36px] border border-slate-100 max-w-lg w-full p-8 space-y-6 shadow-2xl relative">
+               <div className="flex items-center justify-between">
+                  <h3 className="text-2xl font-semibold text-[#2D3748] tracking-tighter">Choose Profile Mascot 🎨</h3>
+                  <button 
+                     onClick={() => setIsAvatarModalOpen(false)}
+                     className="w-9 h-9 bg-slate-50 rounded-full flex-center text-slate-400 hover:bg-slate-100 transition-all font-black text-sm"
+                  >
+                     ✕
+                  </button>
+               </div>
+
+               <div className="space-y-4">
+                  <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Option A: Predefined Animated Mascots</h4>
+                  <div className="grid grid-cols-4 gap-4">
+                     {animatedMascots.map((mascot, idx) => (
+                        <button 
+                           key={idx}
+                           onClick={() => setSelectedAvatar(mascot.url)}
+                           className={`p-2 rounded-2xl border-2 transition-all hover:scale-105 relative ${selectedAvatar === mascot.url ? 'border-[#8A70FF] bg-purple-50/30' : 'border-slate-100 bg-slate-50/50 hover:border-slate-200'}`}
+                        >
+                           <img src={mascot.url} className="w-12 h-12 object-contain mx-auto" alt={mascot.name} />
+                           <span className="text-[9px] font-semibold text-slate-400 block mt-1 text-center leading-none">{mascot.name}</span>
+                           {selectedAvatar === mascot.url && (
+                              <div className="absolute top-1 right-1 w-4 h-4 bg-[#8A70FF] text-white rounded-full flex-center text-[8px] font-bold">✓</div>
+                           )}
+                        </button>
+                     ))}
+                  </div>
+               </div>
+
+               <div className="h-px bg-slate-100" />
+
+               <div className="space-y-4">
+                  <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Option B: Upload Custom Photo</h4>
+                  
+                  <label className="border-2 border-dashed border-slate-200 hover:border-[#8A70FF] rounded-3xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all bg-slate-50/50 hover:bg-purple-50/10 group">
+                     <Upload className="w-8 h-8 text-slate-400 group-hover:text-[#8A70FF] transition-all" />
+                     <span className="text-xs font-semibold text-slate-600">Click to upload custom picture</span>
+                     <span className="text-[10px] font-semibold text-slate-400">PNG, JPG or GIF (Auto-sized)</span>
+                     <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={handleCustomPhotoUpload}
+                        className="hidden" 
+                     />
+                  </label>
+               </div>
+
+               <div className="flex items-center gap-3 pt-2">
+                  <button 
+                     onClick={() => {
+                        setProfile({ ...profile, avatarUrl: selectedAvatar });
+                        setIsAvatarModalOpen(false);
+                     }}
+                     className="flex-1 bg-[#8A70FF] text-white py-3.5 rounded-2xl font-semibold text-sm shadow-lg shadow-purple-100 hover:scale-105 active:scale-95 transition-all"
+                  >
+                     Equip Mascot 🚀
+                  </button>
+                  <button 
+                     onClick={() => setIsAvatarModalOpen(false)}
+                     className="px-6 bg-slate-100 text-slate-500 py-3.5 rounded-2xl font-semibold text-sm hover:bg-slate-200 transition-all"
+                  >
+                     Cancel
+                  </button>
+               </div>
+            </div>
+         </div>
+      )}
+
 
       {/* Form Section */}
       <div className="space-y-4 px-4">
@@ -816,34 +949,51 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
 
   const [homeworks, setHomeworks] = useState([]);
   const [submissions, setSubmissions] = useState([]);
+  const [classroomStudents, setClassroomStudents] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-     const fetchData = async () => {
-        try {
-           const savedStudent = JSON.parse(localStorage.getItem('hwz_active_student'));
-           const actualClassroom = classroom || savedStudent?.classroom;
-           
-           if (actualClassroom?.id) {
-              // Fetch homeworks for this class
-              const hwQ = query(collection(db, 'homeworks'), where('assignedClassId', '==', actualClassroom.id));
-              const hwSnap = await getDocs(hwQ);
-              const hwList = hwSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-              setHomeworks(hwList);
-           }
-           
-           // Fetch all submissions to build leaderboard and recent feedback
-           const subQ = query(collection(db, 'submissions'));
-           const subSnap = await getDocs(subQ);
-           const subList = subSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-           setSubmissions(subList);
-        } catch (err) {
-           console.error("Dashboard Fetch Data Error:", err);
+  const fetchData = async () => {
+     try {
+        const savedStudent = JSON.parse(localStorage.getItem('hwz_active_student'));
+        const actualClassroom = classroom || savedStudent?.classroom;
+        const actualTeacher = teacher || savedStudent?.teacher;
+        
+        if (actualClassroom?.id) {
+           // Fetch homeworks for this class
+           const hwQ = query(collection(db, 'homeworks'), where('assignedClassId', '==', actualClassroom.id));
+           const hwSnap = await getDocs(hwQ);
+           const hwList = hwSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+           setHomeworks(hwList);
         }
-        setLoading(false);
-     };
+        
+        if (actualClassroom?.id && actualTeacher?.uid) {
+           // Fetch classroom student rosters
+           const studentsSnap = await getDocs(collection(db, 'teachers', actualTeacher.uid, 'classrooms', actualClassroom.id, 'students'));
+           setClassroomStudents(studentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        }
+        
+        // Fetch all submissions to build leaderboard and recent feedback
+        const subQ = query(collection(db, 'submissions'));
+        const subSnap = await getDocs(subQ);
+        const subList = subSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setSubmissions(subList);
+     } catch (err) {
+        console.error("Dashboard Fetch Data Error:", err);
+     }
+     setLoading(false);
+  };
+
+  useEffect(() => {
      fetchData();
   }, [studentName, classroom]);
+
+  const getStudentAvatar = (name) => {
+     const st = classroomStudents.find(s => s.name?.toLowerCase() === name?.toLowerCase());
+     if (st?.avatarUrl) {
+        return st.avatarUrl;
+     }
+     return `https://api.dicebear.com/7.x/lorelei/svg?seed=${name || 'student'}`;
+  };
 
   // Compute dynamic variables
   const mySubmissions = submissions.filter(s => s.studentName?.toLowerCase() === studentName?.toLowerCase());
@@ -1066,7 +1216,7 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-3">
                       <button className="w-9 h-9 bg-white rounded-xl flex-center shadow-sm border border-slate-100 hover:scale-110 transition-all overflow-hidden">
-                        <img src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${studentName || 'student'}`} className="w-full h-full object-cover" alt="Profile" />
+                        <img src={getStudentAvatar(studentName)} className="w-full h-full object-cover" alt="Profile" />
                       </button>
                       <button className="w-9 h-9 bg-white rounded-xl flex-center shadow-sm border border-slate-100 text-[#8A70FF] hover:scale-110 transition-all">
                         <Plus className="w-5 h-5" />
@@ -1138,8 +1288,8 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
                           </div>
                        </div>
                        <div className="col-span-5 flex gap-3">
-                          <RankCard rank={1} name={leaderStudent.name} detail="Class Leader" isAlt={false} />
-                          <RankCard rank={activeStudentRank} name={studentName} detail={`${currentStudentScore} Points`} isAlt={true} />
+                          <RankCard rank={1} name={leaderStudent.name} detail="Class Leader" isAlt={false} avatarUrl={getStudentAvatar(leaderStudent.name)} />
+                          <RankCard rank={activeStudentRank} name={studentName} detail={`${currentStudentScore} Points`} isAlt={true} avatarUrl={getStudentAvatar(studentName)} />
                        </div>
                     </div>
                  </div>
@@ -1156,6 +1306,7 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
                              students={row.students} 
                              progress={row.progress} 
                              color={row.color} 
+                             avatarUrl={getStudentAvatar(row.name)}
                           />
                        ))}
                     </div>
@@ -1195,6 +1346,7 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
                              author={post.author} 
                              time={post.time} 
                              content={post.content} 
+                             avatarUrl={getStudentAvatar(post.author)}
                           />
                        ))}
                     </div>
@@ -1224,7 +1376,12 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
            )}
 
            {activeNav === 'My Profile' && (
-              <StudentProfile studentName={studentName} teacher={teacher} classroom={classroom} />
+              <StudentProfile 
+                 studentName={studentName} 
+                 teacher={teacher} 
+                 classroom={classroom} 
+                 onProfileUpdate={() => fetchData()}
+              />
            )}
         </div>
           </main>
@@ -1296,11 +1453,11 @@ const AchievementBadge = ({ icon, label, color }) => (
    </div>
 );
 
-const RankCard = ({ rank, name, detail, isAlt }) => (
+const RankCard = ({ rank, name, detail, isAlt, avatarUrl }) => (
    <div className={`flex-1 ${isAlt ? 'bg-amber-50 border-amber-100' : 'bg-[#F5F3FF] border-purple-100'} p-6 rounded-[32px] border flex flex-col items-center text-center gap-4 relative overflow-hidden group hover:scale-105 transition-all shadow-sm`}>
       <div className="absolute -top-4 -right-4 w-12 h-12 bg-white/50 rounded-full flex-center font-semibold text-2xl text-[#2D3748]/20">{rank}</div>
       <div className="w-16 h-16 rounded-full border-2 border-white bg-white p-1 overflow-hidden">
-         <img src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${name}`} className="w-full h-full object-cover" alt={name} />
+         <img src={avatarUrl || `https://api.dicebear.com/7.x/lorelei/svg?seed=${name}`} className="w-full h-full object-cover" alt={name} />
       </div>
       <div>
          <p className="text-xs font-semibold text-[#2D3748]">{name}</p>
@@ -1310,12 +1467,12 @@ const RankCard = ({ rank, name, detail, isAlt }) => (
    </div>
 );
 
-const StandingRow = ({ rank, name, students, progress, color }) => (
+const StandingRow = ({ rank, name, students, progress, color, avatarUrl }) => (
    <div className="flex items-center justify-between p-4 rounded-2xl hover:bg-slate-50 transition-all cursor-pointer border border-transparent hover:border-slate-100 group">
       <div className="flex items-center gap-4">
          <span className="text-lg font-semibold text-[#2D3748] w-6">{rank}</span>
          <div className="w-10 h-10 rounded-full border-2 border-white bg-slate-50 overflow-hidden">
-            <img src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${name}`} className="w-full h-full object-cover" alt={name} />
+            <img src={avatarUrl || `https://api.dicebear.com/7.x/lorelei/svg?seed=${name}`} className="w-full h-full object-cover" alt={name} />
          </div>
          <div>
             <p className="text-sm font-semibold text-[#2D3748]">{name}</p>
@@ -1326,12 +1483,12 @@ const StandingRow = ({ rank, name, students, progress, color }) => (
    </div>
 );
 
-const FeedPost = ({ author, time, content }) => (
+const FeedPost = ({ author, time, content, avatarUrl }) => (
    <div className="space-y-4 group p-4 hover:bg-slate-50/50 rounded-3xl transition-all border border-transparent hover:border-slate-100">
       <div className="flex items-center justify-between">
          <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-full border-2 border-white bg-slate-50 overflow-hidden">
-               <img src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${author}`} className="w-full h-full object-cover" alt={author} />
+               <img src={avatarUrl || `https://api.dicebear.com/7.x/lorelei/svg?seed=${author}`} className="w-full h-full object-cover" alt={author} />
             </div>
             <div>
                <p className="text-sm font-semibold text-[#2D3748]">{author}</p>

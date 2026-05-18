@@ -1716,46 +1716,6 @@ const LandingPage = () => {
          </div>
       </section>
 
-      {/* --- Action Cards Grid --- */}
-      <section className="max-w-[95%] mx-auto px-6 mt-32 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-          <ZoneCard 
-            title="Daily Missions" 
-            subtitle="Today's Homework!"
-            image="/assets/card_daily_sticker.png"
-            color="bg-[#BFDBFE]"
-            btnColor="bg-[#F87171]"
-            btnText="GO!"
-            onClick={() => navigate('/login/student')}
-         />
-         <ZoneCard 
-            title="Fun Games" 
-            subtitle="Play & Learn!"
-            image="/assets/card_games_sticker.png"
-            color="bg-[#FEF9C3]"
-            btnColor="bg-[#FB923C]"
-            btnText="PLAY!"
-            onClick={() => navigate('/login/student')}
-         />
-         <ZoneCard 
-            title="Library" 
-            subtitle="Read Stories!"
-            image="/assets/card_library_sticker.png"
-            color="bg-[#DCFCE7]"
-            btnColor="bg-[#4ADE80]"
-            btnText="GO!"
-            onClick={() => navigate('/login/student')}
-         />
-         <ZoneCard 
-            title="My Profile" 
-            subtitle="Track Progress!"
-            image="/assets/card_profile_sticker.png"
-            color="bg-[#DBEAFE]"
-            btnColor="bg-[#60A5FA]"
-            btnText="GO!"
-            onClick={() => navigate('/login/student')}
-         />
-      </section>
-
       {/* --- Simple Footer Icons --- */}
       <footer className="max-w-[95%] mx-auto px-6 mt-32 flex items-center justify-between py-10 border-t-8 border-white/20">
          <div className="flex items-center gap-10">
@@ -1772,31 +1732,6 @@ const LandingPage = () => {
     </div>
   );
 };
-
-const ZoneCard = ({ title, subtitle, image, color, btnColor, btnText, onClick }) => (
-  <div className={`group ${color} border-[6px] border-[#2D3748] rounded-[48px] overflow-hidden shadow-[0_20px_0_0_#2D3748] flex flex-col cursor-pointer transition-all hover:-translate-y-4`}>
-     {/* Card Header */}
-     <div className="bg-white border-b-[6px] border-[#2D3748] p-8 flex items-center justify-center">
-        <h3 className="text-2xl font-semibold text-[#2D3748] uppercase tracking-tight">{title}</h3>
-     </div>
-     
-     {/* Card Image */}
-     <div className="flex-1 p-10 flex-center relative overflow-hidden bg-white/40">
-        <img src={image} className="w-full h-full object-contain drop-shadow-xl transform group-hover:scale-110 transition-transform" alt={title} />
-     </div>
-
-     {/* Card Footer Content */}
-     <div className="p-10 bg-white space-y-6 text-center">
-        <p className="text-xl font-semibold text-[#2D3748]">{subtitle}</p>
-        <button 
-          onClick={onClick}
-          className={`${btnColor} text-white border-[6px] border-[#2D3748] w-full py-5 rounded-[24px] font-semibold text-xl uppercase tracking-[0.2em] shadow-[0_8px_0_0_#2D3748] active:translate-y-2 active:shadow-none transition-all`}
-        >
-          {btnText}
-        </button>
-     </div>
-  </div>
-);
 
 const FooterBtn = ({ icon, label, onClick }) => (
   <div onClick={onClick} className="flex flex-col items-center gap-2 group cursor-pointer">

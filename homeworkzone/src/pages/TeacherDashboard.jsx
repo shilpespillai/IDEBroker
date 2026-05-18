@@ -533,7 +533,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
              const chartCounts = chartData.map(bucket => bucket.length);
 
              return (
-                <div className="px-10 py-10 space-y-12 pb-40 relative min-h-[calc(100vh-64px)] bg-[#FAF9FF]">
+                <div className="px-6 py-6 space-y-6 pb-20 relative min-h-[calc(100vh-64px)] bg-[#FAF9FF]">
                    {/* Top Summary Banner */}
                    <div className="flex items-center justify-between">
                        <div className="space-y-1">
@@ -562,17 +562,17 @@ const TeacherDashboard = ({ user, onLogout }) => {
                    </div>
 
                    {/* Split Row: Performance vs Goals / AI Hub */}
-                   <div className="grid grid-cols-12 gap-10">
+                   <div className="grid grid-cols-12 gap-6">
                       {/* Left: Class Performance & Team Goal Thermometer */}
-                      <div className="col-span-8 space-y-10">
+                      <div className="col-span-8 space-y-6">
                          {/* Class Performance Graph */}
-                         <div className="bg-white rounded-[40px] border border-[#E9E4FF] shadow-sm p-10 space-y-8">
+                         <div className="bg-white rounded-[32px] border border-[#E9E4FF] shadow-sm p-6 space-y-4">
                             <div>
                                <h3 className="text-xl font-black text-[#3C2E75] tracking-tight">Class Academic Progress</h3>
                                <p className="text-[10px] font-black text-[#8C83B5] uppercase tracking-widest">{dashboardTimeFilter} progress across core subjects</p>
                             </div>
 
-                            <div className="h-64 flex items-end justify-between gap-2 pr-4 pb-8 border-b border-[#FAF2FF] relative">
+                            <div className="h-48 flex items-end justify-between gap-2 pr-4 pb-4 border-b border-[#FAF2FF] relative">
                                {/* Y-Axis Guidelines */}
                                <div className="absolute inset-x-0 top-0 bottom-8 flex flex-col justify-between pointer-events-none z-0">
                                   {[100, 75, 50, 25, 0].map((val, i) => (
@@ -605,7 +605,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
 
                          {/* Classroom Collaborative Goal Thermometer */}
                          {activeClassroom && (
-                            <div className="bg-white rounded-[40px] border border-[#E9E4FF] shadow-sm p-10 space-y-6">
+                            <div className="bg-white rounded-[32px] border border-[#E9E4FF] shadow-sm p-6 space-y-4">
                                <div className="flex justify-between items-center">
                                   <div className="space-y-1">
                                      <span className="text-[10px] font-black uppercase text-[#FFAB91] tracking-wider">Active Classroom Collaborative Goal</span>
@@ -644,15 +644,15 @@ const TeacherDashboard = ({ user, onLogout }) => {
                       </div>
 
                       {/* Right: AI Teaching Co-Pilot Diagnostic Card */}
-                      <div className="col-span-4 space-y-10">
+                      <div className="col-span-4 space-y-6">
                          {/* AI Co-Pilot Intervention */}
-                         <div className="bg-gradient-to-br from-[#FAF2FF] to-[#F1E0FF] rounded-[40px] border border-[#E8C6FF] shadow-sm p-10 flex flex-col justify-between h-[360px]">
+                         <div className="bg-gradient-to-br from-[#FAF2FF] to-[#F1E0FF] rounded-[32px] border border-[#E8C6FF] shadow-sm p-6 flex flex-col justify-between gap-4">
                             <div className="space-y-6">
                                <div className="flex items-center gap-3">
                                   <span className="text-3xl">🤖</span>
                                   <h3 className="text-xl font-black text-[#3C2E75] tracking-tight">AI Co-Pilot Diagnosis</h3>
                                </div>
-                               <div className="bg-white/80 backdrop-blur-sm border border-[#E9E4FF] p-6 rounded-3xl space-y-4">
+                               <div className="bg-white/80 backdrop-blur-sm border border-[#E9E4FF] p-4 rounded-2xl space-y-3">
                                   <p className="text-sm font-black text-[#5C4D9F] leading-relaxed">
                                      {weakness.subject !== 'None yet' && weakness.average < 75 ? (
                                         <span>Learning gaps detected in <strong>{weakness.subject}</strong> (avg: {weakness.average}%). They would benefit from a revision challenge.</span>
@@ -680,7 +680,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                          </div>
 
                          {/* Attention Needed & High Flyers summary mini-roster */}
-                         <div className="bg-white rounded-[40px] border border-[#E9E4FF] shadow-sm p-8 space-y-6">
+                         <div className="bg-white rounded-[32px] border border-[#E9E4FF] shadow-sm p-6 space-y-4">
                             <h3 className="text-base font-black text-[#3C2E75] tracking-tight flex items-center gap-2">
                                <span>⚠️</span> Class Support Roster
                             </h3>
@@ -703,8 +703,8 @@ const TeacherDashboard = ({ user, onLogout }) => {
                    </div>
 
                    {/* Classroom Journey & Activities Calendar (May 2026) */}
-                   <div className="bg-gradient-to-br from-[#FCF8FF] to-[#F3EFFF] border border-[#E5DFFF] rounded-[40px] p-10 space-y-8 shadow-sm">
-                      <div className="flex justify-between items-center border-b border-[#EBE4FF] pb-6">
+                   <div className="bg-gradient-to-br from-[#FCF8FF] to-[#F3EFFF] border border-[#E5DFFF] rounded-[32px] p-6 space-y-5 shadow-sm">
+                      <div className="flex justify-between items-center border-b border-[#EBE4FF] pb-4">
                          <div className="space-y-1">
                             <h3 className="text-2xl font-black text-[#3B2B85] tracking-tight flex items-center gap-2">
                                <span>📅</span> Learning Calendar & Reminder Center
@@ -760,7 +760,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                             return (
                                <div 
                                   key={day} 
-                                  className={`aspect-square rounded-[28px] p-4 flex flex-col justify-between transition-all duration-300 cursor-pointer relative overflow-hidden group hover:scale-[1.04] ${dayCardStyle}`}
+                                  className={`aspect-square rounded-[20px] p-3 flex flex-col justify-between transition-all duration-300 cursor-pointer relative overflow-hidden group hover:scale-[1.04] ${dayCardStyle}`}
                                   onClick={() => {
                                      if (activeHw) {
                                         setSelectedCalendarHw(activeHw);

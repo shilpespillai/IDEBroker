@@ -85,6 +85,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [newGoalTitle, setNewGoalTitle] = useState('Dino Pizza Party! 🍕');
   const [newGoalTarget, setNewGoalTarget] = useState(1500);
+  const [dashboardRosterTab, setDashboardRosterTab] = useState('Support');
 
   const fetchSubmissions = async () => {
     if (!user?.uid) return;
@@ -537,7 +538,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                    {/* Top Summary Banner */}
                    <div className="flex items-center justify-between">
                        <div className="space-y-1">
-                          <h1 className="text-3xl font-black text-[#3C2E75] tracking-tight">Daily Summary Hub</h1>
+                          <h1 className="text-3xl font-black text-[#3C2E75] tracking-tight">Daily Summary Hub Hub</h1>
                           <p className="text-sm font-bold text-[#8C83B5]">Real-time learning diagnostic metrics across your classrooms.</p>
                        </div>
                        <div className="flex items-center gap-2 bg-[#FFF0FA] p-1.5 rounded-2xl border border-[#FFDDF5]">
@@ -563,13 +564,13 @@ const TeacherDashboard = ({ user, onLogout }) => {
 
                    {/* Split Row: Performance vs Goals / AI Hub */}
                    <div className="grid grid-cols-12 gap-6">
-                      {/* Left: Class Performance & Team Goal Thermometer */}
+                      {/* Left: Class Performance, Subject Mastery, & Team Goal Thermometer */}
                       <div className="col-span-8 space-y-6">
                          {/* Class Performance Graph */}
                          <div className="bg-white rounded-[32px] border border-[#E9E4FF] shadow-sm p-6 space-y-4">
                             <div>
-                               <h3 className="text-xl font-black text-[#3C2E75] tracking-tight">Class Academic Progress</h3>
-                               <p className="text-[10px] font-black text-[#8C83B5] uppercase tracking-widest">{dashboardTimeFilter} progress across core subjects</p>
+                               <h3 className="text-sm font-black text-[#3C2E75] tracking-tight">Class Academic Progress</h3>
+                               <p className="text-[9px] font-black text-[#8C83B5] uppercase tracking-widest">{dashboardTimeFilter} progress across core subjects</p>
                             </div>
 
                             <div className="h-48 flex items-end justify-between gap-2 pr-4 pb-4 border-b border-[#FAF2FF] relative">
@@ -603,13 +604,59 @@ const TeacherDashboard = ({ user, onLogout }) => {
                             </div>
                          </div>
 
+                         {/* Subject Diagnostic Mastery Breakdown (AI Gaps) */}
+                         <div className="bg-white rounded-[32px] border border-[#E9E4FF] shadow-sm p-6 space-y-4">
+                            <div className="flex justify-between items-center">
+                               <div>
+                                  <h3 className="text-sm font-black text-[#3C2E75] tracking-tight">Subject Diagnostic Mastery</h3>
+                                  <p className="text-[9px] font-black text-[#8C83B5] uppercase tracking-widest">Calculated average scores by subject area</p>
+                               </div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4">
+                               {subjectAverages.map(sa => {
+                                  let barColor = "bg-[#CE93D8]";
+                                  let textColor = "text-[#7828B4]";
+                                  let cardBg = "bg-[#FAF2FF] border-[#E8C6FF]/40";
+                                  if (sa.subject === 'Maths') {
+                                     barColor = "bg-[#FF7043]";
+                                     textColor = "text-[#C64F33]";
+                                     cardBg = "bg-[#FFF0EB] border-[#FFD2C4]/40";
+                                  } else if (sa.subject === 'Science') {
+                                     barColor = "bg-[#26A69A]";
+                                     textColor = "text-[#1E8A74]";
+                                     cardBg = "bg-[#EAFBF7] border-[#BCEEE2]/40";
+                                  } else if (sa.subject === 'English') {
+                                     barColor = "bg-[#FFCA28]";
+                                     textColor = "text-[#8C761E]";
+                                     cardBg = "bg-[#FFFCE8] border-[#FCEE9D]/40";
+                                  }
+
+                                  return (
+                                     <div key={sa.subject} className={`p-4 rounded-2xl border ${cardBg} space-y-2 flex flex-col justify-between`}>
+                                        <div className="flex justify-between items-center">
+                                           <span className="text-xs font-black text-[#3C2E75]">{sa.subject}</span>
+                                           <span className={`text-xs font-black ${textColor}`}>{sa.average}%</span>
+                                        </div>
+                                        <div className="h-2 w-full bg-white rounded-full overflow-hidden border border-slate-100">
+                                           <div className={`h-full rounded-full ${barColor}`} style={{ width: `${sa.average}%` }} />
+                                        </div>
+                                        <span className="text-[8px] font-bold text-slate-400 block text-right">{sa.count} assignments</span>
+                                     </div>
+                                  );
+                               })}
+                               {subjectAverages.length === 0 && (
+                                  <div className="col-span-3 text-center text-slate-400 font-bold text-xs italic py-6">No diagnostic mastery data available yet.</div>
+                               )}
+                            </div>
+                         </div>
+
                          {/* Classroom Collaborative Goal Thermometer */}
                          {activeClassroom && (
                             <div className="bg-white rounded-[32px] border border-[#E9E4FF] shadow-sm p-6 space-y-4">
                                <div className="flex justify-between items-center">
                                   <div className="space-y-1">
                                      <span className="text-[10px] font-black uppercase text-[#FFAB91] tracking-wider">Active Classroom Collaborative Goal</span>
-                                     <h3 className="text-2xl font-black text-[#3C2E75]">{targetTitle}</h3>
+                                     <h3 className="text-xl font-black text-[#3C2E75]">{targetTitle}</h3>
                                   </div>
                                   <button 
                                      onClick={() => {
@@ -647,7 +694,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                       <div className="col-span-4 space-y-6">
                          {/* AI Co-Pilot Intervention */}
                          <div className="bg-gradient-to-br from-[#FAF2FF] to-[#F1E0FF] rounded-[32px] border border-[#E8C6FF] shadow-sm p-6 flex flex-col justify-between gap-4">
-                            <div className="space-y-6">
+                            <div className="space-y-4">
                                <div className="flex items-center gap-3">
                                   <span className="text-3xl">🤖</span>
                                   <h3 className="text-xl font-black text-[#3C2E75] tracking-tight">AI Co-Pilot Diagnosis</h3>
@@ -679,24 +726,54 @@ const TeacherDashboard = ({ user, onLogout }) => {
                             </button>
                          </div>
 
-                         {/* Attention Needed & High Flyers summary mini-roster */}
+                         {/* Compact Support & Flyers Roster (Tabbed AI Insights) */}
                          <div className="bg-white rounded-[32px] border border-[#E9E4FF] shadow-sm p-6 space-y-4">
-                            <h3 className="text-base font-black text-[#3C2E75] tracking-tight flex items-center gap-2">
-                               <span>⚠️</span> Class Support Roster
-                            </h3>
-                            <div className="space-y-4 max-h-[220px] overflow-y-auto no-scrollbar">
-                               {struggling.slice(0, 3).map(st => (
-                                  <div key={st.name} className="flex items-center justify-between border-b border-[#FAF2FF] pb-2">
-                                     <div className="flex items-center gap-3">
-                                        <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${st.name}`} className="w-8 h-8 rounded-full border border-slate-100 bg-white" />
-                                        <span className="text-xs font-black text-[#5C4D9F]">{st.name}</span>
+                            <div className="flex justify-between items-center border-b border-[#FAF2FF] pb-2">
+                               <h3 className="text-sm font-black text-[#3C2E75] tracking-tight">Class Support Hub</h3>
+                               <div className="flex bg-[#F5F3FF] p-1 rounded-xl border border-[#EBE4FF]">
+                                  <button 
+                                     onClick={() => setDashboardRosterTab('Support')} 
+                                     className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${dashboardRosterTab === 'Support' ? 'bg-white text-amber-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                  >
+                                     ⚠️ Support ({struggling.length})
+                                  </button>
+                                  <button 
+                                     onClick={() => setDashboardRosterTab('Flyers')} 
+                                     className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${dashboardRosterTab === 'Flyers' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                  >
+                                     ⭐ Flyers ({risingStars.length})
+                                  </button>
+                               </div>
+                            </div>
+                            
+                            <div className="space-y-3 max-h-[160px] overflow-y-auto no-scrollbar">
+                               {dashboardRosterTab === 'Support' ? (
+                                  struggling.map(st => (
+                                     <div key={st.name} className="flex items-center justify-between border-b border-[#FAF2FF] pb-2">
+                                        <div className="flex items-center gap-2">
+                                           <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${st.name}`} className="w-8 h-8 rounded-full border border-slate-100 bg-white" />
+                                           <span className="text-xs font-black text-[#5C4D9F]">{st.name}</span>
+                                        </div>
+                                        <span className="text-xs font-black text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full">{st.avg}% avg</span>
                                      </div>
-                                     <span className="text-xs font-black text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full">{st.avg}% avg</span>
-                                  </div>
-                               ))}
-                               {struggling.length === 0 && (
+                                  ))
+                               ) : (
+                                  risingStars.map(st => (
+                                     <div key={st.name} className="flex items-center justify-between border-b border-[#FAF2FF] pb-2">
+                                        <div className="flex items-center gap-2">
+                                           <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${st.name}`} className="w-8 h-8 rounded-full border border-slate-100 bg-white" />
+                                           <span className="text-xs font-black text-[#5C4D9F]">{st.name}</span>
+                                        </div>
+                                        <span className="text-xs font-black text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full">{st.avg}% avg</span>
+                                     </div>
+                                  ))
+                               )}
+                               {dashboardRosterTab === 'Support' && struggling.length === 0 && (
                                   <div className="text-xs text-emerald-500 font-black italic text-center py-4">All students scoring above 60%! 🎉</div>
-                                )}
+                               )}
+                               {dashboardRosterTab === 'Flyers' && risingStars.length === 0 && (
+                                  <div className="text-xs text-slate-400 font-black italic text-center py-4">No high flyers registered yet. 🚀</div>
+                               )}
                             </div>
                          </div>
                       </div>
@@ -773,7 +850,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                                   {activeHw && (
                                      <div className={`px-1.5 py-0.5 rounded-lg text-[8px] font-black truncate shadow-sm mt-1 flex items-center gap-1 ${tagStyle}`}>
                                         <span className="w-1 h-1 rounded-full bg-current shrink-0" />
-                                        ${activeHw.subject}
+                                        {activeHw.subject}
                                      </div>
                                   )}
                                </div>
@@ -784,6 +861,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                 </div>
              );
           }
+
          case 'My Classes':
             return (
                <div className="px-10 py-10 space-y-12 relative min-h-[calc(100vh-64px)] pb-40">
@@ -1758,180 +1836,6 @@ const TeacherDashboard = ({ user, onLogout }) => {
                    </div>
                 </div>
              );
-          case 'AI Insights': {
-             // Filter submissions and homeworks for this class
-             const classHomeworks = allHomeworks.filter(hw => !activeClassroom || hw.assignedClassId === activeClassroom.id);
-             const classSubmissions = allSubmissions.filter(sub => !activeClassroom || sub.classId === activeClassroom.id);
-             
-             // Calculate subject averages
-             const subjectStats = {};
-             classSubmissions.forEach(sub => {
-                const hw = allHomeworks.find(h => h.id === sub.homeworkId);
-                const subject = hw ? hw.subject : 'General';
-                if (!subjectStats[subject]) subjectStats[subject] = { total: 0, count: 0 };
-                subjectStats[subject].total += sub.score || 0;
-                subjectStats[subject].count += 1;
-             });
-
-             const subjectAverages = Object.entries(subjectStats).map(([subj, data]) => ({
-                subject: subj,
-                average: Math.round(data.total / data.count),
-                count: data.count
-             }));
-
-             // Find class weakness and strength
-             const sortedByAvg = [...subjectAverages].sort((a, b) => a.average - b.average);
-             const weakness = sortedByAvg[0] || { subject: 'None yet', average: 100 };
-
-             // Find struggling and rising students
-             const studentAverages = {};
-             const classStudents = allStudents.filter(s => !activeClassroom || s.classId === activeClassroom.id);
-             
-             classStudents.forEach(student => {
-                const subs = classSubmissions.filter(sub => sub.studentName?.toLowerCase() === student.name?.toLowerCase());
-                if (subs.length > 0) {
-                   const total = subs.reduce((acc, sub) => acc + (sub.score || 0), 0);
-                   studentAverages[student.name] = {
-                      avg: Math.round(total / subs.length),
-                      count: subs.length
-                   };
-                }
-             });
-
-             const struggling = Object.entries(studentAverages)
-                .filter(([name, data]) => data.avg < 60)
-                .map(([name, data]) => ({ name, ...data }));
-
-             const risingStars = Object.entries(studentAverages)
-                .filter(([name, data]) => data.avg >= 85 && data.count >= 1)
-                .map(([name, data]) => ({ name, ...data }));
-
-             return (
-                <div className="px-10 py-10 space-y-10 min-h-[calc(100vh-64px)] pb-40 relative">
-                   <div className="flex items-center justify-between">
-                      <div>
-                         <h1 className="text-4xl font-black text-[#1E3A8A] tracking-tight">AI Insights & Diagnoses</h1>
-                         <p className="text-sm font-bold text-blue-300 italic">Smart analysis of class performance, gaps, and recommendations.</p>
-                      </div>
-                      <div className="w-24 h-24">
-                         <img src="/mascot.png" className="w-full h-full object-contain mix-blend-multiply drop-shadow-xl animate-float" alt="Mascot" />
-                      </div>
-                   </div>
-
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {/* Subject Breakdown Card */}
-                      <div className="bg-white rounded-[40px] border border-blue-50 shadow-sm p-10 space-y-6">
-                         <h3 className="text-xl font-black text-[#1E3A8A] tracking-tight">Subject Diagnostic Breakdown</h3>
-                         <div className="space-y-4">
-                            {subjectAverages.map(sa => (
-                               <div key={sa.subject} className="space-y-2">
-                                  <div className="flex justify-between text-sm font-bold">
-                                     <span className="text-[#1E3A8A]">{sa.subject} ({sa.count} submissions)</span>
-                                     <span className={sa.average >= 80 ? 'text-emerald-500' : sa.average >= 60 ? 'text-blue-500' : 'text-amber-500'}>{sa.average}%</span>
-                                  </div>
-                                  <div className="h-3 w-full bg-slate-50 border border-slate-100 rounded-full overflow-hidden">
-                                     <div 
-                                        className={`h-full rounded-full transition-all duration-500 ${sa.average >= 80 ? 'bg-emerald-400' : sa.average >= 60 ? 'bg-blue-400' : 'bg-amber-400'}`} 
-                                        style={{ width: `${sa.average}%` }} 
-                                     />
-                                  </div>
-                               </div>
-                            ))}
-                            {subjectAverages.length === 0 && (
-                               <div className="text-center text-blue-300 font-bold italic py-10">No diagnostic data yet! Assign homework to get started.</div>
-                            )}
-                         </div>
-                      </div>
-
-                      {/* AI Intervention Card */}
-                      <div className="bg-gradient-to-br from-[#EBE4FF]/30 to-[#E8E6FF]/20 rounded-[40px] border border-purple-100 shadow-sm p-10 flex flex-col justify-between">
-                         <div className="space-y-6">
-                            <div className="flex items-center gap-3">
-                               <span className="text-3xl">🤖</span>
-                               <h3 className="text-xl font-black text-[#1E3A8A] tracking-tight">AI Teaching Co-Pilot</h3>
-                            </div>
-                            <div className="bg-white/80 backdrop-blur-sm border border-purple-50 p-6 rounded-3xl space-y-4">
-                               <p className="text-sm font-bold text-[#1E3A8A] leading-relaxed">
-                                  {weakness.subject !== 'None yet' && weakness.average < 75 ? (
-                                     <span>Based on live grades, students are experiencing learning gaps in <strong>{weakness.subject}</strong> (avg: {weakness.average}%). They would benefit from a targeted revision session.</span>
-                                  ) : (
-                                     <span>Class average is healthy! Students show excellent mastery of subjects. Keep assigning balanced homework tasks.</span>
-                                  )}
-                               </p>
-                               <div className="bg-purple-50 rounded-2xl p-4 border border-purple-100/50">
-                                  <span className="text-[9px] font-black uppercase text-purple-400 tracking-wider block mb-1">Recommended Next Mission</span>
-                                  <p className="text-xs font-black text-purple-600 leading-tight">
-                                     {weakness.subject !== 'None yet' && weakness.average < 75 
-                                        ? `Assign a 5-question conceptual review on ${weakness.subject} to reinforce core knowledge.`
-                                        : `Assign a creative challenge or a multidisciplinary Science/Maths quest!`
-                                     }
-                                  </p>
-                               </div>
-                            </div>
-                         </div>
-                         <button 
-                            onClick={() => setActiveTab('Homework')}
-                            className="w-full bg-[#8A70FF] text-white py-4 rounded-3xl font-black text-xs hover:bg-[#7455FF] transition-all shadow-lg shadow-purple-100 mt-6"
-                         >
-                            Generate Homework Mission 🚀
-                         </button>
-                      </div>
-                   </div>
-
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {/* Struggling Students Alert */}
-                      <div className="bg-white rounded-[40px] border border-blue-50 shadow-sm p-10 space-y-6">
-                         <h3 className="text-xl font-black text-[#1E3A8A] tracking-tight flex items-center gap-2">
-                            <span>⚠️</span> Attention Needed
-                         </h3>
-                         <p className="text-xs font-bold text-blue-300 italic">Students scoring below 60% average. Consider giving individual support.</p>
-                         <div className="space-y-4">
-                            {struggling.map(st => (
-                               <div key={st.name} className="flex items-center justify-between border-b border-slate-50 pb-2">
-                                  <div className="flex items-center gap-3">
-                                     <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${st.name}`} className="w-8 h-8 rounded-full border border-slate-100 bg-white" />
-                                     <span className="text-sm font-black text-[#1E3A8A]">{st.name}</span>
-                                  </div>
-                                  <div className="text-right">
-                                     <span className="text-sm font-black text-amber-500">{st.avg}% avg</span>
-                                     <p className="text-[9px] font-bold text-slate-400 uppercase">{st.count} quizzes completed</p>
-                                  </div>
-                               </div>
-                            ))}
-                            {struggling.length === 0 && (
-                               <div className="py-6 text-center text-emerald-500 font-black text-sm italic">Excellent! All kids are scoring above 60%! 🎉</div>
-                            )}
-                         </div>
-                      </div>
-
-                      {/* Rising Stars Alert */}
-                      <div className="bg-white rounded-[40px] border border-blue-50 shadow-sm p-10 space-y-6">
-                         <h3 className="text-xl font-black text-[#1E3A8A] tracking-tight flex items-center gap-2">
-                            <span>⭐</span> High Flyers
-                         </h3>
-                         <p className="text-xs font-bold text-blue-300 italic">Students scoring 85%+ average. Keep challenging them!</p>
-                         <div className="space-y-4">
-                            {risingStars.map(rs => (
-                               <div key={rs.name} className="flex items-center justify-between border-b border-slate-50 pb-2">
-                                  <div className="flex items-center gap-3">
-                                     <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${rs.name}`} className="w-8 h-8 rounded-full border border-slate-100 bg-white" />
-                                     <span className="text-sm font-black text-[#1E3A8A]">{rs.name}</span>
-                                  </div>
-                                  <div className="text-right">
-                                     <span className="text-sm font-black text-emerald-500">{rs.avg}% avg</span>
-                                     <p className="text-[9px] font-bold text-slate-400 uppercase">{rs.count} quizzes completed</p>
-                                  </div>
-                               </div>
-                            ))}
-                            {risingStars.length === 0 && (
-                               <div className="py-6 text-center text-blue-300 font-bold text-sm italic">Assign more missions to see who excels! 🚀</div>
-                            )}
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             );
-          }
           case 'Class Goals': {
              if (!activeClassroom) {
                 return (
@@ -2176,8 +2080,6 @@ const TeacherDashboard = ({ user, onLogout }) => {
             <SidebarItem id="Gradebook" label="Gradebook" icon={<Trophy className="w-5 h-5 text-emerald-500" />} active={activeTab === 'Gradebook'} onClick={setActiveTab} />
             <SidebarItem id="Messages" label="Messages" icon={<img src="/ic-messages.png" className="w-6 h-6 object-contain mix-blend-multiply" alt="Messages" />} active={activeTab === 'Messages'} onClick={setActiveTab} />
             <SidebarItem id="Rewards" label="Rewards" icon={<img src="/ic-rewards.png" className="w-6 h-6 object-contain mix-blend-multiply" alt="Rewards" />} active={activeTab === 'Rewards'} onClick={setActiveTab} />
-            <SidebarItem id="Class Goals" label="Class Goals" icon={<Trophy className="w-5 h-5 text-amber-500" />} active={activeTab === 'Class Goals'} onClick={setActiveTab} />
-            <SidebarItem id="AI Insights" label="AI Insights" icon={<Star className="w-5 h-5 text-purple-500" />} active={activeTab === 'AI Insights'} onClick={setActiveTab} />
             <SidebarItem id="AI Hub" label="AI Hub" icon={<Zap className="w-5 h-5 text-purple-500" />} active={showAiSettings} onClick={() => setShowAiSettings(true)} />
          </nav>
 

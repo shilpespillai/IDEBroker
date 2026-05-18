@@ -453,7 +453,8 @@ const TeacherDashboard = ({ user, onLogout }) => {
 
              // Classrooms student point math
              const classStudents = allStudents.filter(s => !activeClassroom || s.classId === activeClassroom.id);
-             const classHomeworks = allHomeworks.filter(hw => !activeClassroom || hw.assignedClassId === activeClassroom.id);
+             const classHomeworks = allHomeworks.filter(hw => hw.status === 'published' && (!activeClassroom || hw.assignedClassId === activeClassroom.id));
+             const pendingDrafts = allHomeworks.filter(hw => hw.status === 'draft' && (!activeClassroom || hw.assignedClassId === activeClassroom.id));
              const classSubmissions = allSubmissions.filter(sub => {
                 if (!activeClassroom) return true;
                 const hw = allHomeworks.find(h => h.id === sub.homeworkId);
@@ -769,6 +770,44 @@ const TeacherDashboard = ({ user, onLogout }) => {
 
                       {/* Right: AI Teaching Co-Pilot Diagnostic Card */}
                       <div className="col-span-4 space-y-6">
+                         {/* Pending Drafts Warning Card */}
+                         {pendingDrafts.length > 0 && (
+                            <div className="bg-gradient-to-br from-[#FFF0FA] to-[#FFE5F6] rounded-[32px] border border-[#FFD5F0] shadow-sm p-6 space-y-4 animate-in slide-in-from-top duration-300">
+                               <div className="flex items-center gap-3">
+                                  <span className="text-3xl animate-bounce">📝</span>
+                                  <div>
+                                     <h3 className="text-xl font-black text-[#8A1F6E] tracking-tight">Drafts Pending Review</h3>
+                                     <p className="text-[9px] font-black text-[#C6339A] uppercase tracking-widest">Left to be checked & published</p>
+                                  </div>
+                               </div>
+                               
+                               <div className="space-y-2">
+                                  <p className="text-xs font-bold text-[#8A1F6E]/80">
+                                     You have <span className="font-black text-[#C6339A] text-sm">{pendingDrafts.length} draft homework{pendingDrafts.length > 1 ? 's' : ''}</span> saved that are not visible to students yet.
+                                  </p>
+                                  
+                                  <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
+                                     {pendingDrafts.map(draft => (
+                                        <div key={draft.id} className="bg-white/95 backdrop-blur-sm border border-[#FFDDF5] p-3 rounded-2xl flex items-center justify-between shadow-sm">
+                                           <div className="flex flex-col min-w-0">
+                                              <span className="text-xs font-black text-slate-800 truncate">{draft.title}</span>
+                                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{draft.subject}</span>
+                                           </div>
+                                           <button 
+                                              onClick={() => {
+                                                 setActiveTab('Homework');
+                                              }}
+                                              className="text-[10px] font-black bg-[#C23C9F] text-white px-3 py-1.5 rounded-xl hover:bg-[#A13083] transition-colors shrink-0"
+                                           >
+                                              Check & Publish 🚀
+                                           </button>
+                                        </div>
+                                     ))}
+                                  </div>
+                               </div>
+                            </div>
+                         )}
+
                          {/* AI Co-Pilot Intervention */}
                          <div className="bg-gradient-to-br from-[#FAF2FF] to-[#F1E0FF] rounded-[32px] border border-[#E8C6FF] shadow-sm p-6 space-y-4">
                             <div className="flex items-center gap-3">
@@ -1147,7 +1186,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
           case 'Homework':
             return (
                <div className="px-10 py-10 space-y-10 min-h-[calc(100vh-64px)] pb-40 relative">
-                  <HomeworkGenerator user={user} classrooms={classrooms} activeClassroom={activeClassroom} />
+                  <HomeworkGenerator user={user} classrooms={classrooms} activeClassroom={activeClassroom} onHomeworkCreated={fetchDashboardSubmissions} />
                   <GrassBorder />
                </div>
             );

@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '../firebase';
-import { collection, addDoc, serverTimestamp, getDocs, query, where, orderBy, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, where, orderBy, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 
 const SUBJECTS = [
   { 
@@ -115,7 +115,7 @@ const SUBJECTS = [
   }
 ];
 
-export default function HomeworkGenerator({ user, classrooms = [], activeClassroom }) {
+export default function HomeworkGenerator({ user, classrooms = [], activeClassroom, onHomeworkCreated }) {
   const [formData, setFormData] = useState({
     subject: 'maths',
     title: '',
@@ -323,6 +323,9 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
 
       await addDoc(collection(db, 'homeworks'), payload);
       alert("Homework Published Successfully! 🚀");
+      if (onHomeworkCreated) {
+        onHomeworkCreated();
+      }
       
       // Reset form
       setFormData({
@@ -341,6 +344,73 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
       alert("Failed to publish homework. ❌");
     }
     setIsPublishing(false);
+  };
+
+  const handleSaveDraft = async () => {
+    if (!formData.title || !formData.classId) {
+      alert("Please fill in the title and select a class! 🎒");
+      return;
+    }
+
+    setIsPublishing(true);
+    try {
+      const payload = {
+        title: formData.title,
+        subject: formData.subject,
+        instructions: formData.instructions,
+        assignedClassId: formData.classId,
+        dueDate: formData.dueDate || '',
+        time: formData.time || '',
+        points: formData.points,
+        questions: generatedQuestions || [],
+        teacherId: user?.uid,
+        status: 'draft',
+        createdAt: serverTimestamp()
+      };
+
+      await addDoc(collection(db, 'homeworks'), payload);
+      alert("Homework Draft Saved Successfully! 📝🎨");
+      
+      if (onHomeworkCreated) {
+        onHomeworkCreated();
+      }
+
+      // Reset form
+      setFormData({
+        subject: 'maths',
+        title: '',
+        instructions: '',
+        classId: '',
+        dueDate: '',
+        time: '',
+        points: '10'
+      });
+      setGeneratedQuestions(null);
+      setIsAiAccepted(false);
+    } catch (err) {
+      console.error("Save Draft Error:", err);
+      alert("Failed to save draft. ❌");
+    }
+    setIsPublishing(false);
+  };
+
+  const handlePublishDraft = async (hwId) => {
+    if (!window.confirm("Ready to publish this draft? 🚀 It will become visible to all students in the classroom!")) return;
+    try {
+      const hwRef = doc(db, 'homeworks', hwId);
+      await updateDoc(hwRef, {
+        status: 'published',
+        createdAt: serverTimestamp()
+      });
+      alert("Draft Published successfully! 🚀✨");
+      fetchPastHomeworks();
+      if (onHomeworkCreated) {
+        onHomeworkCreated();
+      }
+    } catch (err) {
+      console.error("Publish draft error:", err);
+      alert("Failed to publish draft.");
+    }
   };
 
   return (
@@ -637,8 +707,12 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
         </div>
 
         <div className="flex items-center gap-4">
-          <button className="bg-purple-50 hover:bg-purple-100 text-purple-600 font-black px-8 py-4 rounded-2xl transition-colors">
-            Save as Draft
+          <button 
+            onClick={handleSaveDraft}
+            disabled={isPublishing}
+            className="bg-purple-50 hover:bg-purple-100 text-purple-600 font-black px-8 py-4 rounded-2xl transition-colors disabled:opacity-50"
+          >
+            {isPublishing ? 'Saving...' : 'Save as Draft 📝'}
           </button>
           <button 
             onClick={handlePublish}
@@ -698,6 +772,15 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
                       <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${hw.subject === 'maths' ? 'bg-blue-100 text-blue-700' : hw.subject === 'science' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
                         {hw.subject}
                       </span>
+                      {hw.status === 'draft' ? (
+                        <span className="px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest bg-purple-100 text-purple-700 border border-purple-200">
+                          Draft 📝
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-700 border border-emerald-200">
+                          Published 🚀
+                        </span>
+                      )}
                       <h3 className="text-xl font-black text-slate-800">{hw.title}</h3>
                     </div>
                     <div className="flex items-center gap-6 text-sm font-bold text-slate-400">
@@ -705,6 +788,18 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
                        <div className="flex items-center gap-2" title="Due Date"><Clock className="w-4 h-4" /> {hw.dueDate ? new Date(hw.dueDate).toLocaleDateString() : 'No Due'}</div>
                        <div className="flex items-center gap-2"><Users className="w-4 h-4" /> {hw.questions?.length || 0} Qs</div>
                        
+                       {hw.status === 'draft' && (
+                         <button 
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             handlePublishDraft(hw.id);
+                           }}
+                           className="px-4 py-2 bg-[#2ecc71] hover:bg-[#27ae60] text-white rounded-xl text-xs font-black transition-colors shadow-sm ml-2 shrink-0"
+                         >
+                           Publish Draft 🚀
+                         </button>
+                       )}
+
                        <button 
                          onClick={() => handleDeleteHomework(hw.id)}
                          className="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center hover:bg-rose-100 transition-colors opacity-0 group-hover:opacity-100 ml-4"

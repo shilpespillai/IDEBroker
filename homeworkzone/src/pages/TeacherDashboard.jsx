@@ -601,8 +601,24 @@ const TeacherDashboard = ({ user, onLogout }) => {
              let chartLabels = [];
              let chartData = [];
              
-             if (dashboardTimeFilter === 'Weekly') {
-                chartLabels = ['Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon'];
+             if (dashboardTimeFilter === 'Daily') {
+                chartLabels = ['Morning', 'Noon', 'Afternoon', 'Evening'];
+                chartData = [[], [], [], []];
+                timeFilteredSubmissions.forEach(sub => {
+                   const subDate = sub.submittedAt?.toDate ? sub.submittedAt.toDate() : new Date(sub.submittedAt);
+                   const hours = subDate.getHours();
+                   if (hours >= 6 && hours < 12) chartData[0].push(sub.score);
+                   else if (hours >= 12 && hours < 18) chartData[1].push(sub.score);
+                   else if (hours >= 18 && hours < 24) chartData[2].push(sub.score);
+                   else chartData[3].push(sub.score);
+                });
+             } else if (dashboardTimeFilter === 'Weekly') {
+                const getDayLabel = (daysAgo) => {
+                   const d = new Date();
+                   d.setDate(d.getDate() - daysAgo);
+                   return d.toLocaleDateString('en-US', { weekday: 'short' });
+                };
+                chartLabels = [getDayLabel(6), getDayLabel(5), getDayLabel(4), getDayLabel(3), getDayLabel(2), getDayLabel(1), getDayLabel(0)];
                 chartData = [[], [], [], [], [], [], []];
                 const now = new Date();
                 timeFilteredSubmissions.forEach(sub => {
@@ -633,7 +649,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                    {/* Top Summary Banner */}
                    <div className="flex items-center justify-between">
                        <div className="space-y-1">
-                          <h1 className="text-3xl font-black text-[#3C2E75] tracking-tight">Daily Summary Hub Hub</h1>
+                          <h1 className="text-3xl font-black text-[#3C2E75] tracking-tight">Daily Summary Hub</h1>
                           <p className="text-sm font-bold text-[#8C83B5]">Real-time learning diagnostic metrics across your classrooms.</p>
                        </div>
                        <div className="flex items-center gap-2 bg-[#FFF0FA] p-1.5 rounded-2xl border border-[#FFDDF5]">

@@ -1331,7 +1331,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                            {missingReports.map(({ student, missingHws }, idx) => (
                               <div key={student.id || idx} className="grid grid-cols-12 px-8 py-6 items-center hover:bg-rose-50/10 transition-all">
                                  <div className="col-span-8 flex items-center gap-4">
-                                    <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${student.name}`} className="w-10 h-10 rounded-full border-2 border-white shadow-sm" alt={student.name} />
+                                    <img src={getStudentAvatar(student.name)} className="w-10 h-10 rounded-full border-2 border-white shadow-sm bg-white p-0.5" alt={student.name} />
                                     <div className="flex flex-col">
                                        <span className="text-sm font-black text-rose-900">{student.name}</span>
                                        <div className="flex flex-col mt-2 gap-1.5">

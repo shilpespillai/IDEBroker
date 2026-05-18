@@ -9,7 +9,6 @@ import {
   MessageCircle, 
   Users, 
   ShoppingBag, 
-  Instagram,
   Copy, 
   Check, 
   ExternalLink,
@@ -325,7 +324,7 @@ const App = () => {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex gap-2">
-                    {['facebook', 'linkedin', 'etsy', 'instagram'].map(id => (
+                    {['facebook', 'linkedin', 'etsy'].map(id => (
                       <button 
                         key={id}
                         onClick={() => togglePlatform(id)}
@@ -337,8 +336,7 @@ const App = () => {
                       >
                         {id === 'facebook' ? <MessageCircle className="w-4 h-4" /> : 
                          id === 'linkedin' ? <Users className="w-4 h-4" /> : 
-                         id === 'etsy' ? <ShoppingBag className="w-4 h-4" /> : 
-                         <Instagram className="w-4 h-4" />}
+                         <ShoppingBag className="w-4 h-4" />}
                       </button>
                     ))}
                   </div>

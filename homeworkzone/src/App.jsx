@@ -1729,8 +1729,13 @@ const LandingPage = () => {
       <section className="max-w-[95%] mx-auto px-6 mt-8">
          <div className="relative bg-white rounded-[60px] border-[12px] border-[#2D3748] shadow-[0_30px_0_0_#2D3748] overflow-hidden group">
             {/* The Kids & School Illustration */}
-            <div className="relative h-[400px] md:h-[600px]">
-               <img src="/assets/hero_banner.png" className="w-full h-full object-cover object-bottom" alt="Homework Zone Adventure" />
+            <div className="relative h-[480px] sm:h-[580px] md:h-[720px] lg:h-[820px] xl:h-[900px]">
+               <img 
+                  src="/assets/hero_banner.png" 
+                  className="w-full h-full object-cover" 
+                  style={{ objectPosition: 'center 62%' }}
+                  alt="Homework Zone Adventure" 
+               />
                
                {/* Welcome Banner Overlay */}
                <div className="absolute top-16 left-1/2 -translate-x-1/2 w-[90%] md:w-auto text-center">

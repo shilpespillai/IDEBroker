@@ -443,7 +443,12 @@ const TeacherDashboard = ({ user, onLogout }) => {
              // Classrooms student point math
              const classStudents = allStudents.filter(s => !activeClassroom || s.classId === activeClassroom.id);
              const classHomeworks = allHomeworks.filter(hw => !activeClassroom || hw.assignedClassId === activeClassroom.id);
-             const classSubmissions = allSubmissions.filter(sub => !activeClassroom || sub.classId === activeClassroom.id);
+             const classSubmissions = allSubmissions.filter(sub => {
+                if (!activeClassroom) return true;
+                const hw = allHomeworks.find(h => h.id === sub.homeworkId);
+                const subClassId = sub.classId || hw?.assignedClassId;
+                return subClassId === activeClassroom.id;
+             });
 
              const computedStudents = classStudents.map(student => {
                 const studentSubs = allSubmissions.filter(sub => 
@@ -1996,7 +2001,12 @@ const TeacherDashboard = ({ user, onLogout }) => {
           }
           case 'Calendar': {
              const classHomeworks = allHomeworks.filter(hw => !activeClassroom || hw.assignedClassId === activeClassroom.id);
-             const classSubmissions = allSubmissions.filter(sub => !activeClassroom || sub.classId === activeClassroom.id);
+             const classSubmissions = allSubmissions.filter(sub => {
+                if (!activeClassroom) return true;
+                const hw = allHomeworks.find(h => h.id === sub.homeworkId);
+                const subClassId = sub.classId || hw?.assignedClassId;
+                return subClassId === activeClassroom.id;
+             });
 
              // Generate calendar dates for May 2026
              const daysInMonth = 31;

@@ -615,21 +615,31 @@ const MissionReports = ({ studentName, teacher }) => {
    );
 };
 
-const RewardBadge = ({ icon, label, color, delay }) => (
+const RewardBadge = ({ icon, label, color, delay, unlocked }) => (
    <motion.div 
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay }}
-      className="flex flex-col items-center gap-3 group cursor-pointer"
+      className={`flex flex-col items-center gap-3 group cursor-pointer relative ${unlocked ? '' : 'opacity-40 grayscale'}`}
    >
-      <div className={`w-20 h-20 ${color} rounded-full flex-center shadow-md border-4 border-white group-hover:scale-110 transition-all`}>
+      <div className={`w-20 h-20 ${color} rounded-full flex-center shadow-md border-4 border-white group-hover:scale-110 transition-all relative`}>
          <span className="text-4xl drop-shadow-sm">{icon}</span>
+         {!unlocked && (
+            <div className="absolute inset-0 bg-slate-900/10 rounded-full flex-center">
+               <span className="text-sm">🔒</span>
+            </div>
+         )}
       </div>
-      <span className="text-[11px] font-semibold text-[#2D3748] text-center leading-tight tracking-tight uppercase px-1">{label}</span>
+      <div className="text-center space-y-0.5">
+         <span className="text-[11px] font-black text-[#2D3748] text-center leading-tight tracking-tight uppercase px-1 block">{label}</span>
+         <span className={`text-[8px] font-bold uppercase tracking-widest ${unlocked ? 'text-emerald-500' : 'text-slate-400'}`}>
+            {unlocked ? 'Unlocked' : 'Locked'}
+         </span>
+      </div>
    </motion.div>
 );
 
-const RewardShopItem = ({ icon, title, subtitle, points, delay }) => (
+const RewardShopItem = ({ icon, title, subtitle, points, delay, onRedeem, canAfford }) => (
    <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -649,7 +659,13 @@ const RewardShopItem = ({ icon, title, subtitle, points, delay }) => (
             </div>
          </div>
       </div>
-      <button className="bg-[#8A70FF] text-white px-5 py-2 rounded-xl text-[10px] font-semibold shadow-lg shadow-purple-100 hover:scale-105 active:scale-95 transition-all">redeem</button>
+      <button 
+         onClick={onRedeem}
+         disabled={!canAfford}
+         className={`px-5 py-2 rounded-xl text-[10px] font-semibold shadow-lg transition-all ${canAfford ? 'bg-[#8A70FF] text-white shadow-purple-100 hover:scale-105 active:scale-95 cursor-pointer' : 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'}`}
+      >
+         {canAfford ? 'Redeem' : 'Locked'}
+      </button>
    </motion.div>
 );
 
@@ -676,24 +692,90 @@ const LeaderboardRow = ({ rank, name, students, delay }) => (
             </div>
             <div>
                <p className="text-sm font-semibold text-[#2D3748]">{name}</p>
-               <p className="text-[10px] font-semibold text-slate-400 italic">{students} students</p>
+               <p className="text-[10px] font-black text-[#8A70FF] uppercase tracking-widest">{students} Points</p>
             </div>
          </div>
       </div>
    </motion.div>
 );
 
-const MyRewards = ({ studentName }) => {
+const MyRewards = ({ studentName, classroom, homeworks, submissions }) => {
+   // Filter student's submissions case-insensitively
+   const mySubmissions = submissions.filter(s => s.studentName?.toLowerCase() === studentName?.toLowerCase());
+   const totalPoints = mySubmissions.reduce((acc, s) => acc + (s.correctCount || 0) * 10, 0);
+
+   // Unlocking Badge calculations
+   const hasMaths = mySubmissions.some(s => {
+      const hw = homeworks.find(h => h.id === s.homeworkId);
+      return hw?.subject?.toLowerCase() === 'maths';
+   });
+   const hasEnglish = mySubmissions.some(s => {
+      const hw = homeworks.find(h => h.id === s.homeworkId);
+      return hw?.subject?.toLowerCase() === 'english';
+   });
+   const hasScience = mySubmissions.some(s => {
+      const hw = homeworks.find(h => h.id === s.homeworkId);
+      return hw?.subject?.toLowerCase() === 'science';
+   });
+   const hasMusicOrArts = mySubmissions.some(s => {
+      const hw = homeworks.find(h => h.id === s.homeworkId);
+      return hw?.subject?.toLowerCase() === 'music' || hw?.subject?.toLowerCase() === 'arts';
+   });
+
+   const badgesList = [
+      { icon: "🐦", label: "Early Bird", color: "bg-amber-100", unlocked: mySubmissions.length >= 1 },
+      { icon: "🧮", label: "Number Ninja", color: "bg-emerald-100", unlocked: hasMaths },
+      { icon: "🧙", label: "Grammar Wizard", color: "bg-purple-100", unlocked: hasEnglish },
+      { icon: "🔬", label: "Little Einstein", color: "bg-blue-100", unlocked: hasScience },
+      { icon: "🎨", label: "Creative Genius", color: "bg-rose-100", unlocked: hasMusicOrArts },
+      { icon: "⭐", label: "Perfect Score", color: "bg-purple-100", unlocked: mySubmissions.some(s => s.score === 100) },
+      { icon: "🚀", label: "Fast Learner", color: "bg-blue-100", unlocked: mySubmissions.some(s => s.score >= 80) },
+      { icon: "📚", label: "Bookworm", color: "bg-emerald-100", unlocked: mySubmissions.length >= 3 },
+      { icon: "🏆", label: "Grand Scholar", color: "bg-purple-100", unlocked: mySubmissions.length >= 5 },
+      { icon: "💬", label: "Co-Pilot Listener", color: "bg-blue-100", unlocked: mySubmissions.some(s => s.feedback) },
+      { icon: "🔥", label: "Super Scholar", color: "bg-amber-100", unlocked: mySubmissions.length >= 2 && (mySubmissions.reduce((acc, s) => acc + s.score, 0) / mySubmissions.length) >= 90 },
+      { icon: "👑", label: "Score Master", color: "bg-purple-100", unlocked: totalPoints >= 100 }
+   ];
+
+   // Leaderboard sorting dynamically from submissions
+   const studentScores = {};
+   submissions.forEach(sub => {
+      if (sub.classId === classroom?.id || !classroom?.id) {
+         const name = sub.studentName || "Student";
+         const points = (sub.correctCount || 0) * 10;
+         studentScores[name] = (studentScores[name] || 0) + points;
+      }
+   });
+
+   if (!studentScores[studentName]) {
+      studentScores[studentName] = 0;
+   }
+
+   const sortedLeaderboard = Object.keys(studentScores)
+      .map(name => ({ name, points: studentScores[name] }))
+      .sort((a, b) => b.points - a.points);
+
+   const shopItems = [
+      { icon: "https://img.icons8.com/fluency/96/astronaut-helmet.png", title: "Astronaut Helmet 🧑‍🚀", subtitle: "Accessory for your profile character", points: 30 },
+      { icon: "https://img.icons8.com/fluency/96/palette.png", title: "Cheerful Palette 🎨", subtitle: "Custom dashboard color theme pack", points: 20 },
+      { icon: "https://img.icons8.com/fluency/96/panda.png", title: "Panda Buddy 🐼", subtitle: "Premium dashboard floating companion mascot", points: 50 },
+      { icon: "https://img.icons8.com/fluency/96/medal.png", title: "Golden Badge Frame 🏅", subtitle: "Special golden border highlight for avatar", points: 15 }
+   ];
+
+   const handleRedeem = (item) => {
+      alert(`🎉 Redeemed successfully: ${item.title}! Head over to your profile to equip it!`);
+   };
+
    return (
       <div className="max-w-4xl mx-auto py-4 space-y-8 pb-20">
          {/* Hero Header */}
          <div className="flex items-center justify-between px-2 relative">
             <div className="space-y-4">
                <div className="space-y-1">
-                  <h1 className="text-3xl font-semibold text-[#2D3748] tracking-tighter">My Rewards</h1>
-                  <p className="text-sm font-semibold text-slate-400">Mohcute soccents with points and badges.</p>
+                  <h1 className="text-3xl font-semibold text-[#2D3748] tracking-tighter">My Rewards Hub</h1>
+                  <p className="text-sm font-semibold text-slate-400">Complete homework missions and unlock cool rewards!</p>
                </div>
-               <h2 className="text-6xl font-semibold text-[#2D3748] tracking-tighter">2450 <span className="text-3xl text-slate-400">points</span></h2>
+               <h2 className="text-6xl font-semibold text-[#2D3748] tracking-tighter">{totalPoints} <span className="text-3xl text-slate-400">points</span></h2>
             </div>
             <div className="w-48 h-48 relative">
                <motion.div 
@@ -711,20 +793,21 @@ const MyRewards = ({ studentName }) => {
 
          {/* Badges Hub */}
          <div className="bg-white rounded-[32px] p-10 border border-slate-100 shadow-sm space-y-10">
+            <div className="space-y-1">
+               <h3 className="text-xl font-semibold text-[#2D3748]">My Badges Collection</h3>
+               <p className="text-xs text-slate-400">Earn badges by completing learning quizzes and perfect scores.</p>
+            </div>
             <div className="grid grid-cols-6 gap-8">
-               <RewardBadge icon="🐝" label="Speiling Boo" color="bg-amber-100" delay={0.1} />
-               <RewardBadge icon="🧮" label="Number Cronsher" color="bg-emerald-100" delay={0.2} />
-               <RewardBadge icon="⭐" label="Star Reader" color="bg-purple-100" delay={0.3} />
-               <RewardBadge icon="😊" label="Helpful Four" color="bg-amber-100" delay={0.4} />
-               <RewardBadge icon="🌟" label="Star Reader" color="bg-blue-100" delay={0.5} />
-               <RewardBadge icon="✨" label="Super Star" color="bg-purple-100" delay={0.6} />
-               
-               <RewardBadge icon="🧙" label="Austie Avatar" color="bg-blue-100" delay={0.7} />
-               <RewardBadge icon="🍎" label="Suetlar Accessorie" color="bg-emerald-100" delay={0.8} />
-               <RewardBadge icon="🌌" label="Socter Nopes" color="bg-purple-100" delay={0.9} />
-               <RewardBadge icon="🌍" label="Wola Digs" color="bg-blue-100" delay={1.0} />
-               <RewardBadge icon="🏅" label="Badges" color="bg-amber-100" delay={1.1} />
-               <RewardBadge icon="🎨" label="Custom Themes" color="bg-purple-100" delay={1.2} />
+               {badgesList.map((badge, idx) => (
+                  <RewardBadge 
+                     key={idx}
+                     icon={badge.icon} 
+                     label={badge.label} 
+                     color={badge.color} 
+                     delay={idx * 0.05} 
+                     unlocked={badge.unlocked}
+                  />
+               ))}
             </div>
          </div>
 
@@ -733,31 +816,36 @@ const MyRewards = ({ studentName }) => {
             <div className="col-span-12 lg:col-span-7 bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm space-y-6">
                <h2 className="text-2xl font-semibold text-[#2D3748]">Reward Shop</h2>
                <div className="space-y-4">
-                  <RewardShopItem 
-                     icon={`https://api.dicebear.com/7.x/lorelei/svg?seed=special`}
-                     title="Special avator Accessories"
-                     subtitle="Cumeu points"
-                     points={3}
-                     delay={1.3}
-                  />
-                  <div className="h-px bg-slate-100 mx-4" />
-                  <RewardShopItem 
-                     icon="https://img.icons8.com/fluency/96/palette.png"
-                     title="Custom Themes"
-                     subtitle="Cumeu points"
-                     points={2}
-                     delay={1.4}
-                  />
+                  {shopItems.map((item, idx) => (
+                     <div key={idx}>
+                        <RewardShopItem 
+                           icon={item.icon}
+                           title={item.title}
+                           subtitle={item.subtitle}
+                           points={item.points}
+                           delay={1.3 + (idx * 0.1)}
+                           onRedeem={() => handleRedeem(item)}
+                           canAfford={totalPoints >= item.points}
+                        />
+                        {idx < shopItems.length - 1 && <div className="h-px bg-slate-100 mx-4 mt-4" />}
+                     </div>
+                  ))}
                </div>
             </div>
 
             {/* Leaderboard */}
             <div className="col-span-12 lg:col-span-5 bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm space-y-6">
-               <h2 className="text-2xl font-semibold text-[#2D3748]">Leaderboard</h2>
+               <h2 className="text-2xl font-semibold text-[#2D3748]">Class Leaderboard</h2>
                <div className="space-y-2">
-                  <LeaderboardRow rank={1} name="Vleun-Gayas" students={20} delay={1.5} />
-                  <LeaderboardRow rank={2} name="Aranya Sharms" students={50} delay={1.6} />
-                  <LeaderboardRow rank={3} name="Oredia Nizkel" students={30} delay={1.7} />
+                  {sortedLeaderboard.slice(0, 5).map((row, idx) => (
+                     <LeaderboardRow 
+                        key={idx} 
+                        rank={idx + 1} 
+                        name={row.name} 
+                        students={row.points} 
+                        delay={1.5 + (idx * 0.1)} 
+                     />
+                  ))}
                </div>
             </div>
          </div>
@@ -1168,7 +1256,12 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
            )}
 
            {activeNav === 'My Rewards' && (
-              <MyRewards studentName={studentName} />
+              <MyRewards 
+                  studentName={studentName} 
+                  classroom={classroom}
+                  homeworks={homeworks}
+                  submissions={submissions}
+               />
            )}
 
            {activeNav === 'My Messages' && (

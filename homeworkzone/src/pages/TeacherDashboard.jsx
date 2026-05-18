@@ -464,21 +464,32 @@ const TeacherDashboard = ({ user, onLogout }) => {
              const targetGoal = activeClassroom?.goalTarget || 1500;
              const progressPercent = Math.min(Math.round((currentClassPoints / targetGoal) * 100), 100);
 
-             // Calculate subject averages
-             const subjectStats = {};
+             // Calculate subject averages (always pre-populate the three core areas)
+             const subjectStats = {
+                'Maths': { total: 0, count: 0 },
+                'Science': { total: 0, count: 0 },
+                'English': { total: 0, count: 0 }
+             };
              classSubmissions.forEach(sub => {
                 const hw = allHomeworks.find(h => h.id === sub.homeworkId);
-                const subject = hw ? hw.subject : 'General';
+                let subject = hw ? hw.subject : 'General';
+                if (subject?.toLowerCase() === 'maths' || subject?.toLowerCase() === 'math') subject = 'Maths';
+                else if (subject?.toLowerCase() === 'science') subject = 'Science';
+                else if (subject?.toLowerCase() === 'english') subject = 'English';
+                else subject = 'General';
+
                 if (!subjectStats[subject]) subjectStats[subject] = { total: 0, count: 0 };
                 subjectStats[subject].total += sub.score || 0;
                 subjectStats[subject].count += 1;
              });
 
-             const subjectAverages = Object.entries(subjectStats).map(([subj, data]) => ({
-                subject: subj,
-                average: Math.round(data.total / data.count),
-                count: data.count
-             }));
+             const subjectAverages = Object.entries(subjectStats)
+                .map(([subj, data]) => ({
+                   subject: subj,
+                   average: data.count > 0 ? Math.round(data.total / data.count) : 0,
+                   count: data.count
+                }))
+                .filter(sa => ['Maths', 'Science', 'English'].includes(sa.subject) || sa.count > 0);
 
              const sortedByAvg = [...subjectAverages].sort((a, b) => a.average - b.average);
              const weakness = sortedByAvg[0] || { subject: 'None yet', average: 100 };
@@ -635,12 +646,14 @@ const TeacherDashboard = ({ user, onLogout }) => {
                                      <div key={sa.subject} className={`p-4 rounded-2xl border ${cardBg} space-y-2 flex flex-col justify-between`}>
                                         <div className="flex justify-between items-center">
                                            <span className="text-xs font-black text-[#3C2E75]">{sa.subject}</span>
-                                           <span className={`text-xs font-black ${textColor}`}>{sa.average}%</span>
+                                           <span className={`text-xs font-black ${textColor}`}>{sa.count > 0 ? `${sa.average}%` : 'N/A'}</span>
                                         </div>
                                         <div className="h-2 w-full bg-white rounded-full overflow-hidden border border-slate-100">
                                            <div className={`h-full rounded-full ${barColor}`} style={{ width: `${sa.average}%` }} />
                                         </div>
-                                        <span className="text-[8px] font-bold text-slate-400 block text-right">{sa.count} assignments</span>
+                                        <span className="text-[8px] font-bold text-slate-400 block text-right">
+                                           {sa.count > 0 ? `${sa.count} assignment${sa.count > 1 ? 's' : ''}` : 'No submissions yet'}
+                                        </span>
                                      </div>
                                   );
                                })}

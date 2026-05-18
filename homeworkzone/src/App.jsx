@@ -1664,16 +1664,6 @@ const LandingPage = () => {
             </div>
          </div>
 
-         {/* Playful Header Icons (Help, Parent Zone, Settings moved to the top!) */}
-         <div className="flex items-center gap-10">
-            <FooterBtn icon="https://img.icons8.com/fluency/144/help.png" label="Help" />
-            <FooterBtn 
-              icon="https://img.icons8.com/fluency/144/family.png" 
-              label="Parental Controls" 
-              onClick={() => navigate('/login/teacher')}
-            />
-            <FooterBtn icon="https://img.icons8.com/fluency/144/settings.png" label="Settings" />
-         </div>
       </header>
       {/* --- Expandable Login Bar --- */}
       <section className="max-w-[95%] mx-auto px-6 mb-10 relative z-30">
@@ -1740,7 +1730,7 @@ const LandingPage = () => {
          <div className="relative bg-white rounded-[60px] border-[12px] border-[#2D3748] shadow-[0_30px_0_0_#2D3748] overflow-hidden group">
             {/* The Kids & School Illustration */}
             <div className="relative h-[400px] md:h-[600px]">
-               <img src="/assets/hero_banner.png" className="w-full h-full object-cover" alt="Homework Zone Adventure" />
+               <img src="/assets/hero_banner.png" className="w-full h-full object-cover object-bottom" alt="Homework Zone Adventure" />
                
                {/* Welcome Banner Overlay */}
                <div className="absolute top-16 left-1/2 -translate-x-1/2 w-[90%] md:w-auto text-center">
@@ -1766,14 +1756,6 @@ const LandingPage = () => {
   );
 };
 
-const FooterBtn = ({ icon, label, onClick }) => (
-  <div onClick={onClick} className="flex flex-col items-center gap-2 group cursor-pointer">
-     <div className="w-16 h-16 bg-white rounded-[20px] border-4 border-[#2D3748] flex-center shadow-[4px_4px_0_0_#2D3748] group-hover:-translate-y-2 transition-all">
-        <img src={icon} className="w-10 h-10" alt={label} />
-     </div>
-     <span className="text-[10px] font-semibold text-[#475569] uppercase tracking-widest">{label}</span>
-  </div>
-);
 
 // --- Mock Login Pages ---
 const LoginPage = ({ role, onLogin }) => {

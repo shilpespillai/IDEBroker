@@ -785,7 +785,7 @@ const RewardShopItem = ({ icon, title, subtitle, points, delay, onRedeem, canAff
    </motion.div>
 );
 
-const LeaderboardRow = ({ rank, name, students, delay }) => (
+const LeaderboardRow = ({ rank, name, students, delay, avatarUrl }) => (
    <motion.div 
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
@@ -804,7 +804,7 @@ const LeaderboardRow = ({ rank, name, students, delay }) => (
          </div>
          <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full border-2 border-white bg-slate-50 overflow-hidden shadow-sm">
-               <img src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${name}`} className="w-full h-full object-cover" alt={name} />
+               <img src={avatarUrl || `https://api.dicebear.com/7.x/lorelei/svg?seed=${name}`} className="w-full h-full object-cover" alt={name} />
             </div>
             <div>
                <p className="text-sm font-semibold text-[#2D3748]">{name}</p>
@@ -815,7 +815,7 @@ const LeaderboardRow = ({ rank, name, students, delay }) => (
    </motion.div>
 );
 
-const MyRewards = ({ studentName, classroom, homeworks, submissions }) => {
+const MyRewards = ({ studentName, classroom, homeworks, submissions, getStudentAvatar }) => {
    // Filter student's submissions case-insensitively
    const mySubmissions = submissions.filter(s => s.studentName?.toLowerCase() === studentName?.toLowerCase());
    const totalPoints = mySubmissions.reduce((acc, s) => acc + (s.correctCount || 0) * 10, 0);
@@ -960,6 +960,7 @@ const MyRewards = ({ studentName, classroom, homeworks, submissions }) => {
                         name={row.name} 
                         students={row.points} 
                         delay={1.5 + (idx * 0.1)} 
+                        avatarUrl={getStudentAvatar ? getStudentAvatar(row.name) : `https://api.dicebear.com/7.x/lorelei/svg?seed=${row.name}`}
                      />
                   ))}
                </div>

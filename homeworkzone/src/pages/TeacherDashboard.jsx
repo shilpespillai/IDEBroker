@@ -76,7 +76,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
   const [newMsgSubject, setNewMsgSubject] = useState('');
   const [newMsgBody, setNewMsgBody] = useState('');
   const getStudentAvatar = (name) => {
-     const st = allStudents.find(s => s.name?.toLowerCase() === name?.toLowerCase());
+     const st = allStudents.find(s => s.id?.toLowerCase() === name?.toLowerCase() || s.name?.toLowerCase() === name?.toLowerCase());
      if (st?.avatarUrl) {
         return st.avatarUrl;
      }

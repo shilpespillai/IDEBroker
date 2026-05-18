@@ -119,6 +119,14 @@ const TeacherDashboard = ({ user, onLogout }) => {
     'History': '/ic-classes.png'
   };
 
+  const CLASS_IMAGES = [
+    '/mascot.png',
+    '/dino-reading.png',
+    '/rocket_mascot.png',
+    '/equip_mascot.png',
+    '/student_avatar.png'
+  ];
+
   const saveAiKeys = () => {
     localStorage.setItem('hwz_gemini_key', aiKeys.gemini);
     localStorage.setItem('hwz_openai_key', aiKeys.openai);
@@ -992,7 +1000,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                            name={room.name}
                            students={room.studentCount || 0}
                            bgColor={['bg-[#F3E8FF]', 'bg-[#FFF9DB]', 'bg-[#E6FCF5]', 'bg-[#E0F2FE]', 'bg-[#FFF0F0]'][i % 5]} 
-                           kidsImg={['/kids-pair.png', '/kiddy_hero_kids.png', '/student_avatar_main.png'][i % 3]} 
+                           kidsImg={CLASS_IMAGES[i % CLASS_IMAGES.length]} 
                            subjects={(room.subjects || ['English', 'Maths', 'Science']).map(sub => ({
                                name: sub,
                                icon: SUBJECT_ICONS[sub] || '/ic-homework.png'

@@ -71,6 +71,48 @@ const SUBJECTS = [
       </div>
     )
   },
+  { 
+    id: 'art', 
+    name: 'Art', 
+    titleColor: 'text-pink-500',
+    bgColor: 'bg-[#fff5f5]', 
+    borderColor: 'border-pink-200',
+    selectedBorder: 'border-pink-400 ring-4 ring-pink-100',
+    desc: 'Drawing, colors, painting and crafts!',
+    renderGraphic: () => (
+      <div className="w-16 h-20 bg-pink-100 rounded-full flex items-center justify-center border-4 border-pink-200 shadow-inner">
+        <span className="text-4xl">🎨</span>
+      </div>
+    )
+  },
+  { 
+    id: 'music', 
+    name: 'Music', 
+    titleColor: 'text-purple-500',
+    bgColor: 'bg-[#fbf4ff]', 
+    borderColor: 'border-purple-200',
+    selectedBorder: 'border-purple-400 ring-4 ring-purple-100',
+    desc: 'Instruments, songs, melodies and rhythm!',
+    renderGraphic: () => (
+      <div className="w-16 h-20 bg-purple-100 rounded-full flex items-center justify-center border-4 border-purple-200 shadow-inner">
+        <span className="text-4xl">🎵</span>
+      </div>
+    )
+  },
+  { 
+    id: 'history', 
+    name: 'History', 
+    titleColor: 'text-amber-700',
+    bgColor: 'bg-[#fffbf0]', 
+    borderColor: 'border-amber-200',
+    selectedBorder: 'border-amber-400 ring-4 ring-amber-100',
+    desc: 'Past events, cultures, heroes and timelines!',
+    renderGraphic: () => (
+      <div className="w-16 h-20 bg-amber-100 rounded-full flex items-center justify-center border-4 border-amber-200 shadow-inner">
+        <span className="text-4xl">🏛️</span>
+      </div>
+    )
+  }
 ];
 
 export default function HomeworkGenerator({ user, classrooms = [], activeClassroom }) {
@@ -97,7 +139,7 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
   const [questionCount, setQuestionCount] = useState(5);
 
   // Dynamic subjects matching based on classroom selections
-  const selectedClass = classrooms.find(c => c.id === formData.classId) || (activeClassroom?.id === formData.classId ? activeClassroom : null);
+  const selectedClass = classrooms.find(c => c.id === formData.classId) || activeClassroom;
   
   const allowedSubjects = SUBJECTS.filter(sub => {
     if (!selectedClass || !selectedClass.subjects || selectedClass.subjects.length === 0) {
@@ -123,7 +165,7 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
 
   // Sync active classroom into the form on mount / change
   useEffect(() => {
-    if (activeClassroom && !formData.classId) {
+    if (activeClassroom) {
       setFormData(prev => ({ ...prev, classId: activeClassroom.id }));
     }
   }, [activeClassroom]);
@@ -168,12 +210,15 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
     }
   };
 
-  const getPlaceholder = () => {
-    if (formData.subject === 'maths') return `e.g. 'Make ${questionCount} questions about adding fractions with unlike denominators'...`;
-    if (formData.subject === 'science') return `e.g. 'Make ${questionCount} questions about the solar system and planets'...`;
-    if (formData.subject === 'english') return `e.g. 'Make ${questionCount} questions about identifying nouns vs verbs in a sentence'...`;
-    return "Describe what the AI should generate...";
-  };
+   const getPlaceholder = () => {
+     if (formData.subject === 'maths') return `e.g. 'Make ${questionCount} questions about adding fractions with unlike denominators'...`;
+     if (formData.subject === 'science') return `e.g. 'Make ${questionCount} questions about the solar system and planets'...`;
+     if (formData.subject === 'english') return `e.g. 'Make ${questionCount} questions about identifying nouns vs verbs in a sentence'...`;
+     if (formData.subject === 'art') return `e.g. 'Make ${questionCount} questions about primary colors and basic color mixing'...`;
+     if (formData.subject === 'music') return `e.g. 'Make ${questionCount} questions about musical note values and treble clef notes'...`;
+     if (formData.subject === 'history') return `e.g. 'Make ${questionCount} questions about ancient castles and medieval life'...`;
+     return "Describe what the AI should generate...";
+   };
 
   const handleGenerateAI = async () => {
     const activeModel = localStorage.getItem('hwz_active_ai') || 'gemini';

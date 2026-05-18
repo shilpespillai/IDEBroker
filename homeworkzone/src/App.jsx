@@ -414,10 +414,11 @@ const MyHomework = ({ studentName, teacher, onStartMission }) => {
                setHomeworks(hwList);
 
                // Fetch submissions
-               const subQ = query(collection(db, 'submissions'), where('studentName', '==', studentName));
-               const subSnap = await getDocs(subQ);
-               const subList = subSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-               setSubmissions(subList);
+               const subQ = query(collection(db, 'submissions'));
+                const subSnap = await getDocs(subQ);
+                const allSubList = subSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const subList = allSubList.filter(s => s.studentName?.toLowerCase() === studentName?.toLowerCase());
+                setSubmissions(subList);
             } catch (err) {
                console.error("Fetch Data Error:", err);
             }
@@ -545,12 +546,22 @@ const MissionReports = ({ studentName, teacher }) => {
       const fetchSubmissions = async () => {
          try {
             const q = query(
-               collection(db, 'submissions'),
-               where('studentName', '==', studentName),
-               orderBy('submittedAt', 'desc')
+               collection(db, 'submissions')
             );
             const snap = await getDocs(q);
-            setSubmissions(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            const allSubList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Filter client-side case-insensitively to bypass database discrepancy
+            const subList = allSubList.filter(s => s.studentName?.toLowerCase() === studentName?.toLowerCase());
+            
+            // Sort client-side in memory to bypass Firebase composite index requirement
+            subList.sort((a, b) => {
+               const timeA = a.submittedAt?.toDate ? a.submittedAt.toDate().getTime() : (a.submittedAt || 0);
+               const timeB = b.submittedAt?.toDate ? b.submittedAt.toDate().getTime() : (b.submittedAt || 0);
+               return timeB - timeA;
+            });
+            
+            setSubmissions(subList);
          } catch (err) {
             console.error("Fetch Submissions Error:", err);
          }

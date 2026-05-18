@@ -532,36 +532,39 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="font-bold text-[#1a237e]">Prompt / Instructions for Students</label>
-            <div className="relative">
-              <textarea 
-                placeholder={getPlaceholder()}
-                value={formData.instructions}
-                onChange={(e) => setFormData({...formData, instructions: e.target.value})}
-                className="w-full h-32 bg-white border-2 border-slate-200 rounded-2xl p-4 text-slate-700 font-bold outline-none focus:border-purple-400 transition-colors resize-none"
-              />
-              <Book className="absolute right-4 bottom-4 w-6 h-6 text-purple-400 opacity-50" />
-            </div>
-          </div>
+                    {/* AI Generator Box inside Details */}
+          <div className="bg-purple-50 p-6 rounded-[32px] border-2 border-purple-100/70 flex flex-col space-y-4">
+             <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm text-purple-600">
+                  <Wand2 className="w-5 h-5" />
+                </div>
+                <div>
+                   <h4 className="font-black text-purple-900 text-sm">Magic Quiz Builder</h4>
+                   <p className="text-[10px] font-bold text-purple-600/70 uppercase tracking-wider">Auto-generate {questionCount} questions based on your prompt</p>
+                </div>
+             </div>
 
-          {/* AI Generator Box inside Details */}
-          <div className="bg-purple-50 p-6 rounded-2xl border-2 border-purple-100 flex flex-col items-center text-center space-y-4">
-             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-purple-600">
-               <Wand2 className="w-6 h-6" />
+             <div className="space-y-2">
+               <label className="text-xs font-black text-purple-950 uppercase tracking-widest block">Prompt / Instructions for Students</label>
+               <div className="relative">
+                 <textarea 
+                   placeholder={getPlaceholder()}
+                   value={formData.instructions}
+                   onChange={(e) => setFormData({...formData, instructions: e.target.value})}
+                   className="w-full h-28 bg-white border border-purple-200 rounded-2xl p-4 text-slate-700 font-bold outline-none focus:border-purple-400 focus:ring-4 focus:ring-purple-100 transition-all resize-none text-sm shadow-inner"
+                 />
+                 <Book className="absolute right-4 bottom-4 w-5 h-5 text-purple-400 opacity-50" />
+               </div>
              </div>
-             <div>
-                <h4 className="font-black text-purple-900">Magic Quiz Builder</h4>
-                <p className="text-xs font-bold text-purple-600/70">Automatically generate {questionCount} multiple-choice questions based on your title & instructions.</p>
-             </div>
+
              {generatedQuestions ? (
                isAiAccepted ? (
                  <div className="w-full bg-emerald-50 p-4 rounded-xl border border-emerald-200 flex items-center justify-between animate-in zoom-in duration-300">
                    <div className="flex items-center gap-3 text-emerald-700 font-bold text-sm">
                      <CheckCircle2 className="w-5 h-5" />
-                     {generatedQuestions.length} Questions Saved to Draft! Scroll down to publish.
+                     {generatedQuestions.length} Questions Saved!
                    </div>
-                   <button onClick={() => setIsAiAccepted(false)} className="text-xs text-emerald-600 font-bold hover:underline px-4 py-2 bg-white rounded-lg border border-emerald-200">View Questions</button>
+                   <button onClick={() => setIsAiAccepted(false)} className="text-xs text-emerald-600 font-bold hover:underline px-4 py-2 bg-white rounded-lg border border-emerald-200 shadow-sm">View Questions</button>
                  </div>
                ) : (
                  <div className="w-full text-left bg-white p-6 rounded-2xl border border-purple-200 space-y-6">
@@ -597,7 +600,7 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
                <button 
                  onClick={handleGenerateAI}
                  disabled={isGenerating}
-                 className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-black text-sm flex items-center gap-2 shadow-sm transition-all"
+                 className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-md transition-all w-full shadow-purple-100/50 hover:scale-[1.01]"
                >
                  {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                  {isGenerating ? 'Generating...' : 'Auto-Generate Questions'}

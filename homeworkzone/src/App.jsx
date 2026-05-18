@@ -815,7 +815,7 @@ const LeaderboardRow = ({ rank, name, students, delay, avatarUrl }) => (
    </motion.div>
 );
 
-const MyRewards = ({ studentName, classroom, homeworks, submissions, getStudentAvatar }) => {
+const MyRewards = ({ studentName, classroom, homeworks, submissions, getStudentAvatar, classroomStudents = [] }) => {
    // Filter student's submissions case-insensitively
    const mySubmissions = submissions.filter(s => s.studentName?.toLowerCase() === studentName?.toLowerCase());
    const totalPoints = mySubmissions.reduce((acc, s) => acc + (s.correctCount || 0) * 10, 0);
@@ -979,6 +979,7 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
   const [homeworks, setHomeworks] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [classroomStudents, setClassroomStudents] = useState([]);
+  const [currentStudentProfile, setCurrentStudentProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
@@ -999,6 +1000,13 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
            // Fetch classroom student rosters
            const studentsSnap = await getDocs(collection(db, 'teachers', actualTeacher.uid, 'classrooms', actualClassroom.id, 'students'));
            setClassroomStudents(studentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+           
+           // Direct student profile fetch
+           const studentRef = doc(db, 'teachers', actualTeacher.uid, 'classrooms', actualClassroom.id, 'students', studentName.toLowerCase());
+           const studentSnap = await getDoc(studentRef);
+           if (studentSnap.exists()) {
+              setCurrentStudentProfile(studentSnap.data());
+           }
         }
         
         // Fetch all submissions to build leaderboard and recent feedback
@@ -1017,7 +1025,17 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
   }, [studentName, classroom, activeNav, teacher]);
 
   const getStudentAvatar = (name) => {
-     const st = classroomStudents.find(s => s.name?.toLowerCase() === name?.toLowerCase());
+     const cleanName = name?.trim().toLowerCase();
+     
+     // 1. Direct logged-in student check
+     if (cleanName === studentName?.trim().toLowerCase() || cleanName === currentStudentProfile?.name?.trim().toLowerCase()) {
+        if (currentStudentProfile?.avatarUrl) {
+           return currentStudentProfile.avatarUrl;
+        }
+     }
+     
+     // 2. Search classroom rosters
+     const st = classroomStudents.find(s => s.id?.trim().toLowerCase() === cleanName || s.name?.trim().toLowerCase() === cleanName);
      if (st?.avatarUrl) {
         return st.avatarUrl;
      }
@@ -1098,8 +1116,10 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
   // 3. Dynamic Ranks & Achievements
   const studentScores = {};
   submissions.forEach(sub => {
-     if (sub.classId === classroom?.id || !classroom?.id) {
-        const name = sub.studentName || "Student";
+     const subName = sub.studentName?.trim().toLowerCase();
+     const isInRoster = classroomStudents.some(s => s.id?.trim().toLowerCase() === subName || s.name?.trim().toLowerCase() === subName);
+     if (sub.classId === classroom?.id || !classroom?.id || isInRoster) {
+        const name = sub.studentName?.trim() || "Student";
         const points = (sub.correctCount || 0) * 10;
         studentScores[name] = (studentScores[name] || 0) + points;
      }
@@ -1401,7 +1421,7 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
            )}
 
            {activeNav === 'My Messages' && (
-              <MessagingModule studentName={studentName} teacher={teacher} classroom={classroom} />
+              <MessagingModule studentName={studentName} teacher={teacher} classroom={classroom} getStudentAvatar={getStudentAvatar} />
            )}
 
            {activeNav === 'My Profile' && (

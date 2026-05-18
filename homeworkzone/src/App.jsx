@@ -1235,18 +1235,20 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
 
   if (activeMission) {
      return (
-        <StudentQuiz 
-           homeworkId={activeMission.id} 
-           initialSubmission={activeMission.pastSubmission}
-           studentName={studentName} 
-           teacher={teacher} 
-           onComplete={() => setActiveMission(null)} 
-        />
+         <div className="student-theme">
+            <StudentQuiz 
+               homeworkId={activeMission.id} 
+               initialSubmission={activeMission.pastSubmission}
+               studentName={studentName} 
+               teacher={teacher} 
+               onComplete={() => setActiveMission(null)} 
+            />
+         </div>
      );
   }
 
   return (
-<div className="flex h-screen bg-[#F9F9FF] font-sans overflow-hidden">
+<div className="flex h-screen bg-[#F9F9FF] font-sans overflow-hidden student-theme">
       {/* --- Sidebar (High Fidelity) --- */}
       <aside className="w-72 bg-[#FDFDFF] border-r border-blue-50 flex flex-col shrink-0 h-screen">
         <div className="mb-6 -mx-2 flex-center pt-8 shrink-0">
@@ -2067,9 +2069,9 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login/teacher" element={<LoginPage role="teacher" onLogin={setCurrentUser} />} />
-        <Route path="/login/student" element={<LoginPage role="student" onLogin={handleStudentLogin} />} />
+        <Route path="/login/student" element={<div className="student-theme"><LoginPage role="student" onLogin={handleStudentLogin} /></div>} />
         <Route path="/dashboard/teacher" element={currentUser ? <TeacherDashboard user={currentUser} onLogout={handleTeacherLogout} /> : <Navigate to="/login/teacher" />} />
-        <Route path="/dashboard/student" element={<StudentDashboard teacher={activeStudent?.teacher} studentName={activeStudent?.name} classroom={activeStudent?.classroom} onLogout={handleStudentLogout} />} />
+        <Route path="/dashboard/student" element={<div className="student-theme"><StudentDashboard teacher={activeStudent?.teacher} studentName={activeStudent?.name} classroom={activeStudent?.classroom} onLogout={handleStudentLogout} /></div>} />
         <Route path="/quiz/sample" element={<StudentQuiz />} />
       </Routes>
     </Router>

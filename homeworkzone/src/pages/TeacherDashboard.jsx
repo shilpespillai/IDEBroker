@@ -31,6 +31,16 @@ import {
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '../firebase';
+
+const toTitleCase = (str) => {
+  if (!str) return '';
+  return str
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
 import { collection, doc, getDoc, setDoc, getDocs, query, orderBy, deleteDoc, where, onSnapshot, addDoc } from 'firebase/firestore';
 import HomeworkGenerator from './HomeworkGenerator';
 
@@ -303,9 +313,10 @@ const TeacherDashboard = ({ user, onLogout }) => {
     if (!studentName.trim() || !user?.uid || !activeClassroom) return;
     setIsAdding(true);
     try {
-      const studentRef = doc(db, 'teachers', user.uid, 'classrooms', activeClassroom.id, 'students', studentName.trim().toLowerCase());
+      const cleanName = toTitleCase(studentName);
+      const studentRef = doc(db, 'teachers', user.uid, 'classrooms', activeClassroom.id, 'students', cleanName.toLowerCase());
       await setDoc(studentRef, {
-        name: studentName.trim(),
+        name: cleanName,
         addedAt: new Date().toISOString()
       });
       setNewStudentName('');

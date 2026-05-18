@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import Lottie from "lottie-react";
 import { BrowserRouter as Router, Routes, Route, useNavigate, Link, Navigate } from 'react-router-dom';
+
+const toTitleCase = (str) => {
+  if (!str) return '';
+  return str
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -217,10 +227,12 @@ const StudentProfile = ({ studentName, teacher, classroom, onProfileUpdate }) =>
         
         if (savedStudent && actualClass && actualTeacher) {
            const studentRef = doc(db, 'teachers', actualTeacher.uid, 'classrooms', actualClass.id, 'students', studentName.toLowerCase());
+           const cleanName = toTitleCase(profile.name || studentName);
            
            // Use setDoc with { merge: true } so it safely creates the document if it doesn't exist yet
            await setDoc(studentRef, {
               ...profile,
+              name: cleanName,
               updatedAt: new Date().toISOString()
            }, { merge: true });
            

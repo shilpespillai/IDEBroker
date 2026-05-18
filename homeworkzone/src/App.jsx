@@ -576,12 +576,18 @@ const MissionReports = ({ studentName, teacher }) => {
                   className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm flex items-center justify-between group hover:shadow-md transition-all"
                >
                   <div className="flex items-center gap-6">
-                     <div className="w-16 h-16 bg-blue-50 rounded-2xl flex-center shadow-sm">
+                     <div className="w-16 h-16 bg-blue-50 rounded-2xl flex-center shadow-sm shrink-0">
                         <Trophy className={`w-8 h-8 ${sub.score >= 80 ? 'text-amber-400' : 'text-blue-400'}`} />
                      </div>
-                     <div>
+                     <div className="space-y-1">
                         <h3 className="text-xl font-black text-slate-800 tracking-tight">Mission Result: {sub.score}%</h3>
-                        <p className="text-xs font-bold text-blue-400 italic">"{sub.feedback}"</p>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Classroom Assignment</span>
+                        {sub.feedback && (
+                          <div className="mt-3 bg-purple-50/50 border border-purple-100 p-4 rounded-2xl relative shadow-sm max-w-lg text-left">
+                            <span className="text-[9px] font-black uppercase text-purple-500 tracking-wider block mb-1">🤖 AI Teacher Feedback</span>
+                            <p className="text-xs font-bold text-[#5C4D9F] leading-relaxed italic">"${sub.feedback}"</p>
+                          </div>
+                        )}
                      </div>
                   </div>
                   <div className="text-right">

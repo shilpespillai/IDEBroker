@@ -1224,26 +1224,19 @@ const TeacherDashboard = ({ user, onLogout }) => {
                   {/* Mock Gradebook Table */}
                   <div className="bg-white rounded-[40px] border border-blue-50 shadow-sm overflow-hidden">
                      <div className="grid grid-cols-12 px-8 py-6 bg-blue-50/20 text-[10px] font-black text-blue-200 uppercase tracking-widest border-b border-blue-50">
-                        <div className="col-span-4">Student Name</div>
-                        <div className="col-span-3">Mission</div>
-                        <div className="col-span-2 text-center">Score</div>
+                        <div className="col-span-6">Student Name</div>
+                        <div className="col-span-3 text-center">Score</div>
                         <div className="col-span-3 text-right">Actions</div>
                      </div>
                      <div className="divide-y divide-blue-50">
                         {(activeClassroom ? allSubmissions.filter(s => s.classId === activeClassroom.id) : allSubmissions).length > 0 ? (
                            (activeClassroom ? allSubmissions.filter(s => s.classId === activeClassroom.id) : allSubmissions).sort((a,b) => b.submittedAt - a.submittedAt).map((sub, idx) => (
                               <div key={sub.id || idx} className="grid grid-cols-12 px-8 py-6 items-center hover:bg-blue-50/10 transition-all">
-                                 <div className="col-span-4 flex items-center gap-4">
+                                 <div className="col-span-6 flex items-center gap-4">
                                     <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${sub.studentName}`} className="w-10 h-10 rounded-full border-2 border-white shadow-sm" alt={sub.studentName} />
-                                    <div className="flex flex-col">
-                                       <span className="text-sm font-black text-[#1E3A8A]">{sub.studentName}</span>
-                                       <span className="text-[10px] font-bold text-blue-400 italic">Feedback: "{sub.feedback}"</span>
-                                    </div>
+                                    <span className="text-sm font-black text-[#1E3A8A]">{sub.studentName}</span>
                                  </div>
-                                 <div className="col-span-3">
-                                    <span className="text-xs font-bold text-blue-400">Mission ID: {sub.homeworkId.slice(0, 8)}...</span>
-                                 </div>
-                                 <div className="col-span-2 text-center">
+                                 <div className="col-span-3 text-center">
                                     <span className={`px-4 py-1 rounded-full text-xs font-black ${sub.score >= 80 ? 'bg-emerald-50 text-emerald-600' : sub.score >= 50 ? 'bg-blue-50 text-blue-600' : 'bg-rose-50 text-rose-600'}`}>
                                        {sub.score}%
                                     </span>

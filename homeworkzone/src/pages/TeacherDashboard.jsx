@@ -293,6 +293,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
       setNewStudentName('');
       setNewStudent('');
       fetchStudents();
+      fetchAllStudents();
     } catch (err) {
       console.error("Add Student Error:", err);
     }
@@ -384,10 +385,10 @@ const TeacherDashboard = ({ user, onLogout }) => {
   };
 
   useEffect(() => {
-    if (activeTab === 'Students' || activeTab === 'Messages') {
+    if (user && classrooms.length > 0) {
        fetchAllStudents();
     }
-  }, [activeTab, classrooms]);
+  }, [user, classrooms]);
 
   const handleDeleteStudent = async (e, studentId, studentName, classId) => {
     e.stopPropagation();
@@ -2312,8 +2313,8 @@ const TeacherDashboard = ({ user, onLogout }) => {
                   <div className="flex justify-between items-start">
                      <div>
                         <span className="text-[9px] font-black uppercase text-[#806BFF] tracking-wider">Mission Details</span>
-                        <h3 className="text-2xl font-black text-[#3B2B85]">${selectedCalendarHw.title}</h3>
-                        <p className="text-xs font-bold text-[#7A69D6] italic">${selectedCalendarHw.subject} • Due: ${selectedCalendarHw.dueDate}</p>
+                        <h3 className="text-2xl font-black text-[#3B2B85]">{selectedCalendarHw.title}</h3>
+                        <p className="text-xs font-bold text-[#7A69D6] italic">{selectedCalendarHw.subject} • Due: {selectedCalendarHw.dueDate}</p>
                      </div>
                      <button onClick={() => setShowCalendarModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
                         <X size={20} strokeWidth={3} />
@@ -2324,7 +2325,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                      {/* Submitted List */}
                      <div className="space-y-4">
                         <h4 className="text-sm font-black text-emerald-500 uppercase tracking-widest flex items-center gap-2">
-                           <span>✅</span> Submitted (${submissions.length})
+                           <span>✅</span> Submitted ({submissions.length})
                         </h4>
                         <div className="space-y-2 max-h-[250px] overflow-y-auto no-scrollbar">
                            {submissions.map(sub => (
@@ -2342,7 +2343,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                      {/* Pending List */}
                      <div className="space-y-4">
                         <h4 className="text-sm font-black text-amber-500 uppercase tracking-widest flex items-center gap-2">
-                           <span>⏳</span> Pending (${pendingStudents.length})
+                           <span>⏳</span> Pending ({pendingStudents.length})
                         </h4>
                         <div className="space-y-2 max-h-[250px] overflow-y-auto no-scrollbar">
                            {pendingStudents.map(student => (

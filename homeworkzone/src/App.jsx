@@ -1482,6 +1482,8 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
                   classroom={classroom}
                   homeworks={homeworks}
                   submissions={submissions}
+                  getStudentAvatar={getStudentAvatar}
+                  classroomStudents={classroomStudents}
                />
            )}
 

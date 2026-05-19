@@ -43,6 +43,7 @@ const toTitleCase = (str) => {
 };
 import { collection, doc, getDoc, setDoc, getDocs, query, orderBy, deleteDoc, where, onSnapshot, addDoc } from 'firebase/firestore';
 import HomeworkGenerator from './HomeworkGenerator';
+import { encryptText, decryptText } from '../utils/crypto';
 
 const TeacherDashboard = ({ user, onLogout }) => {
   console.log("TeacherDashboard Rendered. User:", user);
@@ -53,6 +54,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
   const [newClassName, setNewClassName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [activeTab, setActiveTab] = useState('Dashboard');
+  const [selectedDraft, setSelectedDraft] = useState(null);
   const [dashboardTimeFilter, setDashboardTimeFilter] = useState('Weekly');
   const [timeFilteredSubmissions, setTimeFilteredSubmissions] = useState([]);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
@@ -145,14 +147,91 @@ const TeacherDashboard = ({ user, onLogout }) => {
     '/student_avatar.png'
   ];
 
-  const saveAiKeys = () => {
+  const saveAiKeys = async () => {
     localStorage.setItem('hwz_gemini_key', aiKeys.gemini);
     localStorage.setItem('hwz_openai_key', aiKeys.openai);
     localStorage.setItem('hwz_anthropic_key', aiKeys.anthropic);
     localStorage.setItem('hwz_active_ai', activeAi);
-    alert("AI Configuration saved locally! 🧠🔒");
+    
+    if (user?.uid) {
+      try {
+        const teacherDoc = await getDoc(doc(db, 'teachers', user.uid));
+        const dbCode = teacherDoc.exists() ? teacherDoc.data().teacherCode : '';
+        const code = user.teacherCode || dbCode || user.uid.slice(0, 6).toUpperCase();
+        
+        const encGemini = aiKeys.gemini ? await encryptText(aiKeys.gemini, code) : '';
+        const encOpenai = aiKeys.openai ? await encryptText(aiKeys.openai, code) : '';
+        const encAnthropic = aiKeys.anthropic ? await encryptText(aiKeys.anthropic, code) : '';
+        
+        await setDoc(doc(db, 'teachers', user.uid), {
+          encryptedAiKeys: {
+            gemini: encGemini,
+            openai: encOpenai,
+            anthropic: encAnthropic
+          },
+          activeAi: activeAi
+        }, { merge: true });
+        alert("AI Configuration saved securely to Cloud and locally! 🧠🔒");
+      } catch (err) {
+        console.error("Save AI settings to Firestore failed:", err);
+        alert("AI Configuration saved locally, but failed to sync to Cloud. ⚠️");
+      }
+    } else {
+      alert("AI Configuration saved locally! 🧠🔒");
+    }
     setShowAiSettings(false);
   };
+
+  useEffect(() => {
+    const loadCloudAiSettings = async () => {
+      if (!user?.uid) return;
+      try {
+        const teacherDoc = await getDoc(doc(db, 'teachers', user.uid));
+        if (teacherDoc.exists()) {
+          const data = teacherDoc.data();
+          if (data.activeAi) {
+            setActiveAi(data.activeAi);
+            localStorage.setItem('hwz_active_ai', data.activeAi);
+          }
+          const code = user.teacherCode || data.teacherCode || user.uid.slice(0, 6).toUpperCase();
+          
+          if (data.encryptedAiKeys) {
+            const decryptedGemini = await decryptText(data.encryptedAiKeys.gemini, code);
+            const decryptedOpenai = await decryptText(data.encryptedAiKeys.openai, code);
+            const decryptedAnthropic = await decryptText(data.encryptedAiKeys.anthropic, code);
+            
+            setAiKeys({
+              gemini: decryptedGemini,
+              openai: decryptedOpenai,
+              anthropic: decryptedAnthropic
+            });
+            
+            if (decryptedGemini) localStorage.setItem('hwz_gemini_key', decryptedGemini);
+            if (decryptedOpenai) localStorage.setItem('hwz_openai_key', decryptedOpenai);
+            if (decryptedAnthropic) localStorage.setItem('hwz_anthropic_key', decryptedAnthropic);
+          } else if (aiKeys.gemini || aiKeys.openai || aiKeys.anthropic) {
+            // Migrate local keys to Cloud
+            const encGemini = aiKeys.gemini ? await encryptText(aiKeys.gemini, code) : '';
+            const encOpenai = aiKeys.openai ? await encryptText(aiKeys.openai, code) : '';
+            const encAnthropic = aiKeys.anthropic ? await encryptText(aiKeys.anthropic, code) : '';
+            
+            await setDoc(doc(db, 'teachers', user.uid), {
+              encryptedAiKeys: {
+                gemini: encGemini,
+                openai: encOpenai,
+                anthropic: encAnthropic
+              },
+              activeAi: activeAi
+            }, { merge: true });
+            console.log("Legacy local storage keys migrated to encrypted cloud successfully.");
+          }
+        }
+      } catch (err) {
+        console.error("Load cloud AI settings error:", err);
+      }
+    };
+    loadCloudAiSettings();
+  }, [user]);
 
   useEffect(() => {
     if (user?.uid) {
@@ -476,6 +555,44 @@ const TeacherDashboard = ({ user, onLogout }) => {
     }
   };
 
+  const handleResetGoalProgress = async () => {
+    if (!activeClassroom) return;
+    if (!window.confirm("Are you sure you want to reset the combined points progress for this classroom goal? 🔄\n\nThis will reset the thermometer and pizza back to 0, but will NOT delete any student grades, homework submissions, or history!")) return;
+    
+    try {
+      // Re-calculate raw points right now so we have the absolute current total
+      const classStudents = allStudents.filter(s => s.classId === activeClassroom.id);
+      const computedStudents = classStudents.map(student => {
+         const studentSubs = allSubmissions.filter(sub => 
+            sub.studentName?.toLowerCase() === student.name?.toLowerCase()
+         );
+         const completedCount = studentSubs.length;
+         const totalScore = studentSubs.reduce((acc, sub) => acc + (sub.score || 0), 0);
+         const basePoints = 100;
+         return basePoints + (completedCount * 50) + totalScore;
+      });
+
+      const currentClassRawPoints = computedStudents.reduce((acc, points) => acc + points, 0);
+
+      // Save the raw points as the new reset offset in Firestore
+      await setDoc(doc(db, 'teachers', user.uid, 'classrooms', activeClassroom.id), {
+        goalResetPointsOffset: currentClassRawPoints
+      }, { merge: true });
+
+      // Update local activeClassroom state
+      setActiveClassroom(prev => ({
+        ...prev,
+        goalResetPointsOffset: currentClassRawPoints
+      }));
+
+      setIsEditingGoal(false);
+      alert("Goal points progress has been reset back to 0! 🔄🎒 Let's build a new adventure!");
+    } catch (err) {
+      console.error("Reset Goal Progress Error:", err);
+      alert("Oops! Failed to reset goal progress. ❌");
+    }
+  };
+
   const renderContent = () => {
       switch (activeTab) {
           case 'Dashboard': {
@@ -509,7 +626,9 @@ const TeacherDashboard = ({ user, onLogout }) => {
                 };
              });
 
-             const currentClassPoints = computedStudents.reduce((acc, s) => acc + s.points, 0);
+             const rawClassPoints = computedStudents.reduce((acc, s) => acc + s.points, 0);
+             const resetOffset = activeClassroom?.goalResetPointsOffset || 0;
+             const currentClassPoints = Math.max(0, rawClassPoints - resetOffset);
              const targetTitle = activeClassroom?.goalTitle || 'Dino Pizza Party! 🍕';
              const targetGoal = activeClassroom?.goalTarget || 1500;
              const progressPercent = Math.min(Math.round((currentClassPoints / targetGoal) * 100), 100);
@@ -854,6 +973,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                                            </div>
                                            <button 
                                               onClick={() => {
+                                                 setSelectedDraft(draft);
                                                  setActiveTab('Homework');
                                               }}
                                               className="text-[10px] font-black bg-[#C23C9F] text-white px-3 py-1.5 rounded-xl hover:bg-[#A13083] transition-colors shrink-0"
@@ -907,7 +1027,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                                               <span className={`text-xs font-black ${textColor}`}>{gap.average}% Mastery</span>
                                            </div>
                                            <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100">
-                                              <div className={`h-full rounded-full ${progressColor}`} style={{ width: `${gap.average}%` }} />
+                                              <div className={`h-full ${progressColor}`} style={{ width: `${gap.average}%` }} />
                                            </div>
                                            <div className="bg-[#FAF2FF] rounded-xl p-3 border border-[#E8C6FF]/30">
                                               <span className="text-[8px] font-black uppercase text-purple-400 tracking-wider block mb-0.5">💡 Teacher Prep Hint</span>
@@ -1014,94 +1134,161 @@ const TeacherDashboard = ({ user, onLogout }) => {
                              </div>
 
                              {/* Premium Round Pizza Progress Visual */}
-                             <div className="relative py-4 flex items-center justify-center">
-                                <div className="relative w-40 h-40 flex items-center justify-center bg-amber-50/10 border-4 border-dashed border-[#FAF9FF] rounded-full p-2 shadow-inner">
-                                   <div className="absolute inset-0.5 rounded-full border-4 border-[#8A70FF]/10 bg-[#FAF9FF] shadow-md flex items-center justify-center overflow-hidden">
-                                      {/* Pizza slices container */}
-                                      <div 
-                                         className="absolute inset-0 rounded-full transition-all duration-1000"
-                                         style={{
-                                            background: `conic-gradient(
-                                               #FFA726 0% ${progressPercent}%, 
-                                               #F4EFFF ${progressPercent}% 100%
-                                            )`
-                                         }}
-                                      />
-                                      
-                                      {/* Crust outer shadow/ring */}
-                                      <div 
-                                         className="absolute inset-0 rounded-full border-[8px] transition-all duration-1000 pointer-events-none"
-                                         style={{
-                                            borderColor: '#E65100',
-                                            opacity: 0.15
-                                         }}
-                                      />
+                             <div className="flex-1 py-6 flex flex-col items-center justify-center min-h-[360px]">
+                                <div className="relative w-72 h-72 md:w-80 md:h-80 flex items-center justify-center bg-gradient-to-br from-slate-200 via-slate-100 to-slate-300 border-8 border-slate-400 rounded-full shadow-2xl p-2 select-none">
+                                   {/* Steel tray details */}
+                                   <div className="absolute inset-4 rounded-full border-2 border-slate-400/25" />
+                                   <div className="absolute inset-8 rounded-full border border-slate-400/15" />
+                                   <div className="absolute inset-16 rounded-full border border-slate-400/10" />
+                                   <span className="absolute text-5xl opacity-15 select-none font-black text-slate-800">🍽️</span>
 
-                                      {/* Outer golden-brown crust for only the filled portion! */}
-                                      <div 
-                                         className="absolute inset-0 rounded-full border-[8px] transition-all duration-1000 pointer-events-none"
-                                         style={{
-                                            background: `conic-gradient(
-                                               #E65100 0% ${progressPercent}%, 
-                                               transparent ${progressPercent}% 100%
-                                            )`,
-                                            WebkitMaskImage: 'radial-gradient(circle, transparent 78%, black 78%)',
-                                            maskImage: 'radial-gradient(circle, transparent 78%, black 78%)',
-                                         }}
-                                      />
+                                   {/* Crumbs & Grease marks on empty tray */}
+                                   <div className="absolute top-1/4 left-1/3 w-2 h-2 rounded-full bg-amber-800/10" />
+                                   <div className="absolute bottom-1/3 right-1/4 w-3 h-1.5 rounded-full bg-amber-800/15" />
+                                   <div className="absolute bottom-1/4 left-1/4 w-1.5 h-1.5 rounded-full bg-amber-800/10" />
 
-                                      {/* Cheesy base with toasted spots inside the filled portion! */}
-                                      <div 
-                                         className="absolute inset-2 rounded-full transition-all duration-1000 pointer-events-none"
-                                         style={{
-                                            background: `conic-gradient(
-                                               #FFD54F 0% ${progressPercent}%, 
-                                               transparent ${progressPercent}% 100%
-                                            )`
-                                         }}
-                                      />
-                                      
-                                      {/* Toppings (Pepperoni) distributed dynamically based on progress! */}
-                                      {[
-                                         { top: '22%', left: '42%', pct: 5 },
-                                         { top: '35%', left: '22%', pct: 15 },
-                                         { top: '65%', left: '26%', pct: 30 },
-                                         { top: '75%', left: '50%', pct: 45 },
-                                         { top: '60%', left: '72%', pct: 60 },
-                                         { top: '32%', left: '70%', pct: 75 },
-                                         { top: '48%', left: '48%', pct: 85 },
-                                         { top: '25%', left: '58%', pct: 95 }
-                                      ].map((top, i) => {
-                                         if (progressPercent < top.pct) return null;
-                                         return (
-                                            <div 
-                                               key={i}
-                                               className="absolute w-4 h-4 rounded-full bg-gradient-to-br from-[#E53935] to-[#B71C1C] border border-[#880E4F] shadow-sm animate-in zoom-in duration-300"
-                                               style={{ top: top.top, left: top.left }}
-                                            >
-                                               {/* Topping shine */}
-                                               <div className="absolute top-0.5 left-0.5 w-1 h-1 rounded-full bg-white/40" />
+                                   {/* The Pizza Itself (Clipped/Masked by conic progress) */}
+                                   <div 
+                                      className="absolute inset-2 rounded-full overflow-hidden transition-all duration-1000 shadow-md"
+                                      style={{
+                                         WebkitMaskImage: `conic-gradient(black 0% ${progressPercent}%, transparent ${progressPercent}% 100%)`,
+                                         maskImage: `conic-gradient(black 0% ${progressPercent}%, transparent ${progressPercent}% 100%)`
+                                      }}
+                                   >
+                                      {/* Pizza Outer Crust (Deep Golden Woodfired) */}
+                                      <div className="absolute inset-0 rounded-full bg-[#E65100] border-[16px] border-[#8D6E63] shadow-[inset_0_4px_16px_rgba(0,0,0,0.3)] flex items-center justify-center">
+                                         {/* Outer golden-brown ring */}
+                                         <div className="absolute inset-0.5 rounded-full border-[10px] border-[#FFE0B2]/10" />
+                                      </div>
+
+                                      {/* Rich Marinara Tomato Sauce Base */}
+                                      <div className="absolute inset-4 rounded-full bg-gradient-to-br from-[#D32F2F] via-[#C62828] to-[#B71C1C] shadow-[inset_0_4px_10px_rgba(0,0,0,0.4)] flex items-center justify-center">
+                                         {/* Melty Cheese layer */}
+                                         <div className="absolute inset-1 rounded-full bg-gradient-to-br from-[#FFF59D] via-[#FFD54F] to-[#FFB300] shadow-[inset_0_2px_4px_rgba(0,0,0,0.15)] flex items-center justify-center overflow-hidden">
+                                            {/* Toasted cheese spots */}
+                                            <div className="absolute top-8 left-12 w-6 h-4 rounded-full bg-[#E58F12]/15 blur-[1px]" />
+                                            <div className="absolute bottom-12 right-16 w-8 h-5 rounded-full bg-[#E58F12]/20 blur-[1px]" />
+                                            <div className="absolute bottom-20 left-16 w-5 h-3 rounded-full bg-[#E58F12]/15 blur-[1px]" />
+                                            <div className="absolute top-16 right-10 w-7 h-4 rounded-full bg-[#E58F12]/15 blur-[1px]" />
+
+                                            {/* Scattered Toppings (Rich variety) */}
+                                            {[
+                                               // Pepperonis (Rich red circles with crispy edges & grease highlight)
+                                               { type: 'pepperoni', top: '15%', left: '48%', scale: 1.0 },
+                                               { type: 'pepperoni', top: '28%', left: '68%', scale: 0.95 },
+                                               { type: 'pepperoni', top: '45%', left: '58%', scale: 1.05 },
+                                               { type: 'pepperoni', top: '72%', left: '46%', scale: 1.0 },
+                                               { type: 'pepperoni', top: '65%', left: '22%', scale: 0.9 },
+                                               { type: 'pepperoni', top: '28%', left: '26%', scale: 1.05 },
+                                               { type: 'pepperoni', top: '40%', left: '40%', scale: 1.0 },
+                                               { type: 'pepperoni', top: '50%', left: '72%', scale: 0.95 },
+
+                                               // Basil Leaves (Vibrant green leaf shapes)
+                                               { type: 'basil', top: '22%', left: '38%', rotate: '45deg' },
+                                               { type: 'basil', top: '42%', left: '78%', rotate: '115deg' },
+                                               { type: 'basil', top: '68%', left: '60%', rotate: '180deg' },
+                                               { type: 'basil', top: '52%', left: '15%', rotate: '-45deg' },
+                                               { type: 'basil', top: '18%', left: '28%', rotate: '15deg' },
+                                               { type: 'basil', top: '60%', left: '38%', rotate: '95deg' },
+
+                                               // Mushrooms (Grey-brown caps with stems)
+                                               { type: 'mushroom', top: '28%', left: '55%', rotate: '-15deg' },
+                                               { type: 'mushroom', top: '55%', left: '72%', rotate: '60deg' },
+                                               { type: 'mushroom', top: '62%', left: '22%', rotate: '135deg' },
+                                               { type: 'mushroom', top: '42%', left: '25%', rotate: '-90deg' },
+                                               { type: 'mushroom', top: '45%', left: '48%', rotate: '10deg' }
+                                            ].map((top, i) => {
+                                               if (top.type === 'pepperoni') {
+                                                  return (
+                                                     <div 
+                                                        key={i}
+                                                        className="absolute rounded-full bg-gradient-to-br from-[#EF5350] to-[#C62828] border-2 border-[#800F0F] shadow-[0_2px_4px_rgba(0,0,0,0.25)] flex items-center justify-center animate-in zoom-in duration-300"
+                                                        style={{
+                                                           width: '38px',
+                                                           height: '38px',
+                                                           top: top.top,
+                                                           left: top.left,
+                                                           transform: `scale(${top.scale || 1})`,
+                                                           zIndex: 5
+                                                        }}
+                                                     >
+                                                        {/* Crispy edge rim */}
+                                                        <div className="absolute inset-0.5 rounded-full border border-[#D32F2F] opacity-40" />
+                                                        {/* Grease shine */}
+                                                        <div className="absolute top-1 left-1.5 w-2.5 h-2.5 rounded-full bg-white/35" />
+                                                        {/* Toasted spots */}
+                                                        <div className="absolute bottom-1 right-2 w-1.5 h-1.5 rounded-full bg-black/15" />
+                                                     </div>
+                                                  );
+                                               } else if (top.type === 'basil') {
+                                                  return (
+                                                     <div 
+                                                        key={i}
+                                                        className="absolute bg-gradient-to-br from-[#4CAF50] to-[#2E7D32] border border-[#1B5E20] shadow-[0_1px_2px_rgba(0,0,0,0.15)] animate-in zoom-in duration-300"
+                                                        style={{
+                                                           width: '20px',
+                                                           height: '11px',
+                                                           top: top.top,
+                                                           left: top.left,
+                                                           borderRadius: '50% 0 50% 0',
+                                                           transform: `rotate(${top.rotate || '0deg'})`,
+                                                           zIndex: 4
+                                                        }}
+                                                     />
+                                                  );
+                                               } else if (top.type === 'mushroom') {
+                                                  return (
+                                                     <div 
+                                                        key={i}
+                                                        className="absolute flex flex-col items-center animate-in zoom-in duration-300"
+                                                        style={{
+                                                           top: top.top,
+                                                           left: top.left,
+                                                           transform: `rotate(${top.rotate || '0deg'})`,
+                                                           zIndex: 3
+                                                        }}
+                                                     >
+                                                        {/* Mushroom Cap */}
+                                                        <div className="w-7 h-4.5 bg-gradient-to-br from-[#E0D8D5] to-[#BCAAA4] border border-[#5D4037] rounded-t-full shadow-[0_1.5px_2px_rgba(0,0,0,0.15)]" />
+                                                        {/* Mushroom Stem */}
+                                                        <div className="w-3 h-3 bg-[#E0D8D5] border-x border-b border-[#5D4037] -mt-0.5" />
+                                                     </div>
+                                                  );
+                                               }
+                                               return null;
+                                            })}
+
+                                            {/* Slice cut lines on active pizza */}
+                                            <div className="absolute inset-0 opacity-15 pointer-events-none z-10">
+                                               <div className="absolute inset-y-0 left-1/2 w-0.5 bg-amber-950" />
+                                               <div className="absolute inset-x-0 top-1/2 h-0.5 bg-amber-955" />
+                                               <div className="absolute inset-0 rotate-45 flex items-center justify-center">
+                                                  <div className="w-full h-0.5 bg-amber-955" />
+                                               </div>
+                                               <div className="absolute inset-0 -rotate-45 flex items-center justify-center">
+                                                  <div className="w-full h-0.5 bg-amber-955" />
+                                               </div>
                                             </div>
-                                         );
-                                      })}
-
-                                      {/* Slice lines to represent 8 pre-cut slices */}
-                                      <div className="absolute inset-0 opacity-10 pointer-events-none">
-                                         <div className="absolute inset-y-0 left-1/2 w-px bg-amber-955" />
-                                         <div className="absolute inset-x-0 top-1/2 h-px bg-amber-955" />
-                                         <div className="absolute inset-0 rotate-45 flex items-center justify-center">
-                                            <div className="w-full h-px bg-amber-955" />
-                                         </div>
-                                         <div className="absolute inset-0 -rotate-45 flex items-center justify-center">
-                                            <div className="w-full h-px bg-amber-955" />
                                          </div>
                                       </div>
+                                   </div>
 
-                                      {/* Center floating badge */}
-                                      <div className="absolute z-20 bg-white/95 backdrop-blur-sm border border-[#E9E4FF] px-2.5 py-1 rounded-xl shadow-md flex flex-col items-center">
-                                         <span className="text-xs font-black text-[#3C2E75] leading-none">{progressPercent}%</span>
-                                         <span className="text-[6px] font-black text-rose-500 uppercase tracking-widest mt-0.5">BAKED!</span>
+                                   {/* Slice lines to represent 8 pre-cut slices on tray background */}
+                                   <div className="absolute inset-0 opacity-10 pointer-events-none z-0">
+                                      <div className="absolute inset-y-0 left-1/2 w-px bg-slate-400" />
+                                      <div className="absolute inset-x-0 top-1/2 h-px bg-slate-400" />
+                                      <div className="absolute inset-0 rotate-45 flex items-center justify-center">
+                                         <div className="w-full h-px bg-slate-400" />
                                       </div>
+                                      <div className="absolute inset-0 -rotate-45 flex items-center justify-center">
+                                         <div className="w-full h-px bg-slate-400" />
+                                      </div>
+                                   </div>
+
+                                   {/* Center floating baked status badge */}
+                                   <div className="absolute z-20 bg-white/95 backdrop-blur-sm border-2 border-amber-500 px-3.5 py-1.5 rounded-2xl shadow-xl flex flex-col items-center">
+                                      <span className="text-sm font-black text-[#3C2E75] leading-none">{progressPercent}%</span>
+                                      <span className="text-[7px] font-black text-rose-500 uppercase tracking-widest mt-0.5">BAKED!</span>
                                    </div>
                                 </div>
                              </div>
@@ -1383,7 +1570,16 @@ const TeacherDashboard = ({ user, onLogout }) => {
           case 'Homework':
             return (
                <div className="px-10 py-10 space-y-10 min-h-[calc(100vh-64px)] pb-40 relative">
-                  <HomeworkGenerator user={user} classrooms={classrooms} activeClassroom={activeClassroom} onHomeworkCreated={fetchDashboardSubmissions} />
+                  <HomeworkGenerator 
+                     user={user} 
+                     classrooms={classrooms} 
+                     activeClassroom={activeClassroom} 
+                     initialDraft={selectedDraft}
+                     onHomeworkCreated={() => {
+                        setSelectedDraft(null);
+                        fetchDashboardSubmissions();
+                     }} 
+                  />
                   <GrassBorder />
                </div>
             );
@@ -2193,7 +2389,9 @@ const TeacherDashboard = ({ user, onLogout }) => {
                 return basePoints + (completedCount * 50) + totalScore;
              });
 
-             const currentClassPoints = computedStudents.reduce((acc, points) => acc + points, 0);
+             const rawClassPoints = computedStudents.reduce((acc, points) => acc + points, 0);
+             const resetOffset = activeClassroom.goalResetPointsOffset || 0;
+             const currentClassPoints = Math.max(0, rawClassPoints - resetOffset);
 
              // Fetch goal parameters with beautiful fallbacks
              const targetTitle = activeClassroom.goalTitle || 'Dino Pizza Party! 🍕';
@@ -2275,45 +2473,6 @@ const TeacherDashboard = ({ user, onLogout }) => {
                          </div>
                       </div>
                    </div>
-
-                   {/* Goal Edit Modal */}
-                   {isEditingGoal && (
-                      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[200] flex-center p-6">
-                         <div className="max-w-md w-full bg-white rounded-[40px] p-10 space-y-8 shadow-2xl border border-blue-50 relative">
-                            <h3 className="text-2xl font-black text-[#1E3A8A]">Customize Class Goal</h3>
-                            <div className="space-y-4">
-                               <div>
-                                  <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest block mb-2">Goal Name / Title</label>
-                                  <input 
-                                     type="text" 
-                                     value={newGoalTitle} 
-                                     onChange={(e) => setNewGoalTitle(e.target.value)} 
-                                     className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-[#1E3A8A] focus:outline-none"
-                                     placeholder="e.g. Pizza Party! 🍕"
-                                  />
-                               </div>
-                               <div>
-                                  <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest block mb-2">Target Points</label>
-                                  <input 
-                                     type="number" 
-                                     value={newGoalTarget} 
-                                     onChange={(e) => setNewGoalTarget(e.target.value)} 
-                                     className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-[#1E3A8A] focus:outline-none"
-                                     placeholder="e.g. 1500"
-                                  />
-                               </div>
-                            </div>
-                            <div className="flex gap-4">
-                               <button onClick={handleSaveGoal} className="flex-1 bg-[#8A70FF] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#7455FF] transition-all shadow-lg shadow-purple-100">
-                                  Save Goal 🚀
-                               </button>
-                               <button onClick={() => setIsEditingGoal(false)} className="w-1/3 bg-slate-50 hover:bg-slate-100 text-slate-500 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-colors">
-                                  Cancel
-                               </button>
-                            </div>
-                         </div>
-                      </div>
-                   )}
                 </div>
              );
           }
@@ -2518,12 +2677,59 @@ const TeacherDashboard = ({ user, onLogout }) => {
 
             {renderContent()}
 
-      {/* Global Calendar Reminder Modal */}
+            {/* Goal Edit Modal - Globally Accessible across tabs */}
+            {isEditingGoal && (
+               <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[200] flex-center p-6">
+                  <div className="max-w-md w-full bg-white rounded-[40px] p-10 space-y-8 shadow-2xl border border-blue-50 relative">
+                     <h3 className="text-2xl font-black text-[#1E3A8A]">Customize Class Goal</h3>
+                     <div className="space-y-4">
+                        <div>
+                           <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest block mb-2">Goal Name / Title</label>
+                           <input 
+                              type="text" 
+                              value={newGoalTitle} 
+                              onChange={(e) => setNewGoalTitle(e.target.value)} 
+                              className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-[#1E3A8A] focus:outline-none"
+                              placeholder="e.g. Pizza Party! 🍕"
+                           />
+                        </div>
+                        <div>
+                           <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest block mb-2">Target Points</label>
+                           <input 
+                              type="number" 
+                              value={newGoalTarget} 
+                              onChange={(e) => setNewGoalTarget(e.target.value)} 
+                              className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-[#1E3A8A] focus:outline-none"
+                              placeholder="e.g. 1500"
+                           />
+                        </div>
+                     </div>
+                     <div className="flex flex-col gap-3">
+                        <div className="flex gap-4">
+                           <button onClick={handleSaveGoal} className="flex-1 bg-[#8A70FF] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#7455FF] transition-all shadow-lg shadow-purple-100">
+                              Save Goal 🚀
+                           </button>
+                           <button onClick={() => setIsEditingGoal(false)} className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-500 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-colors">
+                              Cancel
+                           </button>
+                        </div>
+                        <button 
+                           onClick={handleResetGoalProgress}
+                           className="w-full bg-red-50 hover:bg-red-100/80 text-red-500 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all border border-red-100"
+                        >
+                           Reset Goal Progress 🔄
+                        </button>
+                     </div>
+                  </div>
+               </div>
+            )}
+{/* Global Calendar Reminder Modal */}
       {showCalendarModal && selectedCalendarHw && (() => {
          const submissions = allSubmissions.filter(s => s.homeworkId === selectedCalendarHw.id && (!activeClassroom || s.classId === activeClassroom.id));
          const classStudents = allStudents.filter(s => s.classId === selectedCalendarHw.assignedClassId);
-         const submittedStudentNames = new Set(submissions.map(s => s.studentName?.toLowerCase()));
-         const pendingStudents = classStudents.filter(s => !submittedStudentNames.has(s.name?.toLowerCase()));
+         const normalizeName = (name) => (name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+         const submittedStudentNames = new Set(submissions.map(s => normalizeName(s.studentName)));
+         const pendingStudents = classStudents.filter(s => !submittedStudentNames.has(normalizeName(s.name)));
 
          const handleSendReminderPing = async (student) => {
             try {

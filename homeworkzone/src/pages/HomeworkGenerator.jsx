@@ -24,7 +24,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '../firebase';
-import { collection, addDoc, serverTimestamp, getDocs, query, where, orderBy, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, where, orderBy, deleteDoc, doc, getDoc, setDoc } from 'firebase/firestore';
+import { decryptText } from '../utils/crypto';
 
 const SUBJECTS = [
   { 
@@ -71,51 +72,9 @@ const SUBJECTS = [
       </div>
     )
   },
-  { 
-    id: 'art', 
-    name: 'Art', 
-    titleColor: 'text-pink-500',
-    bgColor: 'bg-[#fff5f5]', 
-    borderColor: 'border-pink-200',
-    selectedBorder: 'border-pink-400 ring-4 ring-pink-100',
-    desc: 'Drawing, colors, painting and crafts!',
-    renderGraphic: () => (
-      <div className="w-16 h-20 bg-pink-100 rounded-full flex items-center justify-center border-4 border-pink-200 shadow-inner">
-        <span className="text-4xl">🎨</span>
-      </div>
-    )
-  },
-  { 
-    id: 'music', 
-    name: 'Music', 
-    titleColor: 'text-purple-500',
-    bgColor: 'bg-[#fbf4ff]', 
-    borderColor: 'border-purple-200',
-    selectedBorder: 'border-purple-400 ring-4 ring-purple-100',
-    desc: 'Instruments, songs, melodies and rhythm!',
-    renderGraphic: () => (
-      <div className="w-16 h-20 bg-purple-100 rounded-full flex items-center justify-center border-4 border-purple-200 shadow-inner">
-        <span className="text-4xl">🎵</span>
-      </div>
-    )
-  },
-  { 
-    id: 'history', 
-    name: 'History', 
-    titleColor: 'text-amber-700',
-    bgColor: 'bg-[#fffbf0]', 
-    borderColor: 'border-amber-200',
-    selectedBorder: 'border-amber-400 ring-4 ring-amber-100',
-    desc: 'Past events, cultures, heroes and timelines!',
-    renderGraphic: () => (
-      <div className="w-16 h-20 bg-amber-100 rounded-full flex items-center justify-center border-4 border-amber-200 shadow-inner">
-        <span className="text-4xl">🏛️</span>
-      </div>
-    )
-  }
 ];
 
-export default function HomeworkGenerator({ user, classrooms = [], activeClassroom, onHomeworkCreated }) {
+export default function HomeworkGenerator({ user, classrooms = [], activeClassroom, initialDraft, onHomeworkCreated }) {
   const [formData, setFormData] = useState({
     subject: 'maths',
     title: '',
@@ -126,49 +85,43 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
     points: '10'
   });
   
+  // Real-time AI key resolution will be done on-the-fly during generation.
+  
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [generatedQuestions, setGeneratedQuestions] = useState(null);
   const [isAiAccepted, setIsAiAccepted] = useState(false);
 
   const [activeTab, setActiveTab] = useState('create');
   const [pastHomeworks, setPastHomeworks] = useState([]);
+  
+  useEffect(() => {
+    if (initialDraft) {
+      setFormData({
+        subject: initialDraft.subject || 'maths',
+        title: initialDraft.title || '',
+        instructions: initialDraft.instructions || '',
+        classId: initialDraft.assignedClassId || '',
+        dueDate: initialDraft.dueDate || '',
+        time: initialDraft.time || '',
+        points: initialDraft.points || '10'
+      });
+      setGeneratedQuestions(initialDraft.questions || null);
+      setIsAiAccepted(true);
+      setActiveTab('create');
+    }
+  }, [initialDraft]);
+
+  useEffect(() => {
+    if (activeClassroom?.id && !formData.classId) {
+      setFormData(prev => ({ ...prev, classId: activeClassroom.id }));
+    }
+  }, [activeClassroom]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [filterDate, setFilterDate] = useState('');
   const [expandedHomeworkId, setExpandedHomeworkId] = useState(null);
   const [questionCount, setQuestionCount] = useState(5);
-
-  // Dynamic subjects matching based on classroom selections
-  const selectedClass = classrooms.find(c => c.id === formData.classId) || activeClassroom;
-  
-  const allowedSubjects = SUBJECTS.filter(sub => {
-    if (!selectedClass || !selectedClass.subjects || selectedClass.subjects.length === 0) {
-      return true; // Backwards compatibility: show all if no subjects restriction is set
-    }
-    return selectedClass.subjects.some(s => s.toLowerCase() === sub.id.toLowerCase());
-  });
-
-  // Automatically select a valid subject when the class changes
-  useEffect(() => {
-    if (selectedClass && selectedClass.subjects && selectedClass.subjects.length > 0) {
-      const isAllowed = selectedClass.subjects.some(s => s.toLowerCase() === formData.subject.toLowerCase());
-      if (!isAllowed) {
-        const firstAllowed = SUBJECTS.find(sub => 
-          selectedClass.subjects.some(s => s.toLowerCase() === sub.id.toLowerCase())
-        );
-        if (firstAllowed) {
-          setFormData(prev => ({ ...prev, subject: firstAllowed.id }));
-        }
-      }
-    }
-  }, [formData.classId, classrooms, activeClassroom]);
-
-  // Sync active classroom into the form on mount / change
-  useEffect(() => {
-    if (activeClassroom) {
-      setFormData(prev => ({ ...prev, classId: activeClassroom.id }));
-    }
-  }, [activeClassroom]);
 
   const fetchPastHomeworks = async () => {
     if (!user?.uid) return;
@@ -210,30 +163,73 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
     }
   };
 
-   const getPlaceholder = () => {
-     if (formData.subject === 'maths') return `e.g. 'Make ${questionCount} questions about adding fractions with unlike denominators'...`;
-     if (formData.subject === 'science') return `e.g. 'Make ${questionCount} questions about the solar system and planets'...`;
-     if (formData.subject === 'english') return `e.g. 'Make ${questionCount} questions about identifying nouns vs verbs in a sentence'...`;
-     if (formData.subject === 'art') return `e.g. 'Make ${questionCount} questions about primary colors and basic color mixing'...`;
-     if (formData.subject === 'music') return `e.g. 'Make ${questionCount} questions about musical note values and treble clef notes'...`;
-     if (formData.subject === 'history') return `e.g. 'Make ${questionCount} questions about ancient castles and medieval life'...`;
-     return "Describe what the AI should generate...";
-   };
+  const getPlaceholder = () => {
+    if (formData.subject === 'maths') return `e.g. 'Make ${questionCount} questions about adding fractions with unlike denominators'...`;
+    if (formData.subject === 'science') return `e.g. 'Make ${questionCount} questions about the solar system and planets'...`;
+    if (formData.subject === 'english') return `e.g. 'Make ${questionCount} questions about identifying nouns vs verbs in a sentence'...`;
+    return "Describe what the AI should generate...";
+  };
 
   const handleGenerateAI = async () => {
-    const activeModel = localStorage.getItem('hwz_active_ai') || 'gemini';
-    const activeKey = localStorage.getItem(`hwz_${activeModel}_key`);
-
-    if (!activeKey) return alert("Please set your API Key in the Power Hub first! 🔑");
-    if (!formData.title) return alert("Please provide a Title first to guide generation! 🎯");
-
     setIsAiAccepted(false);
     setIsGenerating(true);
+
     try {
+      // 1. Resolve active AI model from local storage
+      let activeModel = localStorage.getItem('hwz_active_ai') || 'gemini';
+      
+      // 2. Resolve key: start with Local Storage
+      let activeKey = localStorage.getItem(`hwz_${activeModel}_key`) || '';
+
+      // 3. Fallback: If Local Storage is empty, fetch and decrypt from Cloud Firestore
+      if (!activeKey && user?.uid) {
+        try {
+          console.log("[AI Generator] Local key empty. Attempting Cloud fallback...");
+          const teacherDoc = await getDoc(doc(db, 'teachers', user.uid));
+          if (teacherDoc.exists()) {
+            const data = teacherDoc.data();
+            if (data.activeAi) {
+              activeModel = data.activeAi;
+            }
+            if (data.encryptedAiKeys && data.encryptedAiKeys[activeModel]) {
+              const code = user.teacherCode || data.teacherCode || user.uid.slice(0, 6).toUpperCase();
+              const decrypted = await decryptText(data.encryptedAiKeys[activeModel], code);
+              if (decrypted) {
+                activeKey = decrypted;
+                console.log("[AI Generator] Successfully resolved key from Cloud.");
+              }
+            }
+          }
+        } catch (dbErr) {
+          console.warn("[AI Generator] Cloud key resolution failed:", dbErr);
+        }
+      }
+
+      console.log("[AI Generator] Triggered with resolved keys.", {
+        activeModel,
+        hasKey: !!activeKey,
+        keyLength: activeKey ? activeKey.length : 0,
+        title: formData.title,
+        instructions: formData.instructions
+      });
+
+      if (!activeKey) {
+        alert("Please set your API Key in the Power Hub first! 🔑");
+        setIsGenerating(false);
+        return;
+      }
+
+      if (!formData.title && !formData.instructions) {
+        alert("Please provide either a Title or Instructions to guide generation! 🎯");
+        setIsGenerating(false);
+        return;
+      }
+
+      const topic = formData.title || (formData.instructions ? formData.instructions.slice(0, 45) + '...' : 'General Quiz');
       const prompt = `You are an expert curriculum designer. 
       Create a ${questionCount}-question multiple-choice quiz for students about the following topic:
       Subject: ${formData.subject}
-      Topic: ${formData.title}
+      Topic: ${topic}
       Specific Content Instructions: ${formData.instructions}
       
       Ensure the questions test the students' knowledge on the specific content instructions provided. DO NOT generate meta-questions about the instructions themselves.
@@ -321,11 +317,12 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
         createdAt: serverTimestamp()
       };
 
-      await addDoc(collection(db, 'homeworks'), payload);
-      alert("Homework Published Successfully! 🚀");
-      if (onHomeworkCreated) {
-        onHomeworkCreated();
+      if (initialDraft?.id) {
+        await setDoc(doc(db, 'homeworks', initialDraft.id), payload, { merge: true });
+      } else {
+        await addDoc(collection(db, 'homeworks'), payload);
       }
+      alert("Homework Published Successfully! 🚀");
       
       // Reset form
       setFormData({
@@ -339,6 +336,10 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
       });
       setGeneratedQuestions(null);
       setIsAiAccepted(false);
+      
+      if (typeof onHomeworkCreated === 'function') {
+        onHomeworkCreated();
+      }
     } catch (err) {
       console.error("Publish Error:", err);
       alert("Failed to publish homework. ❌");
@@ -352,7 +353,7 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
       return;
     }
 
-    setIsPublishing(true);
+    setIsSavingDraft(true);
     try {
       const payload = {
         title: formData.title,
@@ -368,13 +369,13 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
         createdAt: serverTimestamp()
       };
 
-      await addDoc(collection(db, 'homeworks'), payload);
-      alert("Homework Draft Saved Successfully! 📝🎨");
-      
-      if (onHomeworkCreated) {
-        onHomeworkCreated();
+      if (initialDraft?.id) {
+        await setDoc(doc(db, 'homeworks', initialDraft.id), payload, { merge: true });
+      } else {
+        await addDoc(collection(db, 'homeworks'), payload);
       }
-
+      alert("Homework Saved as Draft! 📝🚀");
+      
       // Reset form
       setFormData({
         subject: 'maths',
@@ -387,30 +388,17 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
       });
       setGeneratedQuestions(null);
       setIsAiAccepted(false);
+      
+      if (typeof onHomeworkCreated === 'function') {
+        onHomeworkCreated();
+      }
+      
+      fetchPastHomeworks();
     } catch (err) {
       console.error("Save Draft Error:", err);
       alert("Failed to save draft. ❌");
     }
-    setIsPublishing(false);
-  };
-
-  const handlePublishDraft = async (hwId) => {
-    if (!window.confirm("Ready to publish this draft? 🚀 It will become visible to all students in the classroom!")) return;
-    try {
-      const hwRef = doc(db, 'homeworks', hwId);
-      await updateDoc(hwRef, {
-        status: 'published',
-        createdAt: serverTimestamp()
-      });
-      alert("Draft Published successfully! 🚀✨");
-      fetchPastHomeworks();
-      if (onHomeworkCreated) {
-        onHomeworkCreated();
-      }
-    } catch (err) {
-      console.error("Publish draft error:", err);
-      alert("Failed to publish draft.");
-    }
+    setIsSavingDraft(false);
   };
 
   return (
@@ -466,7 +454,7 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {allowedSubjects.map((sub) => (
+          {SUBJECTS.map((sub) => (
             <div 
               key={sub.id}
               onClick={() => setFormData({...formData, subject: sub.id})}
@@ -532,79 +520,88 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
             </div>
           </div>
 
-                    {/* AI Generator Box inside Details */}
-          <div className="bg-purple-50 p-6 rounded-[32px] border-2 border-purple-100/70 flex flex-col space-y-4">
+          {/* Unified Magic Quiz Builder Panel */}
+          <div className="bg-purple-50/50 p-6 rounded-3xl border-2 border-purple-100/80 flex flex-col space-y-5">
              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm text-purple-600">
+                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm text-[#8A70FF] shrink-0 border border-purple-100">
                   <Wand2 className="w-5 h-5" />
                 </div>
-                <div>
+                <div className="text-left">
                    <h4 className="font-black text-purple-900 text-sm">Magic Quiz Builder</h4>
-                   <p className="text-[10px] font-bold text-purple-600/70 uppercase tracking-wider">Auto-generate {questionCount} questions based on your prompt</p>
+                   <p className="text-[10px] font-bold text-purple-600/70">Automatically generate {questionCount} multiple-choice questions based on your title & instructions.</p>
                 </div>
              </div>
 
-             <div className="space-y-2">
-               <label className="text-xs font-black text-purple-950 uppercase tracking-widest block">Prompt / Instructions for Students</label>
+             <div className="space-y-1.5 text-left">
+               <label className="font-bold text-[#1a237e] text-xs block ml-1">Prompt / Instructions for Students</label>
                <div className="relative">
                  <textarea 
                    placeholder={getPlaceholder()}
                    value={formData.instructions}
                    onChange={(e) => setFormData({...formData, instructions: e.target.value})}
-                   className="w-full h-28 bg-white border border-purple-200 rounded-2xl p-4 text-slate-700 font-bold outline-none focus:border-purple-400 focus:ring-4 focus:ring-purple-100 transition-all resize-none text-sm shadow-inner"
+                   className="w-full h-32 bg-white border-2 border-slate-200 rounded-2xl p-4 text-slate-700 font-bold outline-none focus:border-purple-400 transition-colors resize-none text-xs"
                  />
                  <Book className="absolute right-4 bottom-4 w-5 h-5 text-purple-400 opacity-50" />
                </div>
              </div>
 
              {generatedQuestions ? (
-               isAiAccepted ? (
-                 <div className="w-full bg-emerald-50 p-4 rounded-xl border border-emerald-200 flex items-center justify-between animate-in zoom-in duration-300">
-                   <div className="flex items-center gap-3 text-emerald-700 font-bold text-sm">
-                     <CheckCircle2 className="w-5 h-5" />
-                     {generatedQuestions.length} Questions Saved!
-                   </div>
-                   <button onClick={() => setIsAiAccepted(false)} className="text-xs text-emerald-600 font-bold hover:underline px-4 py-2 bg-white rounded-lg border border-emerald-200 shadow-sm">View Questions</button>
-                 </div>
-               ) : (
-                 <div className="w-full text-left bg-white p-6 rounded-2xl border border-purple-200 space-y-6">
-                   <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-                     <div className="flex items-center gap-2 text-emerald-600 font-black">
-                       <CheckCircle2 className="w-5 h-5" /> {generatedQuestions.length} Questions Ready!
-                     </div>
-                     <div className="flex gap-2">
-                       <button onClick={() => setIsAiAccepted(true)} className="text-xs text-white font-bold px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg shadow-sm transition-colors">Accept & Continue</button>
-                     </div>
-                   </div>
-                   <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar pr-2">
-                     {generatedQuestions.map((q, idx) => (
-                       <div key={idx} className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                         <p className="font-bold text-slate-800 text-sm mb-3"><span className="text-purple-600 mr-1">Q{idx + 1}.</span> {q.text}</p>
-                         <div className="grid grid-cols-2 gap-2">
-                           {q.options.map((opt, i) => (
-                             <div key={i} className={`px-3 py-2 rounded-lg text-xs font-bold border ${opt === q.answer ? 'bg-emerald-100 border-emerald-300 text-emerald-800' : 'bg-white border-slate-200 text-slate-600'}`}>
-                               {opt}
-                             </div>
-                           ))}
-                         </div>
-                       </div>
-                     ))}
-                   </div>
-                   <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                     <button onClick={handleGenerateAI} className="text-xs text-purple-600 font-bold hover:underline px-4 py-2 bg-purple-50 rounded-lg">Regenerate</button>
-                     <button onClick={() => {setGeneratedQuestions(null); setIsAiAccepted(false);}} className="text-xs text-rose-500 font-bold hover:underline px-4 py-2 bg-rose-50 rounded-lg">Discard</button>
-                   </div>
-                 </div>
-               )
+                isAiAccepted ? (
+                  <div className="w-full bg-emerald-50 p-4 rounded-xl border border-emerald-200 flex items-center justify-between animate-in zoom-in duration-300">
+                    <div className="flex items-center gap-3 text-emerald-700 font-bold text-xs">
+                      <CheckCircle2 className="w-5 h-5" />
+                      {generatedQuestions.length} Questions Saved to Draft! Scroll down to publish.
+                    </div>
+                    <button onClick={() => setIsAiAccepted(false)} className="text-xs text-emerald-600 font-bold hover:underline px-4 py-2 bg-white rounded-lg border border-emerald-200">View Questions</button>
+                  </div>
+                ) : (
+                  <div className="w-full text-left bg-white p-6 rounded-2xl border border-purple-200 space-y-6">
+                    <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                      <div className="flex items-center gap-2 text-emerald-600 font-black text-sm">
+                        <CheckCircle2 className="w-5 h-5" /> {generatedQuestions.length} Questions Ready!
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => setIsAiAccepted(true)} className="text-xs text-white font-bold px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg shadow-sm transition-colors">Accept & Continue</button>
+                      </div>
+                    </div>
+                    <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar pr-2">
+                      {generatedQuestions.map((q, idx) => (
+                        <div key={idx} className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                          <p className="font-bold text-slate-800 text-xs mb-3"><span className="text-purple-600 mr-1 font-black">Q{idx + 1}.</span> {q.text}</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            {q.options.map((opt, i) => (
+                              <div key={i} className={`px-3 py-2 rounded-lg text-[10px] font-bold border ${opt === q.answer ? 'bg-emerald-100 border-emerald-300 text-emerald-800' : 'bg-white border-slate-200 text-slate-600'}`}>
+                                {opt}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                      <button onClick={handleGenerateAI} className="text-xs text-purple-600 font-bold hover:underline px-4 py-2 bg-purple-50 rounded-lg">Regenerate</button>
+                      <button onClick={() => {setGeneratedQuestions(null); setIsAiAccepted(false);}} className="text-xs text-rose-500 font-bold hover:underline px-4 py-2 bg-rose-50 rounded-lg">Discard</button>
+                    </div>
+                  </div>
+                )
              ) : (
-               <button 
-                 onClick={handleGenerateAI}
-                 disabled={isGenerating}
-                 className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-md transition-all w-full shadow-purple-100/50 hover:scale-[1.01]"
-               >
-                 {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                 {isGenerating ? 'Generating...' : 'Auto-Generate Questions'}
-               </button>
+                <button 
+                  onClick={handleGenerateAI}
+                  disabled={isGenerating}
+                  className="w-full bg-[#8A70FF] hover:bg-[#7455FF] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-purple-100/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Generating Questions...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Auto-Generate Questions
+                    </>
+                  )}
+                </button>
              )}
           </div>
 
@@ -712,10 +709,10 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
         <div className="flex items-center gap-4">
           <button 
             onClick={handleSaveDraft}
-            disabled={isPublishing}
-            className="bg-purple-50 hover:bg-purple-100 text-purple-600 font-black px-8 py-4 rounded-2xl transition-colors disabled:opacity-50"
+            disabled={isSavingDraft}
+            className="bg-purple-50 hover:bg-purple-100 text-purple-600 font-black px-8 py-4 rounded-2xl transition-colors disabled:opacity-50 flex items-center gap-2"
           >
-            {isPublishing ? 'Saving...' : 'Save as Draft 📝'}
+            {isSavingDraft ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Save as Draft 📝'}
           </button>
           <button 
             onClick={handlePublish}
@@ -775,15 +772,6 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
                       <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${hw.subject === 'maths' ? 'bg-blue-100 text-blue-700' : hw.subject === 'science' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
                         {hw.subject}
                       </span>
-                      {hw.status === 'draft' ? (
-                        <span className="px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest bg-purple-100 text-purple-700 border border-purple-200">
-                          Draft 📝
-                        </span>
-                      ) : (
-                        <span className="px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-700 border border-emerald-200">
-                          Published 🚀
-                        </span>
-                      )}
                       <h3 className="text-xl font-black text-slate-800">{hw.title}</h3>
                     </div>
                     <div className="flex items-center gap-6 text-sm font-bold text-slate-400">
@@ -791,18 +779,6 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
                        <div className="flex items-center gap-2" title="Due Date"><Clock className="w-4 h-4" /> {hw.dueDate ? new Date(hw.dueDate).toLocaleDateString() : 'No Due'}</div>
                        <div className="flex items-center gap-2"><Users className="w-4 h-4" /> {hw.questions?.length || 0} Qs</div>
                        
-                       {hw.status === 'draft' && (
-                         <button 
-                           onClick={(e) => {
-                             e.stopPropagation();
-                             handlePublishDraft(hw.id);
-                           }}
-                           className="px-4 py-2 bg-[#2ecc71] hover:bg-[#27ae60] text-white rounded-xl text-xs font-black transition-colors shadow-sm ml-2 shrink-0"
-                         >
-                           Publish Draft 🚀
-                         </button>
-                       )}
-
                        <button 
                          onClick={() => handleDeleteHomework(hw.id)}
                          className="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center hover:bg-rose-100 transition-colors opacity-0 group-hover:opacity-100 ml-4"

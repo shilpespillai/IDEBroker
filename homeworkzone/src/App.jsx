@@ -836,8 +836,8 @@ const LeaderboardRow = ({ rank, name, students, delay, avatarUrl }) => (
 );
 
 const MyRewards = ({ studentName, classroom, homeworks, submissions, getStudentAvatar, classroomStudents = [] }) => {
-   // Filter student's submissions case-insensitively
-   const mySubmissions = submissions.filter(s => s.studentName?.toLowerCase() === studentName?.toLowerCase());
+   const normalizeName = (name) => (name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+   const mySubmissions = submissions.filter(s => normalizeName(s.studentName) === normalizeName(studentName));
    const totalPoints = mySubmissions.reduce((acc, s) => acc + (s.correctCount || 0) * 10, 0);
 
    // Unlocking Badge calculations
@@ -873,23 +873,30 @@ const MyRewards = ({ studentName, classroom, homeworks, submissions, getStudentA
       { icon: "👑", label: "Score Master", color: "bg-purple-100", unlocked: totalPoints >= 100 }
    ];
 
-   // Leaderboard sorting dynamically from submissions
    const studentScores = {};
    submissions.forEach(sub => {
-      if (sub.classId === classroom?.id || !classroom?.id) {
-         const name = sub.studentName || "Student";
-         const points = (sub.correctCount || 0) * 10;
-         studentScores[name] = (studentScores[name] || 0) + points;
+      const subName = normalizeName(sub.studentName);
+      const isInRoster = classroomStudents.some(s => normalizeName(s.id) === subName || normalizeName(s.name) === subName);
+      if (sub.classId === classroom?.id || !classroom?.id || isInRoster) {
+         const matchedRosterName = classroomStudents.find(s => normalizeName(s.name) === subName || normalizeName(s.id) === subName)?.name || sub.studentName;
+         studentScores[matchedRosterName] = (studentScores[matchedRosterName] || 0) + (sub.correctCount || 0) * 10;
       }
    });
 
-   if (!studentScores[studentName]) {
-      studentScores[studentName] = 0;
+   const activeRegisteredName = classroomStudents.find(s => normalizeName(s.name) === normalizeName(studentName))?.name || studentName;
+   if (studentScores[activeRegisteredName] === undefined) {
+      studentScores[activeRegisteredName] = 0;
    }
 
-   const sortedLeaderboard = Object.keys(studentScores)
+   const sortedStudents = Object.keys(studentScores)
       .map(name => ({ name, points: studentScores[name] }))
-      .sort((a, b) => b.points - a.points);
+      .sort((a,b) => b.points - a.points);
+
+   const activeStudentRankIdx = sortedStudents.findIndex(s => normalizeName(s.name) === normalizeName(studentName));
+   const activeStudentRank = activeStudentRankIdx !== -1 ? activeStudentRankIdx + 1 : 1;
+
+   const leaderStudent = sortedStudents[0] || { name: activeRegisteredName, points: 0 };
+   const currentStudentScore = studentScores[activeRegisteredName] || 0;
 
    const shopItems = [
       { icon: "https://img.icons8.com/fluency/96/astronaut-helmet.png", title: "Astronaut Helmet 🧑‍🚀", subtitle: "Accessory for your profile character", points: 30 },
@@ -973,7 +980,7 @@ const MyRewards = ({ studentName, classroom, homeworks, submissions, getStudentA
             <div className="col-span-12 lg:col-span-5 bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm space-y-6">
                <h2 className="text-2xl font-semibold text-[#2D3748]">Class Leaderboard</h2>
                <div className="space-y-2">
-                  {sortedLeaderboard.slice(0, 5).map((row, idx) => (
+                  {sortedStudents.slice(0, 5).map((row, idx) => (
                      <LeaderboardRow 
                         key={idx} 
                         rank={idx + 1} 
@@ -1076,7 +1083,8 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
   };
 
   // Compute dynamic variables
-  const mySubmissions = submissions.filter(s => s.studentName?.toLowerCase() === studentName?.toLowerCase());
+  const normalizeName = (name) => (name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const mySubmissions = submissions.filter(s => normalizeName(s.studentName) === normalizeName(studentName));
   const completedHwIds = new Set(mySubmissions.map(s => s.homeworkId));
   const pendingHws = homeworks.filter(hw => !completedHwIds.has(hw.id));
   const recentlyGraded = mySubmissions.filter(s => s.feedback).sort((a,b) => b.submittedAt - a.submittedAt);
@@ -1149,28 +1157,29 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
   // 3. Dynamic Ranks & Achievements
   const studentScores = {};
   submissions.forEach(sub => {
-     const subName = sub.studentName?.trim().toLowerCase();
-     const isInRoster = classroomStudents.some(s => s.id?.trim().toLowerCase() === subName || s.name?.trim().toLowerCase() === subName);
+     const subName = normalizeName(sub.studentName);
+     const isInRoster = classroomStudents.some(s => normalizeName(s.id) === subName || normalizeName(s.name) === subName);
      if (sub.classId === classroom?.id || !classroom?.id || isInRoster) {
-        const name = sub.studentName?.trim() || "Student";
-        const points = (sub.correctCount || 0) * 10;
-        studentScores[name] = (studentScores[name] || 0) + points;
+        const name = (sub.studentName?.trim() || "Student").replace(/\s+/g, ' ');
+        const matchedRosterName = classroomStudents.find(s => normalizeName(s.name) === normalizeName(name))?.name || name;
+        studentScores[matchedRosterName] = (studentScores[matchedRosterName] || 0) + (sub.correctCount || 0) * 10;
      }
   });
 
-  if (!studentScores[studentName]) {
-     studentScores[studentName] = 0;
+  const activeRegisteredName = classroomStudents.find(s => normalizeName(s.name) === normalizeName(studentName))?.name || studentName;
+  if (studentScores[activeRegisteredName] === undefined) {
+     studentScores[activeRegisteredName] = 0;
   }
 
   const sortedStudents = Object.keys(studentScores)
      .map(name => ({ name, points: studentScores[name] }))
      .sort((a,b) => b.points - a.points);
 
-  const activeStudentRankIdx = sortedStudents.findIndex(s => s.name?.toLowerCase() === studentName?.toLowerCase());
+  const activeStudentRankIdx = sortedStudents.findIndex(s => normalizeName(s.name) === normalizeName(studentName));
   const activeStudentRank = activeStudentRankIdx !== -1 ? activeStudentRankIdx + 1 : 1;
 
-  const leaderStudent = sortedStudents[0] || { name: studentName, points: 0 };
-  const currentStudentScore = studentScores[studentName] || 0;
+  const leaderStudent = sortedStudents[0] || { name: activeRegisteredName, points: 0 };
+  const currentStudentScore = studentScores[activeRegisteredName] || 0;
 
   // Standings
   const standings = sortedStudents.slice(0, 3).map((st, idx) => ({

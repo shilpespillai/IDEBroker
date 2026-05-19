@@ -1634,18 +1634,36 @@ const TeacherDashboard = ({ user, onLogout }) => {
                                        {(() => {
                                           const hw = allHomeworks.find(h => h.id === sub.homeworkId);
                                           if (!hw) return <span className="text-[10px] text-slate-400 font-bold mt-1">Unknown Assignment</span>;
+                                          
+                                          // Format short code from document ID
+                                          const hwCode = hw.id ? `HW-${hw.id.slice(0, 5).toUpperCase()}` : 'N/A';
+                                          
+                                          // Format due date nicely
+                                          const formattedDueDate = hw.dueDate ? new Date(hw.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'No Due Date';
+
                                           return (
-                                             <div className="flex items-center gap-2 mt-1.5">
-                                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${
-                                                   hw.subject === 'maths' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                   hw.subject === 'science' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                   'bg-pink-50 text-pink-600 border-pink-100'
-                                                }`}>
-                                                   {hw.subject}
-                                                </span>
-                                                <span className="text-xs font-bold text-slate-500 truncate max-w-[200px]" title={hw.title}>
-                                                   {hw.title}
-                                                </span>
+                                             <div className="flex flex-col gap-1.5 mt-1.5">
+                                                <div className="flex items-center gap-2">
+                                                   <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${
+                                                      hw.subject === 'maths' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                      hw.subject === 'science' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                      'bg-pink-50 text-pink-600 border-pink-100'
+                                                   }`}>
+                                                      {hw.subject}
+                                                   </span>
+                                                   <span className="text-xs font-black text-slate-700 truncate max-w-[200px]" title={hw.title}>
+                                                      {hw.title}
+                                                   </span>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400">
+                                                   <span className="bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 font-mono text-[9px] text-slate-500">
+                                                      {hwCode}
+                                                   </span>
+                                                   <span>•</span>
+                                                   <span className="text-rose-500">
+                                                      Due: {formattedDueDate}
+                                                   </span>
+                                                </div>
                                              </div>
                                           );
                                        })()}

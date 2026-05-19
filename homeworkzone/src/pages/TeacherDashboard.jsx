@@ -45,6 +45,8 @@ import { collection, doc, getDoc, setDoc, getDocs, query, orderBy, deleteDoc, wh
 import HomeworkGenerator from './HomeworkGenerator';
 import { encryptText, decryptText } from '../utils/crypto';
 
+const normalizeName = (name) => (name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+
 const TeacherDashboard = ({ user, onLogout }) => {
   console.log("TeacherDashboard Rendered. User:", user);
   const [classrooms, setClassrooms] = useState([]);
@@ -564,7 +566,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
       const classStudents = allStudents.filter(s => s.classId === activeClassroom.id);
       const computedStudents = classStudents.map(student => {
          const studentSubs = allSubmissions.filter(sub => 
-            sub.studentName?.toLowerCase() === student.name?.toLowerCase()
+            normalizeName(sub.studentName) === normalizeName(student.name)
          );
          const completedCount = studentSubs.length;
          const totalScore = studentSubs.reduce((acc, sub) => acc + (sub.score || 0), 0);
@@ -614,7 +616,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
 
              const computedStudents = classStudents.map(student => {
                 const studentSubs = allSubmissions.filter(sub => 
-                   sub.studentName?.toLowerCase() === student.name?.toLowerCase()
+                   normalizeName(sub.studentName) === normalizeName(student.name)
                 );
                 const completedCount = studentSubs.length;
                 const totalScore = studentSubs.reduce((acc, sub) => acc + (sub.score || 0), 0);
@@ -713,7 +715,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
 
              const studentAverages = {};
              classStudents.forEach(student => {
-                const subs = classSubmissions.filter(sub => sub.studentName?.toLowerCase() === student.name?.toLowerCase());
+                const subs = classSubmissions.filter(sub => normalizeName(sub.studentName) === normalizeName(student.name));
                 if (subs.length > 0) {
                    const total = subs.reduce((acc, sub) => acc + (sub.score || 0), 0);
                    studentAverages[student.name] = {
@@ -1590,7 +1592,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
             
             const missingReports = [];
             currentStudents.forEach(student => {
-               const studentSubs = currentSubmissions.filter(s => s.studentName?.toLowerCase() === student.name?.toLowerCase());
+               const studentSubs = currentSubmissions.filter(s => normalizeName(s.studentName) === normalizeName(student.name));
                const submittedHwIds = new Set(studentSubs.map(s => s.homeworkId));
                
                const missingHws = currentHomeworks.filter(hw => !submittedHwIds.has(hw.id));
@@ -2058,7 +2060,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
             // Map each student to computed points, badges and averages based on their actual submissions
             const computedStudents = filteredStudentsList.map(student => {
                const studentSubs = allSubmissions.filter(sub => 
-                  sub.studentName?.toLowerCase() === student.name?.toLowerCase()
+                  normalizeName(sub.studentName) === normalizeName(student.name)
                );
 
                const completedCount = studentSubs.length;
@@ -2131,7 +2133,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
             // Get recent rewards based on actual submissions for the selected classroom
             const recentSubmissions = allSubmissions
                .filter(sub => {
-                  const student = allStudents.find(s => s.name?.toLowerCase() === sub.studentName?.toLowerCase());
+                  const student = allStudents.find(s => normalizeName(s.name) === normalizeName(sub.studentName));
                   if (!student) return false;
                   if (filterClass === 'All Classes') return true;
                   return student.className === filterClass;
@@ -2381,7 +2383,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
              const classStudents = allStudents.filter(s => s.classId === activeClassroom.id);
              const computedStudents = classStudents.map(student => {
                 const studentSubs = allSubmissions.filter(sub => 
-                   sub.studentName?.toLowerCase() === student.name?.toLowerCase()
+                   normalizeName(sub.studentName) === normalizeName(student.name)
                 );
                 const completedCount = studentSubs.length;
                 const totalScore = studentSubs.reduce((acc, sub) => acc + (sub.score || 0), 0);

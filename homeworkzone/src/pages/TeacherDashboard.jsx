@@ -1887,7 +1887,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                                     onClick={() => setActiveChat(msg)}
                                     className={`w-full text-left p-6 flex items-center gap-4 transition-all ${currentChat?.id === msg.id ? 'bg-blue-50/50' : 'hover:bg-blue-50/30'}`}
                                  >
-                                    <img src={getStudentAvatar(msg.senderName)} className="w-12 h-12 rounded-full border-2 border-white shadow-sm bg-white p-0.5" alt="avatar" />
+                                    <img src={getStudentAvatar(messagesTab === 'Inbox' ? msg.senderName : msg.recipientName)} className="w-12 h-12 rounded-full border-2 border-white shadow-sm bg-white p-0.5" alt="avatar" />
                                     <div className="flex-1 min-w-0">
                                        <div className="flex items-center justify-between">
                                           <p className="text-sm font-black text-[#1E3A8A] truncate">

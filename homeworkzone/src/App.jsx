@@ -523,14 +523,20 @@ const HomeworkCard = ({ hw, completedSubmission, delay, onStart }) => {
   );
 };
 
-const MyHomework = ({ studentName, teacher, onStartMission }) => {
+const MyHomework = ({ studentName, teacher, onStartMission, homeworks: initialHomeworks, submissions: initialSubmissions }) => {
    const [activeTab, setActiveTab] = useState('All');
    const [subjectFilter, setSubjectFilter] = useState('All Subjects');
-   const [homeworks, setHomeworks] = useState([]);
-   const [submissions, setSubmissions] = useState([]);
-   const [loading, setLoading] = useState(true);
+   const [homeworks, setHomeworks] = useState(initialHomeworks || []);
+   const [submissions, setSubmissions] = useState(initialSubmissions || []);
+   const [loading, setLoading] = useState(!initialHomeworks || !initialSubmissions);
 
    useEffect(() => {
+      if (initialHomeworks && initialSubmissions) {
+         setHomeworks(initialHomeworks);
+         setSubmissions(initialSubmissions);
+         setLoading(false);
+         return;
+      }
       const fetchData = async () => {
          const savedStudent = JSON.parse(localStorage.getItem('hwz_active_student'));
          if (savedStudent && savedStudent.classroom) {
@@ -541,7 +547,7 @@ const MyHomework = ({ studentName, teacher, onStartMission }) => {
                const hwList = hwSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                setHomeworks(hwList);
 
-                // Server-filtered parallel queries - massive scaling win!
+                // Server-filtered parallel queries
                 const cleanName = studentName?.trim();
                 const subQ1 = query(collection(db, 'submissions'), where('studentName', '==', cleanName));
                 const subQ2 = query(collection(db, 'submissions'), where('studentName', '==', toTitleCase(cleanName)));
@@ -560,7 +566,7 @@ const MyHomework = ({ studentName, teacher, onStartMission }) => {
          setLoading(false);
       };
       fetchData();
-   }, [studentName]);
+   }, [studentName, initialHomeworks, initialSubmissions]);
 
    const completedHwIds = new Set(submissions.map(s => s.homeworkId));
    const todoHws = homeworks.filter(hw => !completedHwIds.has(hw.id));
@@ -672,11 +678,16 @@ const MyHomework = ({ studentName, teacher, onStartMission }) => {
    );
 };
 
-const MissionReports = ({ studentName, teacher }) => {
-   const [submissions, setSubmissions] = useState([]);
-   const [loading, setLoading] = useState(true);
+const MissionReports = ({ studentName, teacher, submissions: initialSubmissions }) => {
+   const [submissions, setSubmissions] = useState(initialSubmissions || []);
+   const [loading, setLoading] = useState(!initialSubmissions);
 
    useEffect(() => {
+      if (initialSubmissions) {
+         setSubmissions(initialSubmissions);
+         setLoading(false);
+         return;
+      }
       const fetchSubmissions = async () => {
          try {
              const cleanName = studentName?.trim();
@@ -704,7 +715,7 @@ const MissionReports = ({ studentName, teacher }) => {
          setLoading(false);
       };
       fetchSubmissions();
-   }, [studentName]);
+   }, [studentName, initialSubmissions]);
 
    return (
       <div className="max-w-[100%] mx-auto w-full py-4 space-y-10 pb-20">
@@ -1042,12 +1053,22 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
             const subQ1 = query(collection(db, 'submissions'), where('classId', '==', actualClassroom.id));
             const subQ2 = query(collection(db, 'submissions'), where('studentName', '==', cleanName));
             const subQ3 = query(collection(db, 'submissions'), where('studentName', '==', toTitleCase(cleanName)));
+            const subQ4 = query(collection(db, 'submissions'), where('studentName', '==', cleanName.toLowerCase()));
+            const subQ5 = query(collection(db, 'submissions'), where('studentName', '==', cleanName.toUpperCase()));
             
-            const [snap1, snap2, snap3] = await Promise.all([getDocs(subQ1), getDocs(subQ2), getDocs(subQ3)]);
+            const [snap1, snap2, snap3, snap4, snap5] = await Promise.all([
+               getDocs(subQ1), 
+               getDocs(subQ2), 
+               getDocs(subQ3),
+               getDocs(subQ4),
+               getDocs(subQ5)
+             ]);
             const combinedMap = {};
             snap1.docs.forEach(doc => combinedMap[doc.id] = { id: doc.id, ...doc.data() });
             snap2.docs.forEach(doc => combinedMap[doc.id] = { id: doc.id, ...doc.data() });
             snap3.docs.forEach(doc => combinedMap[doc.id] = { id: doc.id, ...doc.data() });
+            snap4.docs.forEach(doc => combinedMap[doc.id] = { id: doc.id, ...doc.data() });
+            snap5.docs.forEach(doc => combinedMap[doc.id] = { id: doc.id, ...doc.data() });
             
             const subList = Object.values(combinedMap);
             setSubmissions(subList);
@@ -1448,11 +1469,11 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
            )}
 
            {activeNav === 'My Homework' && (
-              <MyHomework studentName={studentName} teacher={teacher} onStartMission={(id, pastSubmission) => setActiveMission({ id, pastSubmission })} />
+              <MyHomework studentName={studentName} teacher={teacher} homeworks={homeworks} submissions={mySubmissions} onStartMission={(id, pastSubmission) => setActiveMission({ id, pastSubmission })} />
            )}
 
            {activeNav === 'Mission Reports' && (
-              <MissionReports studentName={studentName} teacher={teacher} />
+              <MissionReports studentName={studentName} teacher={teacher} submissions={mySubmissions} />
            )}
 
            {activeNav === 'My Rewards' && (

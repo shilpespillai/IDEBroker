@@ -89,12 +89,61 @@ const TeacherDashboard = ({ user, onLogout }) => {
   const [newMsgRecipientId, setNewMsgRecipientId] = useState('');
   const [newMsgSubject, setNewMsgSubject] = useState('');
   const [newMsgBody, setNewMsgBody] = useState('');
+  const [subjectPrompts, setSubjectPrompts] = useState({
+    maths: 'Make 5 questions about adding fractions with unlike denominators. This is for grade 4 students.',
+    english: 'Make 5 questions about identifying nouns vs verbs in a sentence. This is for grade 4 students.',
+    science: 'Make 5 questions about the solar system and planets. This is for grade 4 students.'
+  });
+  const [newSubjectName, setNewSubjectName] = useState('');
+  const [isSavingPrompts, setIsSavingPrompts] = useState(false);
   const getStudentAvatar = (name) => {
      const st = allStudents.find(s => s.id?.toLowerCase() === name?.toLowerCase() || s.name?.toLowerCase() === name?.toLowerCase());
      if (st?.avatarUrl) {
         return st.avatarUrl;
      }
      return `https://api.dicebear.com/7.x/adventurer/svg?seed=${name || 'student'}`;
+  };
+
+  const handleSavePrompts = async () => {
+    if (!user?.uid) return;
+    setIsSavingPrompts(true);
+    try {
+      await setDoc(doc(db, 'teachers', user.uid), {
+        subjectPrompts: subjectPrompts
+      }, { merge: true });
+      alert("Generic Subject Prompts saved successfully! 🚀🪄");
+    } catch (err) {
+      console.error("Save Prompts Error:", err);
+      alert("Failed to save prompts. ❌");
+    }
+    setIsSavingPrompts(false);
+  };
+
+  const handleAddSubject = () => {
+    if (!newSubjectName.trim()) {
+      alert("Please enter a subject name! 🎒");
+      return;
+    }
+    const cleanName = newSubjectName.trim().toLowerCase();
+    if (subjectPrompts[cleanName] !== undefined) {
+      alert("This subject already exists! ⚠️");
+      return;
+    }
+    setSubjectPrompts(prev => ({
+      ...prev,
+      [cleanName]: `Make 5 questions about ${cleanName}. This is for grade 4 students.`
+    }));
+    setNewSubjectName('');
+  };
+
+  const handleDeleteSubject = (subKey) => {
+    if (window.confirm(`Are you sure you want to delete the generic prompt for "${subKey}"?`)) {
+      setSubjectPrompts(prev => {
+        const copy = { ...prev };
+        delete copy[subKey];
+        return copy;
+      });
+    }
   };
 
   const [homeworkSubject, setHomeworkSubject] = useState('English');
@@ -194,6 +243,9 @@ const TeacherDashboard = ({ user, onLogout }) => {
           if (data.activeAi) {
             setActiveAi(data.activeAi);
             localStorage.setItem('hwz_active_ai', data.activeAi);
+          }
+          if (data.subjectPrompts) {
+            setSubjectPrompts(data.subjectPrompts);
           }
           const code = user.teacherCode || data.teacherCode || user.uid.slice(0, 6).toUpperCase();
           
@@ -1577,6 +1629,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
                      classrooms={classrooms} 
                      activeClassroom={activeClassroom} 
                      initialDraft={selectedDraft}
+                     subjectPrompts={subjectPrompts}
                      onHomeworkCreated={() => {
                         setSelectedDraft(null);
                         fetchDashboardSubmissions();
@@ -2594,9 +2647,102 @@ const TeacherDashboard = ({ user, onLogout }) => {
                 </div>
              );
           }
+           case 'My Prompts': {
+              return (
+                 <div className="px-10 py-10 space-y-10 min-h-[calc(100vh-64px)] pb-40 relative">
+                    {/* Top Header */}
+                    <div className="flex items-center justify-between">
+                       <div>
+                          <h1 className="text-4xl font-black text-[#1E3A8A] tracking-tight">My AI Prompts</h1>
+                          <p className="text-sm font-bold text-blue-300 italic">Configure default templates that automatically pre-fill the Magic Quiz Builder when a subject is chosen.</p>
+                       </div>
+                    </div>
 
-         default:
-            return null;
+                    {/* Main Form container */}
+                    <div className="grid grid-cols-12 gap-8 items-start">
+                       {/* Left: Prompts List */}
+                       <div className="col-span-8 space-y-6">
+                          {Object.keys(subjectPrompts).length > 0 ? (
+                             Object.keys(subjectPrompts).map(subKey => (
+                                <div key={subKey} className="bg-white rounded-[32px] border border-blue-50 shadow-sm p-6 space-y-4 hover:shadow-md transition-all relative overflow-hidden group">
+                                   <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3">
+                                         <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 font-black text-xs uppercase shadow-sm">
+                                            {subKey.slice(0, 3)}
+                                         </div>
+                                         <h3 className="text-base font-black text-[#1E3A8A] capitalize">{subKey}</h3>
+                                      </div>
+                                      <button 
+                                         onClick={() => handleDeleteSubject(subKey)}
+                                         className="text-red-400 hover:text-red-600 transition-colors w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50"
+                                         title="Delete Subject"
+                                      >
+                                         <Trash2 className="w-4 h-4" />
+                                      </button>
+                                   </div>
+                                   <div className="relative">
+                                      <textarea 
+                                         value={subjectPrompts[subKey]}
+                                         onChange={(e) => setSubjectPrompts(prev => ({ ...prev, [subKey]: e.target.value }))}
+                                         className="w-full h-32 bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-slate-700 font-bold outline-none focus:border-indigo-400 transition-colors resize-none text-xs"
+                                         placeholder={`Enter generic prompt for ${subKey}...`}
+                                      />
+                                   </div>
+                                </div>
+                             ))
+                          ) : (
+                             <div className="text-center py-20 bg-white rounded-[32px] border border-blue-50">
+                                <p className="text-blue-300 font-bold italic">No generic prompts configured. Add a subject on the right!</p>
+                             </div>
+                          )}
+
+                          {/* Save Button */}
+                          <div className="flex justify-end pt-4">
+                             <button
+                                onClick={handleSavePrompts}
+                                disabled={isSavingPrompts}
+                                className="bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 px-10 rounded-[24px] shadow-lg shadow-indigo-100 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50"
+                             >
+                                {isSavingPrompts ? 'Saving...' : 'Save All Prompts ✨'}
+                             </button>
+                          </div>
+                       </div>
+
+                       {/* Right: Add Subject Controls */}
+                       <div className="col-span-4 bg-white rounded-[32px] border border-blue-50 shadow-sm p-6 space-y-6">
+                          <div className="space-y-2">
+                             <h3 className="text-lg font-black text-[#1E3A8A]">Add New Subject</h3>
+                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Create a custom prompt section</p>
+                          </div>
+
+                          <div className="space-y-4">
+                             <div className="space-y-1">
+                                <label className="text-xs font-black text-slate-500 block ml-1">Subject Name</label>
+                                <input 
+                                   type="text"
+                                   value={newSubjectName}
+                                   onChange={(e) => setNewSubjectName(e.target.value)}
+                                   placeholder="e.g. History"
+                                   className="w-full bg-slate-50 border border-slate-100 p-3.5 rounded-2xl text-xs font-semibold text-[#475569] shadow-inner focus:border-indigo-400 outline-none transition-all"
+                                />
+                             </div>
+                             <button
+                                onClick={handleAddSubject}
+                                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-2xl shadow-md hover:scale-[1.02] active:scale-95 transition-all text-xs"
+                             >
+                                Create Subject Card ➕
+                             </button>
+                          </div>
+                       </div>
+                    </div>
+
+                    <GrassBorder />
+                 </div>
+              );
+           }
+ 
+          default:
+             return null;
       }
    };
 
@@ -2620,6 +2766,7 @@ const TeacherDashboard = ({ user, onLogout }) => {
             <SidebarItem id="Gradebook" label="Gradebook" icon={<Trophy className="w-5 h-5 text-emerald-500" />} active={activeTab === 'Gradebook'} onClick={setActiveTab} />
             <SidebarItem id="Messages" label="Messages" icon={<img src="/ic-messages.png" className="w-6 h-6 object-contain mix-blend-multiply" alt="Messages" />} active={activeTab === 'Messages'} onClick={setActiveTab} />
             <SidebarItem id="Rewards" label="Rewards" icon={<img src="/ic-rewards.png" className="w-6 h-6 object-contain mix-blend-multiply" alt="Rewards" />} active={activeTab === 'Rewards'} onClick={setActiveTab} />
+            <SidebarItem id="My Prompts" label="My Prompts" icon={<MessageSquare className="w-5 h-5 text-indigo-500" />} active={activeTab === 'My Prompts'} onClick={setActiveTab} />
             <SidebarItem id="AI Hub" label="AI Hub" icon={<Zap className="w-5 h-5 text-purple-500" />} active={showAiSettings} onClick={() => setShowAiSettings(true)} />
          </nav>
 

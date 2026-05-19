@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   BookOpen, 
   FlaskConical, 
@@ -74,7 +74,7 @@ const SUBJECTS = [
   },
 ];
 
-export default function HomeworkGenerator({ user, classrooms = [], activeClassroom, initialDraft, onHomeworkCreated }) {
+export default function HomeworkGenerator({ user, classrooms = [], activeClassroom, initialDraft, subjectPrompts, onHomeworkCreated }) {
    const [formData, setFormData] = useState({
     subject: 'maths',
     title: '',
@@ -85,6 +85,51 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
     time: '',
     points: '10'
   });
+
+  const lastSubjectRef = useRef(formData.subject);
+
+  useEffect(() => {
+    if (subjectPrompts) {
+      const normSubject = formData.subject.toLowerCase();
+      const matchedKey = Object.keys(subjectPrompts).find(k => k.toLowerCase() === normSubject);
+      
+      // Auto-fill on manual subject change, or if it is the first load and aiPrompt is empty
+      if (formData.subject !== lastSubjectRef.current || !formData.aiPrompt) {
+        lastSubjectRef.current = formData.subject;
+        if (matchedKey && subjectPrompts[matchedKey]) {
+          setFormData(prev => ({ ...prev, aiPrompt: subjectPrompts[matchedKey] }));
+        } else if (formData.subject !== lastSubjectRef.current) {
+          setFormData(prev => ({ ...prev, aiPrompt: '' }));
+        }
+      }
+    }
+  }, [formData.subject, subjectPrompts]);
+
+  const getDynamicSubjects = () => {
+    const list = [...SUBJECTS];
+    if (subjectPrompts) {
+      Object.keys(subjectPrompts).forEach(key => {
+        const lowerKey = key.toLowerCase();
+        if (!list.some(s => s.id === lowerKey)) {
+          list.push({
+            id: lowerKey,
+            name: key.charAt(0).toUpperCase() + key.slice(1),
+            titleColor: 'text-indigo-500',
+            bgColor: 'bg-[#faf9ff]',
+            borderColor: 'border-indigo-200',
+            selectedBorder: 'border-indigo-400 ring-4 ring-indigo-100',
+            desc: `Custom subject template for ${key}!`,
+            renderGraphic: () => (
+              <div className="w-16 h-20 bg-indigo-500 rounded-lg flex items-center justify-center text-white font-black text-2xl shadow-[0_4px_0_0_#4338ca] transform rotate-3">
+                {key.slice(0, 2).toUpperCase()}
+              </div>
+            )
+          });
+        }
+      });
+    }
+    return list;
+  };
   
   // Real-time AI key resolution will be done on-the-fly during generation.
   
@@ -457,8 +502,8 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
           <h2 className="text-2xl font-black text-[#1a237e]">Choose Subject</h2>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {SUBJECTS.map((sub) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+          {getDynamicSubjects().map((sub) => (
             <div 
               key={sub.id}
               onClick={() => setFormData({...formData, subject: sub.id})}
@@ -543,9 +588,9 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
                    placeholder={getPlaceholder()}
                    value={formData.aiPrompt}
                    onChange={(e) => setFormData({...formData, aiPrompt: e.target.value})}
-                   className="w-full h-24 bg-white border-2 border-slate-200 rounded-2xl p-4 text-slate-700 font-bold outline-none focus:border-purple-400 transition-colors resize-none text-xs"
+                   className="w-full h-64 bg-white border-2 border-slate-200 rounded-2xl p-4 text-slate-700 font-bold outline-none focus:border-purple-400 transition-colors resize-y text-xs font-sans"
                  />
-                 <Wand2 className="absolute right-4 bottom-4 w-5 h-5 text-purple-400 opacity-50" />
+                 <Wand2 className="absolute right-4 bottom-4 w-5 h-5 text-purple-400 opacity-50 pointer-events-none" />
                </div>
              </div>
 

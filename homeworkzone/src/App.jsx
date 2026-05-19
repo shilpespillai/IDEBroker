@@ -255,7 +255,7 @@ const StudentProfile = ({ studentName, teacher, classroom, onProfileUpdate }) =>
     <motion.div 
        initial={{ opacity: 0, y: 20 }}
        animate={{ opacity: 1, y: 0 }}
-       className="max-w-4xl mx-auto py-4 space-y-6 pb-20"
+       className="max-w-[100%] mx-auto w-full py-4 space-y-6 pb-20"
     >
       {/* Header Actions */}
       <div className="flex items-center justify-between">
@@ -583,7 +583,7 @@ const MyHomework = ({ studentName, teacher, onStartMission }) => {
    ];
 
    return (
-      <div className="max-w-5xl mx-auto py-6 space-y-8 pb-20">
+      <div className="max-w-[100%] mx-auto w-full py-6 space-y-8 pb-20">
          {/* Header area with custom illustrations */}
          <div className="flex items-center justify-between px-2 pt-4">
             <div className="flex items-center gap-4 relative z-10">
@@ -707,7 +707,7 @@ const MissionReports = ({ studentName, teacher }) => {
    }, [studentName]);
 
    return (
-      <div className="max-w-4xl mx-auto py-4 space-y-10 pb-20">
+      <div className="max-w-[100%] mx-auto w-full py-4 space-y-10 pb-20">
          <div className="space-y-1 px-2">
             <h1 className="text-4xl font-black text-[#1E3A8A] tracking-tight">Mission Reports</h1>
             <p className="text-sm font-bold text-blue-300 italic">Review your performance and AI feedback.</p>
@@ -910,7 +910,7 @@ const MyRewards = ({ studentName, classroom, homeworks, submissions, getStudentA
    };
 
    return (
-      <div className="max-w-4xl mx-auto py-4 space-y-8 pb-20">
+      <div className="max-w-[100%] mx-auto w-full py-4 space-y-8 pb-20">
          {/* Hero Header */}
          <div className="flex items-center justify-between px-2 relative">
             <div className="space-y-4">
@@ -1777,9 +1777,12 @@ const LoginPage = ({ role, onLogin }) => {
   const [code, setCode] = useState('');
   const [studentName, setStudentName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleSubmit = async () => {
+    setErrorMsg('');
     if (role === 'student' && (!code || !studentName)) {
+      setErrorMsg("Please enter both the Teacher Code and your name! 🎒");
       alert("Please enter both the Teacher Code and your name! 🎒");
       return;
     }
@@ -1856,14 +1859,17 @@ const LoginPage = ({ role, onLogin }) => {
              onLogin({ teacher: { uid: teacherDoc.id, ...teacherData }, name: matchedStudentName, classroom: studentClass });
              navigate('/dashboard/student');
           } else {
+             setErrorMsg("Oops! Your name isn't on the class list yet. Talk to your teacher to join the Homework Zone! 🍎");
              alert("Oops! Your name isn't on the class list yet. Talk to your teacher to join the Homework Zone! 🍎");
           }
         } else {
+          setErrorMsg("Invalid Teacher Code. Please check with your teacher! 🔍");
           alert("Invalid Teacher Code. Please check with your teacher! 🔍");
         }
       }
     } catch (error) {
       console.error("Login Error:", error);
+      setErrorMsg("Login failed. Please try again! 🔄");
       alert("Login failed. Please try again! 🔄");
     }
     setIsLoading(false);
@@ -1919,6 +1925,12 @@ const LoginPage = ({ role, onLogin }) => {
             </div>
           )}
         </div>
+
+        {errorMsg && (
+          <div className="bg-rose-50 border-4 border-[#2D3748] text-rose-600 px-6 py-4 rounded-3xl text-sm font-black text-center shadow-[4px_4px_0_0_#2D3748] animate-bounce-short">
+             {errorMsg}
+          </div>
+        )}
 
         <button 
           onClick={handleSubmit} 

@@ -488,7 +488,7 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
           </div>
 
           <div className="space-y-2">
-            <label className="font-bold text-[#1a237e]">Title</label>
+            <label className="font-bold text-[#1a237e]">Title <span className="text-rose-500">*</span></label>
             <div className="relative">
               <input 
                 type="text"

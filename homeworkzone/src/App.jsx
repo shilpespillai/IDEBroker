@@ -1829,22 +1829,34 @@ const LoginPage = ({ role, onLogin }) => {
           
           let studentFound = false;
           let studentClass = null;
+          let matchedStudentName = null;
+
+          const normalizeName = (name) => (name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+          const cleanInputName = normalizeName(studentName);
 
           for (const classDoc of classroomsSnap.docs) {
-             const studentRef = doc(db, 'teachers', teacherDoc.id, 'classrooms', classDoc.id, 'students', studentName.toLowerCase());
-             const studentSnap = await getDoc(studentRef);
-             if (studentSnap.exists()) {
-               studentFound = true;
-               studentClass = { id: classDoc.id, ...classDoc.data() };
-               break;
+             const studentsRef = collection(db, 'teachers', teacherDoc.id, 'classrooms', classDoc.id, 'students');
+             const studentsSnap = await getDocs(studentsRef);
+             
+             const matchedDoc = studentsSnap.docs.find(stDoc => {
+                const stData = stDoc.data();
+                return normalizeName(stDoc.id) === cleanInputName || 
+                       normalizeName(stData.name) === cleanInputName;
+             });
+
+             if (matchedDoc) {
+                studentFound = true;
+                studentClass = { id: classDoc.id, ...classDoc.data() };
+                matchedStudentName = matchedDoc.data().name || matchedDoc.id;
+                break;
              }
           }
 
           if (studentFound) {
-             onLogin({ teacher: { uid: teacherDoc.id, ...teacherData }, name: studentName, classroom: studentClass });
+             onLogin({ teacher: { uid: teacherDoc.id, ...teacherData }, name: matchedStudentName, classroom: studentClass });
              navigate('/dashboard/student');
           } else {
-            alert("Oops! Your name isn't on the class list yet. Talk to your teacher to join the Homework Zone! 🍎");
+             alert("Oops! Your name isn't on the class list yet. Talk to your teacher to join the Homework Zone! 🍎");
           }
         } else {
           alert("Invalid Teacher Code. Please check with your teacher! 🔍");

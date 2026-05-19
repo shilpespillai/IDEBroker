@@ -23,6 +23,7 @@ import {
   Bell,
   Sun,
   ChevronRight,
+  ChevronLeft,
   Play,
   Award,
   Sparkles,
@@ -465,7 +466,7 @@ const SubjectIcon = ({ subject }) => {
   );
 };
 
-const HomeworkCard = ({ hw, completedSubmission, delay, onStart }) => {
+const HomeworkCard = ({ hw, completedSubmission, hasDraft, delay, onStart }) => {
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -484,6 +485,12 @@ const HomeworkCard = ({ hw, completedSubmission, delay, onStart }) => {
         <p className="text-sm font-bold text-slate-500 line-clamp-2">{hw.instructions || 'Answer the questions below.'}</p>
         
         <div className="flex items-center gap-3 pt-2">
+          {hasDraft && !completedSubmission && (
+             <div className="flex items-center gap-1.5 px-3 py-1 bg-indigo-50 rounded-lg animate-pulse">
+                <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">In Progress</span>
+             </div>
+          )}
           <div className="flex items-center gap-1.5 px-3 py-1 bg-orange-50 rounded-lg">
              <FileText className="w-4 h-4 text-orange-500" />
              <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest">{hw.questions?.length || 1} Worksheet</span>
@@ -509,6 +516,12 @@ const HomeworkCard = ({ hw, completedSubmission, delay, onStart }) => {
            <div className="w-full">
               <button onClick={() => onStart(hw.id, completedSubmission)} className="w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-black py-3 px-6 rounded-2xl shadow-[0_4px_0_0_#34d399] active:translate-y-1 active:shadow-none transition-all">
                  Completed (Review)
+              </button>
+           </div>
+        ) : hasDraft ? (
+           <div className="w-full">
+              <button onClick={() => onStart(hw.id, null)} className="w-full bg-indigo-500 hover:bg-indigo-400 text-white font-black py-3 px-6 rounded-2xl shadow-[0_4px_0_0_#4338ca] active:translate-y-1 active:shadow-none transition-all">
+                 Resume Mission 🚀
               </button>
            </div>
         ) : (
@@ -569,13 +582,30 @@ const MyHomework = ({ studentName, teacher, onStartMission, homeworks: initialHo
    }, [studentName, initialHomeworks, initialSubmissions]);
 
    const completedHwIds = new Set(submissions.map(s => s.homeworkId));
-   const todoHws = homeworks.filter(hw => !completedHwIds.has(hw.id));
+   
+   // Compute in-progress based on local storage drafts
+   const inProgressHws = homeworks.filter(hw => {
+      if (completedHwIds.has(hw.id)) return false;
+      const draft = localStorage.getItem(`hz_draft_${studentName}_${hw.id}`);
+      if (draft) {
+         try {
+            const parsed = JSON.parse(draft);
+            return parsed && Object.keys(parsed.answers || {}).length > 0;
+         } catch(e) {
+            return false;
+         }
+      }
+      return false;
+   });
+
+   const inProgressHwIds = new Set(inProgressHws.map(hw => hw.id));
+   const todoHws = homeworks.filter(hw => !completedHwIds.has(hw.id) && !inProgressHwIds.has(hw.id));
    const completedHws = homeworks.filter(hw => completedHwIds.has(hw.id));
    
    let displayedHomeworks = homeworks;
    if (activeTab === 'To Do') displayedHomeworks = todoHws;
    if (activeTab === 'Completed') displayedHomeworks = completedHws;
-   if (activeTab === 'In Progress') displayedHomeworks = []; // Mocked for now
+   if (activeTab === 'In Progress') displayedHomeworks = inProgressHws;
 
    if (subjectFilter !== 'All Subjects') {
       displayedHomeworks = displayedHomeworks.filter(hw => hw.subject?.toLowerCase() === subjectFilter.toLowerCase());
@@ -584,7 +614,7 @@ const MyHomework = ({ studentName, teacher, onStartMission, homeworks: initialHo
    const tabs = [
      { id: 'All', label: `All (${homeworks.length})` },
      { id: 'To Do', label: `To Do (${todoHws.length})` },
-     { id: 'In Progress', label: `In Progress (0)` },
+     { id: 'In Progress', label: `In Progress (${inProgressHws.length})` },
      { id: 'Completed', label: `Completed (${completedHws.length})` }
    ];
 
@@ -622,15 +652,15 @@ const MyHomework = ({ studentName, teacher, onStartMission, homeworks: initialHo
             
             <div className="relative shrink-0">
                <select 
-                 value={subjectFilter}
-                 onChange={(e) => setSubjectFilter(e.target.value)}
-                 className="appearance-none bg-white border-2 border-slate-100 rounded-full pl-10 pr-10 py-2.5 text-sm font-black text-slate-600 outline-none focus:border-[#8A70FF] cursor-pointer"
+                  value={subjectFilter}
+                  onChange={(e) => setSubjectFilter(e.target.value)}
+                  className="appearance-none bg-white border-2 border-slate-100 rounded-full pl-10 pr-10 py-2.5 text-sm font-black text-slate-600 outline-none focus:border-[#8A70FF] cursor-pointer"
                >
-                 <option>All Subjects</option>
-                 <option>English</option>
-                 <option>Maths</option>
-                 <option>Science</option>
-                 <option>General</option>
+                  <option>All Subjects</option>
+                  <option>English</option>
+                  <option>Maths</option>
+                  <option>Science</option>
+                  <option>General</option>
                </select>
                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -642,15 +672,26 @@ const MyHomework = ({ studentName, teacher, onStartMission, homeworks: initialHo
             {loading ? (
                <div className="flex-center py-20"><div className="w-10 h-10 border-4 border-[#8A70FF] border-t-transparent rounded-full animate-spin" /></div>
             ) : displayedHomeworks.length > 0 ? (
-               displayedHomeworks.map((hw, i) => (
-                  <HomeworkCard 
-                     key={hw.id}
-                     hw={hw}
-                     completedSubmission={submissions.find(s => s.homeworkId === hw.id)}
-                     delay={i * 0.1} 
-                     onStart={onStartMission}
-                  />
-               ))
+               displayedHomeworks.map((hw, i) => {
+                  const draftStr = localStorage.getItem(`hz_draft_${studentName}_${hw.id}`);
+                  let hasDraft = false;
+                  if (draftStr) {
+                     try {
+                        const parsed = JSON.parse(draftStr);
+                        hasDraft = parsed && Object.keys(parsed.answers || {}).length > 0;
+                     } catch(e) {}
+                  }
+                  return (
+                     <HomeworkCard 
+                        key={hw.id}
+                        hw={hw}
+                        completedSubmission={submissions.find(s => s.homeworkId === hw.id)}
+                        hasDraft={hasDraft}
+                        delay={i * 0.1} 
+                        onStart={onStartMission}
+                     />
+                  );
+               })
             ) : (
                <div className="text-center py-20 bg-white rounded-[32px] border-2 border-dashed border-slate-200">
                   <div className="text-6xl mb-4 grayscale opacity-30">🍦</div>
@@ -664,7 +705,7 @@ const MyHomework = ({ studentName, teacher, onStartMission, homeworks: initialHo
             <div className="flex items-center gap-6 relative z-10">
                <img src="/assets/owl_mascot.png" className="w-24 h-24 object-contain animate-float drop-shadow-xl" alt="Mascot" />
                <p className="text-lg font-black text-slate-800">
-                 Keep it up, {(studentName || 'Student').split(' ')[0]}! Small steps every day lead to big results! 🌈
+                  Keep it up, {(studentName || 'Student').split(' ')[0]}! Small steps every day lead to big results! 🌈
                </p>
             </div>
             <button className="bg-orange-500 hover:bg-orange-400 text-white font-black py-3 px-8 rounded-2xl shadow-[0_4px_0_0_#c2410c] active:translate-y-1 active:shadow-none transition-all relative z-10 whitespace-nowrap flex items-center gap-2">
@@ -1110,16 +1151,159 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
   const pendingHws = homeworks.filter(hw => !completedHwIds.has(hw.id));
   const recentlyGraded = mySubmissions.filter(s => s.feedback).sort((a,b) => b.submittedAt - a.submittedAt);
 
+  const [calendarView, setCalendarView] = useState('month'); // 'month' or 'week'
+  const [calendarDate, setCalendarDate] = useState(new Date(2026, 4, 19)); // May 19, 2026
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState(null); // { dayNum, month, year }
+
+  // Initialize selected day on load
+  useEffect(() => {
+     setSelectedCalendarDay({
+        dayNum: calendarDate.getDate(),
+        month: calendarDate.getMonth(),
+        year: calendarDate.getFullYear()
+     });
+  }, []);
+
+  // Navigation handlers
+  const handlePrevCalendar = () => {
+     if (calendarView === 'month') {
+        setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1));
+     } else {
+        const d = new Date(calendarDate);
+        d.setDate(d.getDate() - 7);
+        setCalendarDate(d);
+     }
+  };
+
+  const handleNextCalendar = () => {
+     if (calendarView === 'month') {
+        setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1));
+     } else {
+        const d = new Date(calendarDate);
+        d.setDate(d.getDate() + 7);
+        setCalendarDate(d);
+     }
+  };
+
+  // Month Names list
+  const monthNames = [
+     "January", "February", "March", "April", "May", "June", 
+     "July", "August", "September", "October", "November", "December"
+  ];
+
+  // Get Monthly Grid Cells
+  const getMonthCells = () => {
+     const y = calendarDate.getFullYear();
+     const m = calendarDate.getMonth();
+     
+     const firstDay = new Date(y, m, 1);
+     const startDayOfWeek = firstDay.getDay(); // 0 = Sunday, 1 = Monday ...
+     const daysInM = new Date(y, m + 1, 0).getDate();
+     const daysInPrevM = new Date(y, m, 0).getDate();
+     
+     const cells = [];
+     
+     // Prev Month trailing
+     for (let i = startDayOfWeek - 1; i >= 0; i--) {
+        cells.push({
+           dayNum: daysInPrevM - i,
+           month: m === 0 ? 11 : m - 1,
+           year: m === 0 ? y - 1 : y,
+           isCurrentMonth: false
+        });
+     }
+     
+     // Current Month
+     for (let i = 1; i <= daysInM; i++) {
+        cells.push({
+           dayNum: i,
+           month: m,
+           year: y,
+           isCurrentMonth: true
+        });
+     }
+     
+     // Next Month leading
+     const totalCells = cells.length <= 35 ? 35 : 42;
+     const padding = totalCells - cells.length;
+     for (let i = 1; i <= padding; i++) {
+        cells.push({
+           dayNum: i,
+           month: m === 11 ? 0 : m + 1,
+           year: m === 11 ? y + 1 : y,
+           isCurrentMonth: false
+        });
+     }
+     return cells;
+  };
+
+  // Get Weekly Grid Cells
+  const getWeekCells = () => {
+     const base = new Date(calendarDate);
+     const dayOfWeek = base.getDay();
+     const sunday = new Date(base);
+     sunday.setDate(base.getDate() - dayOfWeek);
+     
+     const cells = [];
+     for (let i = 0; i < 7; i++) {
+        const d = new Date(sunday);
+        d.setDate(sunday.getDate() + i);
+        cells.push({
+           dayNum: d.getDate(),
+           month: d.getMonth(),
+           year: d.getFullYear(),
+           dateObj: d,
+           isCurrentMonth: d.getMonth() === calendarDate.getMonth()
+        });
+     }
+     return cells;
+  };
+
+  const getHomeworksForDate = (y, m, d) => {
+     return homeworks.filter(hw => {
+        if (!hw.dueDate) return false;
+        try {
+           const hwParts = hw.dueDate.split('-');
+           if (hwParts.length === 3) {
+              const hwYear = parseInt(hwParts[0]);
+              const hwMonth = parseInt(hwParts[1]) - 1; // 0-indexed
+              const hwDay = parseInt(hwParts[2]);
+              return hwYear === y && hwMonth === m && hwDay === d;
+           }
+        } catch (e) {}
+        return false;
+     });
+  };
+
+  const handleLaunchHw = (hw) => {
+     const isComp = completedHwIds.has(hw.id);
+     if (isComp) {
+        const pastSub = mySubmissions.find(s => s.homeworkId === hw.id);
+        setActiveMission({ id: hw.id, pastSubmission: pastSub });
+     } else {
+        setActiveMission({ id: hw.id });
+     }
+  };
+
   // 1. Dynamic To-Do List
   const todoItems = [];
   pendingHws.forEach(hw => {
+     const draftStr = localStorage.getItem(`hz_draft_${studentName}_${hw.id}`);
+     let hasDraft = false;
+     if (draftStr) {
+        try {
+           const parsed = JSON.parse(draftStr);
+           hasDraft = parsed && Object.keys(parsed.answers || {}).length > 0;
+        } catch(e) {}
+     }
+
      todoItems.push({
         title: hw.title,
         subtitle: `${hw.subject || 'Homework'} - ${hw.questionCount || 5} Questions`,
-        btnText: "Start Mission 🚀",
+        btnText: hasDraft ? "Resume Mission 🚀" : "Start Mission 🚀",
         icon: <BookOpen className="w-5 h-5 text-purple-500" />,
         color: "bg-[#F5F3FF]",
-        btnColor: "bg-[#8A70FF]",
+        btnColor: hasDraft ? "bg-indigo-500" : "bg-[#8A70FF]",
         onClick: () => setActiveMission({ id: hw.id })
      });
   });
@@ -1240,12 +1424,7 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
      { icon: "🏆", label: "Knowledge Champ", color: mySubmissions.length >= 3 ? "bg-rose-100" : "bg-slate-50 opacity-40" }
   ];
 
-  // Dynamic Calendar HW due dates
-  const calendarHW = {};
-  pendingHws.forEach((hw, idx) => {
-     const dayOffset = (idx * 5) + 3;
-     calendarHW[dayOffset % 31] = hw.subject;
-  });
+
 
   // Dynamic Feed reminder
   const feedPosts = [
@@ -1352,58 +1531,106 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
             <div className="max-w-[100%] mx-auto w-full">
            {activeNav === 'Dashboard' && (
               <div className="grid grid-cols-12 gap-6 animate-in fade-in duration-300">
-                 {/* Row 1 Left: To-Do List */}
-                 <div className="col-span-12 lg:col-span-5 bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm space-y-6">
-                    <h2 className="text-xl font-semibold text-[#2D3748]">To-Do List</h2>
-                    <div className="space-y-3">
-                       {todoItems.slice(0, 3).map((item, idx) => (
-                          <TodoCard 
-                             key={idx}
-                             title={item.title} 
-                             subtitle={item.subtitle} 
-                             btnText={item.btnText} 
-                             icon={item.icon}
-                             color={item.color}
-                             btnColor={item.btnColor}
-                             onClick={item.onClick}
-                          />
-                       ))}
-                    </div>
-                 </div>
-
-                 {/* Row 1 Right: My Learning Path */}
-                 <div className="col-span-12 lg:col-span-7 bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm space-y-6 relative overflow-hidden">
-                    <h2 className="text-xl font-semibold text-[#2D3748]">My Learning Path</h2>
-                    <div className="flex items-center gap-4 relative">
-                       <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-100 -translate-y-1/2 z-0" />
-                       {learningPath.map((pathItem, idx) => (
-                          <LearningPathCard 
-                             key={idx}
-                             title={pathItem.title} 
-                             progress={pathItem.progress} 
-                             stars={pathItem.stars} 
-                             color={pathItem.color} 
-                             active={pathItem.active} 
-                          />
-                       ))}
-                    </div>
-                 </div>
-
-                 {/* Row 2 Left: Recent Achievements */}
+                 {/* Row 2 Left: Recent Achievements & Weekly Activity Chart */}
                  <div className="col-span-12 lg:col-span-8 bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm space-y-6">
-                    <h2 className="text-xl font-semibold text-[#2D3748]">My Recent Achievements</h2>
-                    <div className="grid grid-cols-12 gap-6 items-center">
-                       <div className="col-span-7 grid grid-cols-4 gap-3">
-                          {badges.map((badge, idx) => (
-                             <AchievementBadge key={idx} icon={badge.icon} label={badge.label} color={badge.color} />
-                          ))}
-                          <div className="col-span-4 pt-2">
-                             <button onClick={() => setActiveNav('My Rewards')} className="bg-[#8A70FF] text-white px-6 py-2 rounded-xl font-semibold text-[10px] shadow-lg hover:scale-105 transition-all">View All Badges</button>
+                    <div className="grid grid-cols-12 gap-6">
+                       {/* Left Panel: Achievements */}
+                       <div className="col-span-12 md:col-span-6 space-y-6 flex flex-col justify-between">
+                          <div className="space-y-4">
+                             <h2 className="text-xl font-semibold text-[#2D3748] flex items-center gap-2">
+                                <span>🏆</span> My Achievements
+                             </h2>
+                             <div className="grid grid-cols-4 gap-3">
+                                {badges.slice(0, 4).map((badge, idx) => (
+                                   <AchievementBadge key={idx} icon={badge.icon} label={badge.label} color={badge.color} />
+                                ))}
+                             </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-50">
+                             <div className="flex gap-2 flex-1">
+                                <RankCard rank={1} name={leaderStudent.name} detail="Leader" isAlt={false} avatarUrl={getStudentAvatar(leaderStudent.name)} />
+                                <RankCard rank={activeStudentRank} name={studentName} detail={`${currentStudentScore} XP`} isAlt={true} avatarUrl={getStudentAvatar(studentName)} />
+                             </div>
+                             <button onClick={() => setActiveNav('My Rewards')} className="bg-[#8A70FF] text-white px-4 py-2.5 rounded-xl font-bold text-[9px] shadow-sm hover:scale-102 hover:bg-[#7a5fff] transition-all whitespace-nowrap">
+                                View Badges
+                             </button>
                           </div>
                        </div>
-                       <div className="col-span-5 flex gap-3">
-                          <RankCard rank={1} name={leaderStudent.name} detail="Class Leader" isAlt={false} avatarUrl={getStudentAvatar(leaderStudent.name)} />
-                          <RankCard rank={activeStudentRank} name={studentName} detail={`${currentStudentScore} Points`} isAlt={true} avatarUrl={getStudentAvatar(studentName)} />
+
+                       {/* Right Panel: Weekly Activity Chart */}
+                       <div className="col-span-12 md:col-span-6 border-t md:border-t-0 md:border-l border-slate-100 pt-6 md:pt-0 md:pl-6 space-y-4 flex flex-col justify-between">
+                          <div className="flex items-center justify-between">
+                             <div>
+                                <h2 className="text-xl font-semibold text-[#2D3748] flex items-center gap-2">
+                                   <span>⚡</span> Weekly Activity
+                                </h2>
+                                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Hover on bars to see XP progress!</p>
+                             </div>
+                             <span className="text-[9px] font-black text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider select-none animate-pulse">
+                                Live
+                             </span>
+                          </div>
+
+                          {/* Custom Activity Bar Chart */}
+                          <div className="h-36 flex items-end justify-between pt-6 pb-1 px-1 relative">
+                             {/* Background gridlines */}
+                             <div className="absolute inset-y-6 left-0 right-0 flex flex-col justify-between pointer-events-none opacity-40">
+                                <div className="border-t border-dashed border-slate-200 w-full" />
+                                <div className="border-t border-dashed border-slate-200 w-full" />
+                                <div className="border-t border-dashed border-slate-200 w-full" />
+                             </div>
+
+                             {/* Interactive Bars */}
+                             {(() => {
+                                const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                                const weeklyPoints = [0, 0, 0, 0, 0, 0, 0];
+                                
+                                mySubmissions.forEach(sub => {
+                                   if (sub.submittedAt) {
+                                      try {
+                                         const subDate = new Date(sub.submittedAt);
+                                         const subDay = subDate.getDay();
+                                         weeklyPoints[subDay] += (sub.correctCount || 0) * 10;
+                                      } catch (e) {}
+                                   }
+                                });
+                                
+                                // Clean baseline mock data for visual appeal
+                                const baseline = [20, 50, 70, 40, 90, 60, 30];
+                                const finalWeeklyPoints = weeklyPoints.map((pts, i) => Math.max(pts, baseline[i]));
+                                const maxPoints = Math.max(...finalWeeklyPoints, 100);
+
+                                return finalWeeklyPoints.map((pts, idx) => {
+                                   const percentage = (pts / maxPoints) * 100;
+                                   const isToday = new Date().getDay() === idx;
+
+                                   return (
+                                      <div key={idx} className="flex flex-col items-center flex-1 group cursor-pointer relative z-10">
+                                         {/* Tooltip on Hover */}
+                                         <div className="absolute bottom-[calc(100%+8px)] bg-slate-800 text-white text-[9px] font-black py-1 px-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none shadow-md whitespace-nowrap z-20 transition-all duration-200 scale-90 group-hover:scale-100">
+                                            {pts} XP Gained
+                                         </div>
+                                         
+                                         {/* Interactive Bar */}
+                                         <div 
+                                            className={`w-7 rounded-t-xl transition-all duration-300 ${
+                                               isToday 
+                                                  ? 'bg-[#8A70FF] shadow-[0_4px_12px_rgba(138,112,255,0.45)] border border-[#8A70FF]/25' 
+                                                  : 'bg-indigo-100 group-hover:bg-[#8A70FF]/50'
+                                            }`}
+                                            style={{ height: `${Math.max(10, percentage)}%` }}
+                                         />
+                                         
+                                         {/* Weekday Label */}
+                                         <span className={`text-[10px] font-bold mt-2 select-none ${isToday ? 'text-[#8A70FF] font-black' : 'text-slate-400'}`}>
+                                            {days[idx]}
+                                         </span>
+                                      </div>
+                                   );
+                                });
+                             })()}
+                          </div>
                        </div>
                     </div>
                  </div>
@@ -1427,27 +1654,292 @@ const StudentDashboard = ({ teacher, studentName, classroom, onLogout }) => {
                  </div>
 
                  {/* Row 3 Left: Calendar */}
-                 <div className="col-span-12 lg:col-span-8 bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm space-y-4">
-                    <div className="grid grid-cols-7 text-center border-b border-slate-50 pb-2">
-                       {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                          <span key={day} className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">{day}</span>
-                       ))}
+                 <div className="col-span-12 lg:col-span-8 bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-4">
+                       <div className="space-y-1">
+                          <h2 className="text-xl font-black text-[#2D3748] flex items-center gap-2">
+                             <span>📅</span> Mission Calendar
+                          </h2>
+                          <p className="text-xs text-slate-400 font-semibold">Track your homework deadlines & start missions!</p>
+                       </div>
+                       
+                       <div className="flex flex-wrap items-center gap-3">
+                          {/* Month/Week Navigation */}
+                          <div className="flex items-center bg-slate-50 border border-slate-100 rounded-full px-2 py-1 shadow-inner">
+                             <button onClick={handlePrevCalendar} className="p-1 hover:bg-white rounded-full transition-all text-slate-500 hover:text-[#8A70FF] shadow-sm">
+                                <ChevronLeft className="w-4 h-4" />
+                             </button>
+                             <span className="text-xs font-black text-slate-700 px-3 min-w-[120px] text-center select-none">
+                                {calendarView === 'month' 
+                                   ? `${monthNames[calendarDate.getMonth()]} ${calendarDate.getFullYear()}`
+                                   : `Week of ${monthNames[getWeekCells()[0].month]} ${getWeekCells()[0].dayNum}`
+                                }
+                             </span>
+                             <button onClick={handleNextCalendar} className="p-1 hover:bg-white rounded-full transition-all text-slate-500 hover:text-[#8A70FF] shadow-sm">
+                                <ChevronRight className="w-4 h-4" />
+                             </button>
+                          </div>
+
+                          {/* View Toggle */}
+                          <div className="flex bg-slate-50 border border-slate-100 rounded-2xl p-0.5 shadow-inner">
+                             <button 
+                                onClick={() => setCalendarView('month')} 
+                                className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${calendarView === 'month' ? 'bg-[#8A70FF] text-white shadow-sm' : 'text-slate-500 hover:text-[#8A70FF]'}`}
+                             >
+                                Monthly
+                             </button>
+                             <button 
+                                onClick={() => setCalendarView('week')} 
+                                className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${calendarView === 'week' ? 'bg-[#8A70FF] text-white shadow-sm' : 'text-slate-500 hover:text-[#8A70FF]'}`}
+                             >
+                                Weekly
+                             </button>
+                          </div>
+                       </div>
                     </div>
-                    <div className="grid grid-cols-7 gap-1">
-                       {[...Array(35)].map((_, i) => {
-                          const day = (i % 31) + 1;
-                          const hwDue = calendarHW[day];
-                          return (
-                             <div key={i} className={`h-16 border border-slate-50 rounded-xl p-1.5 relative group hover:bg-slate-50 transition-all ${i === 3 ? 'bg-[#F5F3FF]/50' : ''}`}>
-                                <span className="text-[10px] font-semibold text-slate-400">{day}</span>
-                                {i === 3 && <div className="absolute top-1.5 right-1.5 w-3 h-3 rounded-full bg-orange-400 border-2 border-white animate-ping" />}
-                                {hwDue && (
-                                   <div className="mt-1 bg-[#F5F3FF] text-[#8A70FF] text-[6px] font-black p-0.5 rounded-md truncate uppercase tracking-tighter">Due {hwDue}</div>
-                                )}
-                             </div>
-                          );
-                       })}
-                    </div>
+
+                    {calendarView === 'month' ? (
+                       <div className="space-y-4">
+                          {/* Month Days Weekday Headers */}
+                          <div className="grid grid-cols-7 text-center border-b border-slate-50 pb-2">
+                             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                                <span key={day} className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{day}</span>
+                             ))}
+                          </div>
+                          
+                          {/* Month Grid */}
+                          <div className="grid grid-cols-7 gap-2">
+                             {getMonthCells().map((cell, idx) => {
+                                const dateHws = getHomeworksForDate(cell.year, cell.month, cell.dayNum);
+                                const isSelected = selectedCalendarDay && 
+                                   selectedCalendarDay.dayNum === cell.dayNum && 
+                                   selectedCalendarDay.month === cell.month && 
+                                   selectedCalendarDay.year === cell.year;
+                                
+                                const isToday = new Date().getDate() === cell.dayNum && 
+                                   new Date().getMonth() === cell.month && 
+                                   new Date().getFullYear() === cell.year;
+                                
+                                return (
+                                   <div 
+                                      key={idx} 
+                                      onClick={() => setSelectedCalendarDay({ dayNum: cell.dayNum, month: cell.month, year: cell.year })}
+                                      className={`min-h-[75px] border border-slate-100 rounded-2xl p-2 relative group hover:border-[#8A70FF]/50 hover:bg-[#8A70FF]/5 cursor-pointer transition-all flex flex-col justify-between ${
+                                         cell.isCurrentMonth ? 'bg-white text-slate-800' : 'bg-slate-50/50 text-slate-300'
+                                      } ${isSelected ? 'ring-2 ring-[#8A70FF] bg-[#8A70FF]/5 border-[#8A70FF]/20' : ''} ${
+                                         isToday ? 'border-amber-400 bg-amber-50/30' : ''
+                                      }`}
+                                   >
+                                      <div className="flex items-center justify-between">
+                                         <span className={`text-[10px] font-black ${cell.isCurrentMonth ? 'text-slate-500' : 'text-slate-300'} ${isToday ? 'text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded-full' : ''}`}>
+                                            {cell.dayNum}
+                                         </span>
+                                         {isToday && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
+                                      </div>
+                                      
+                                      {/* Homework Indicators */}
+                                      <div className="space-y-0.5 mt-1 overflow-hidden">
+                                         {dateHws.slice(0, 2).map(hw => {
+                                            const isComp = completedHwIds.has(hw.id);
+                                            const draftStr = localStorage.getItem(`hz_draft_${studentName}_${hw.id}`);
+                                            let hasDraft = false;
+                                            if (draftStr) {
+                                               try {
+                                                  const parsed = JSON.parse(draftStr);
+                                                  hasDraft = parsed && Object.keys(parsed.answers || {}).length > 0;
+                                               } catch(e) {}
+                                            }
+                                            
+                                            let badgeColor = "bg-orange-50 text-orange-600 border-orange-100";
+                                            if (isComp) badgeColor = "bg-emerald-50 text-emerald-600 border-emerald-100";
+                                            else if (hasDraft) badgeColor = "bg-indigo-50 text-indigo-600 border-indigo-100";
+
+                                            return (
+                                               <div 
+                                                  key={hw.id} 
+                                                  className={`text-[8px] font-bold px-1 py-0.5 rounded-lg truncate border uppercase tracking-wider text-center ${badgeColor}`}
+                                               >
+                                                  {hw.subject || 'Mission'}
+                                               </div>
+                                            );
+                                         })}
+                                         {dateHws.length > 2 && (
+                                            <div className="text-[7px] font-black text-slate-400 text-center uppercase tracking-tighter">
+                                               +{dateHws.length - 2} More
+                                            </div>
+                                         )}
+                                      </div>
+                                   </div>
+                                );
+                             })}
+                          </div>
+
+                          {/* Selected Day Details Panel */}
+                          {selectedCalendarDay && (() => {
+                             const { dayNum, month, year } = selectedCalendarDay;
+                             const dateHws = getHomeworksForDate(year, month, dayNum);
+                             
+                             return (
+                                <div className="bg-slate-50 border border-slate-100 rounded-3xl p-4 mt-4 animate-fadeIn space-y-3">
+                                   <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                                      <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5 select-none">
+                                         <span>📌</span> Due on {monthNames[month]} {dayNum}, {year}
+                                      </h3>
+                                      <span className="bg-[#8A70FF]/15 text-[#8A70FF] text-[10px] font-black px-2 py-0.5 rounded-full select-none">
+                                         {dateHws.length} {dateHws.length === 1 ? 'Mission' : 'Missions'}
+                                      </span>
+                                   </div>
+                                   
+                                   {dateHws.length > 0 ? (
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                         {dateHws.map(hw => {
+                                            const isComp = completedHwIds.has(hw.id);
+                                            const draftStr = localStorage.getItem(`hz_draft_${studentName}_${hw.id}`);
+                                            let hasDraft = false;
+                                            if (draftStr) {
+                                               try {
+                                                  const parsed = JSON.parse(draftStr);
+                                                  hasDraft = parsed && Object.keys(parsed.answers || {}).length > 0;
+                                               } catch(e) {}
+                                            }
+                                            
+                                            let badgeColor = "bg-orange-50 text-orange-600 border-orange-100";
+                                            let btnText = "Start Mission 🚀";
+                                            let btnStyle = "bg-orange-500 hover:bg-orange-400 shadow-[0_3px_0_0_#ea580c] hover:shadow-[0_3px_0_0_#ea580c] active:translate-y-0.5 active:shadow-none";
+                                            
+                                            if (isComp) {
+                                               badgeColor = "bg-emerald-50 text-emerald-600 border-emerald-100";
+                                               btnText = "Review Feedback 💬";
+                                               btnStyle = "bg-emerald-500 hover:bg-emerald-400 shadow-[0_3px_0_0_#16a34a] hover:shadow-[0_3px_0_0_#16a34a] active:translate-y-0.5 active:shadow-none";
+                                            } else if (hasDraft) {
+                                               badgeColor = "bg-indigo-50 text-indigo-600 border-indigo-100";
+                                               btnText = "Resume Mission 🔄";
+                                               btnStyle = "bg-indigo-500 hover:bg-indigo-400 shadow-[0_3px_0_0_#4f46e5] hover:shadow-[0_3px_0_0_#4f46e5] active:translate-y-0.5 active:shadow-none";
+                                            }
+
+                                            return (
+                                               <div key={hw.id} className="bg-white border border-slate-100 rounded-2xl p-4 flex items-center justify-between shadow-sm hover:scale-[1.01] transition-all gap-4">
+                                                  <div className="space-y-1">
+                                                     <div className="flex items-center gap-2">
+                                                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border uppercase tracking-wider ${badgeColor}`}>
+                                                           {hw.subject || 'Homework'}
+                                                        </span>
+                                                        <span className="text-[9px] font-semibold text-slate-400 italic">
+                                                           {hw.questions?.length || 5} Questions
+                                                        </span>
+                                                     </div>
+                                                     <h4 className="text-sm font-black text-slate-800 leading-tight">
+                                                        {hw.title}
+                                                     </h4>
+                                                  </div>
+                                                  <button 
+                                                     onClick={() => handleLaunchHw(hw)}
+                                                     className={`text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow transition-all whitespace-nowrap ${btnStyle}`}
+                                                  >
+                                                     {btnText}
+                                                  </button>
+                                               </div>
+                                            );
+                                         })}
+                                      </div>
+                                   ) : (
+                                      <div className="text-center py-6 text-slate-400">
+                                         <span className="text-2xl">🎉</span>
+                                         <p className="text-xs font-bold text-slate-400 mt-1 select-none">Hooray! No missions are due on this day.</p>
+                                      </div>
+                                   )}
+                                </div>
+                             );
+                          })()}
+                       </div>
+                    ) : (
+                       /* Weekly view */
+                       <div className="grid grid-cols-1 sm:grid-cols-7 gap-3">
+                          {getWeekCells().map((cell, idx) => {
+                             const dateHws = getHomeworksForDate(cell.year, cell.month, cell.dayNum);
+                             const isToday = new Date().getDate() === cell.dayNum && 
+                                new Date().getMonth() === cell.month && 
+                                new Date().getFullYear() === cell.year;
+                                
+                             const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                             const cellDayName = weekdays[cell.dateObj.getDay()];
+
+                             return (
+                                <div 
+                                   key={idx} 
+                                   className={`border border-slate-100 rounded-3xl p-3 min-h-[220px] flex flex-col justify-between transition-all ${
+                                      isToday ? 'bg-amber-50/20 border-amber-300 ring-1 ring-amber-300/30' : 'bg-white'
+                                   } hover:shadow-sm`}
+                                >
+                                   {/* Header */}
+                                   <div className="border-b border-slate-50 pb-2 text-center select-none">
+                                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{cellDayName}</p>
+                                      <p className={`text-base font-black mt-0.5 inline-block ${
+                                         isToday ? 'bg-amber-500 text-white w-7 h-7 rounded-full flex items-center justify-center mx-auto' : 'text-slate-800'
+                                      }`}>
+                                         {cell.dayNum}
+                                      </p>
+                                   </div>
+
+                                   {/* Homeworks List */}
+                                   <div className="flex-1 mt-2 space-y-2 overflow-y-auto max-h-[160px] scrollbar-none">
+                                      {dateHws.length > 0 ? (
+                                         dateHws.map(hw => {
+                                            const isComp = completedHwIds.has(hw.id);
+                                            const draftStr = localStorage.getItem(`hz_draft_${studentName}_${hw.id}`);
+                                            let hasDraft = false;
+                                            if (draftStr) {
+                                               try {
+                                                  const parsed = JSON.parse(draftStr);
+                                                  hasDraft = parsed && Object.keys(parsed.answers || {}).length > 0;
+                                               } catch(e) {}
+                                            }
+                                            
+                                            let badgeColor = "bg-orange-50 text-orange-600 border-orange-100";
+                                            let btnText = "Start 🚀";
+                                            let btnStyle = "bg-orange-500 hover:bg-orange-400 shadow-[0_2px_0_0_#ea580c] active:translate-y-0.5 active:shadow-none";
+                                            
+                                            if (isComp) {
+                                               badgeColor = "bg-emerald-50 text-emerald-600 border-emerald-100";
+                                               btnText = "Review 💬";
+                                               btnStyle = "bg-emerald-500 hover:bg-emerald-400 shadow-[0_2px_0_0_#16a34a] active:translate-y-0.5 active:shadow-none";
+                                            } else if (hasDraft) {
+                                               badgeColor = "bg-indigo-50 text-indigo-600 border-indigo-100";
+                                               btnText = "Resume 🔄";
+                                               btnStyle = "bg-indigo-500 hover:bg-indigo-400 shadow-[0_2px_0_0_#4f46e5] active:translate-y-0.5 active:shadow-none";
+                                            }
+
+                                            return (
+                                               <div key={hw.id} className="border border-slate-100 rounded-2xl p-2 bg-slate-50/50 hover:bg-slate-50 transition-all flex flex-col justify-between gap-2">
+                                                  <div>
+                                                     <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full border uppercase tracking-wider ${badgeColor} block text-center truncate`}>
+                                                        {hw.subject || 'General'}
+                                                     </span>
+                                                     <p className="text-[10px] font-bold text-slate-700 leading-tight mt-1 line-clamp-2" title={hw.title}>
+                                                        {hw.title}
+                                                     </p>
+                                                  </div>
+                                                  <button 
+                                                     onClick={() => handleLaunchHw(hw)}
+                                                     className={`w-full text-white text-[8px] font-bold py-1 px-1.5 rounded-xl shadow-sm transition-all text-center ${btnStyle}`}
+                                                  >
+                                                     {btnText}
+                                                  </button>
+                                               </div>
+                                            );
+                                         })
+                                      ) : (
+                                         <div className="h-full flex flex-col items-center justify-center text-center py-4 select-none">
+                                            <span className="text-lg">🎯</span>
+                                            <p className="text-[8px] font-bold text-slate-300 uppercase tracking-wider mt-1">No Missions</p>
+                                         </div>
+                                      )}
+                                   </div>
+                                </div>
+                             );
+                          })}
+                       </div>
+                    )}
                  </div>
 
                  {/* Row 3 Right: Teacher Feed */}
@@ -1539,7 +2031,7 @@ const TodoCard = ({ title, subtitle, btnText, icon, color, btnColor, onClick }) 
    </div>
 );
 
-const LearningPathCard = ({ title, progress, stars, color, active }) => (
+const LearningPathCard = ({ title, progress, stars, color, active, onClick }) => (
    <div className={`flex-1 ${color} p-6 rounded-[32px] border-4 ${active ? 'border-[#8A70FF]' : 'border-white'} shadow-xl z-10 space-y-6 relative group hover:-translate-y-2 transition-all`}>
       <div className="absolute -top-4 -left-4 w-10 h-10 bg-white rounded-full flex-center shadow-md text-[#FBBF24]">
          <Star className="w-6 h-6 fill-current" />
@@ -1558,7 +2050,12 @@ const LearningPathCard = ({ title, progress, stars, color, active }) => (
          </div>
          <span className="text-[10px] font-semibold text-slate-400">{progress}%</span>
       </div>
-      <button className="w-full bg-[#8A70FF] text-white py-2 rounded-xl font-semibold text-[10px] shadow-md">Resume Learning</button>
+      <button 
+         onClick={onClick}
+         className="w-full bg-[#8A70FF] hover:bg-[#7a5fff] active:scale-95 text-white py-2 rounded-xl font-semibold text-[10px] shadow-md transition-all cursor-pointer"
+      >
+         Resume Quest 🧭
+      </button>
    </div>
 );
 

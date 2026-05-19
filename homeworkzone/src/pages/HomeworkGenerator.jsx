@@ -296,8 +296,8 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
   };
 
   const handlePublish = async () => {
-    if (!formData.title || !formData.classId) {
-      alert("Please fill in the title and select a class! 🎒");
+    if (!formData.title || !formData.classId || !formData.dueDate) {
+      alert("Please fill in the title, select a class, and select a due date! 🎒📅");
       return;
     }
 
@@ -626,7 +626,7 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
 
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="font-bold text-[#1a237e]">Class</label>
+              <label className="font-bold text-[#1a237e]">Class <span className="text-rose-500">*</span></label>
               <div className="relative">
                 <Users className="absolute left-4 top-4 w-5 h-5 text-blue-400" />
                 <select 
@@ -642,7 +642,7 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
             </div>
 
             <div className="space-y-2">
-              <label className="font-bold text-[#1a237e]">Due Date</label>
+              <label className="font-bold text-[#1a237e]">Due Date <span className="text-rose-500">*</span></label>
               <div className="relative">
                 <Calendar className="absolute left-4 top-4 w-5 h-5 text-blue-400" />
                 <input 

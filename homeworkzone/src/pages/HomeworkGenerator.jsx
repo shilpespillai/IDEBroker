@@ -75,10 +75,11 @@ const SUBJECTS = [
 ];
 
 export default function HomeworkGenerator({ user, classrooms = [], activeClassroom, initialDraft, onHomeworkCreated }) {
-  const [formData, setFormData] = useState({
+   const [formData, setFormData] = useState({
     subject: 'maths',
     title: '',
-    instructions: '',
+    instructions: 'Read each question carefully and select the best answer! 🚀',
+    aiPrompt: '',
     classId: '',
     dueDate: '',
     time: '',
@@ -101,7 +102,8 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
       setFormData({
         subject: initialDraft.subject || 'maths',
         title: initialDraft.title || '',
-        instructions: initialDraft.instructions || '',
+        instructions: initialDraft.instructions || 'Read each question carefully and select the best answer! 🚀',
+        aiPrompt: '',
         classId: initialDraft.assignedClassId || '',
         dueDate: initialDraft.dueDate || '',
         time: initialDraft.time || '',
@@ -210,7 +212,7 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
         hasKey: !!activeKey,
         keyLength: activeKey ? activeKey.length : 0,
         title: formData.title,
-        instructions: formData.instructions
+        aiPrompt: formData.aiPrompt
       });
 
       if (!activeKey) {
@@ -219,18 +221,18 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
         return;
       }
 
-      if (!formData.title && !formData.instructions) {
-        alert("Please provide either a Title or Instructions to guide generation! 🎯");
+      if (!formData.title && !formData.aiPrompt) {
+        alert("Please provide either a Title or an AI Prompt to guide generation! 🎯");
         setIsGenerating(false);
         return;
       }
 
-      const topic = formData.title || (formData.instructions ? formData.instructions.slice(0, 45) + '...' : 'General Quiz');
+      const topic = formData.title || (formData.aiPrompt ? formData.aiPrompt.slice(0, 45) + '...' : 'General Quiz');
       const prompt = `You are an expert curriculum designer. 
       Create a ${questionCount}-question multiple-choice quiz for students about the following topic:
       Subject: ${formData.subject}
       Topic: ${topic}
-      Specific Content Instructions: ${formData.instructions}
+      Specific Content Instructions: ${formData.aiPrompt || formData.title}
       
       Ensure the questions test the students' knowledge on the specific content instructions provided. DO NOT generate meta-questions about the instructions themselves.
       
@@ -328,7 +330,8 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
       setFormData({
         subject: 'maths',
         title: '',
-        instructions: '',
+        instructions: 'Read each question carefully and select the best answer! 🚀',
+        aiPrompt: '',
         classId: '',
         dueDate: '',
         time: '',
@@ -380,7 +383,8 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
       setFormData({
         subject: 'maths',
         title: '',
-        instructions: '',
+        instructions: 'Read each question carefully and select the best answer! 🚀',
+        aiPrompt: '',
         classId: '',
         dueDate: '',
         time: '',
@@ -528,20 +532,34 @@ export default function HomeworkGenerator({ user, classrooms = [], activeClassro
                 </div>
                 <div className="text-left">
                    <h4 className="font-black text-purple-900 text-sm">Magic Quiz Builder</h4>
-                   <p className="text-[10px] font-bold text-purple-600/70">Automatically generate {questionCount} multiple-choice questions based on your title & instructions.</p>
+                   <p className="text-[10px] font-bold text-purple-600/70">Automatically generate {questionCount} multiple-choice questions based on your title & AI prompt.</p>
                 </div>
              </div>
 
              <div className="space-y-1.5 text-left">
-               <label className="font-bold text-[#1a237e] text-xs block ml-1">Prompt / Instructions for Students</label>
+               <label className="font-bold text-[#1a237e] text-xs block ml-1">What should the quiz be about? (AI Prompt)</label>
                <div className="relative">
                  <textarea 
                    placeholder={getPlaceholder()}
+                   value={formData.aiPrompt}
+                   onChange={(e) => setFormData({...formData, aiPrompt: e.target.value})}
+                   className="w-full h-24 bg-white border-2 border-slate-200 rounded-2xl p-4 text-slate-700 font-bold outline-none focus:border-purple-400 transition-colors resize-none text-xs"
+                 />
+                 <Wand2 className="absolute right-4 bottom-4 w-5 h-5 text-purple-400 opacity-50" />
+               </div>
+             </div>
+
+             <div className="space-y-1.5 text-left">
+               <label className="font-bold text-[#1a237e] text-xs block ml-1">Instructions for Students (shown on student dashboard)</label>
+               <div className="relative">
+                 <input 
+                   type="text"
+                   placeholder="e.g. Read each question carefully and select the best answer!"
                    value={formData.instructions}
                    onChange={(e) => setFormData({...formData, instructions: e.target.value})}
-                   className="w-full h-32 bg-white border-2 border-slate-200 rounded-2xl p-4 text-slate-700 font-bold outline-none focus:border-purple-400 transition-colors resize-none text-xs"
+                   className="w-full bg-white border-2 border-slate-200 rounded-2xl p-4 text-slate-700 font-bold outline-none focus:border-purple-400 transition-colors text-xs"
                  />
-                 <Book className="absolute right-4 bottom-4 w-5 h-5 text-purple-400 opacity-50" />
+                 <Book className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400 opacity-50" />
                </div>
              </div>
 

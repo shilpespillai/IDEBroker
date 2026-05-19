@@ -1628,8 +1628,28 @@ const TeacherDashboard = ({ user, onLogout }) => {
                            (activeClassroom ? allSubmissions.filter(s => s.classId === activeClassroom.id) : allSubmissions).sort((a,b) => b.submittedAt - a.submittedAt).map((sub, idx) => (
                               <div key={sub.id || idx} className="grid grid-cols-12 px-8 py-6 items-center hover:bg-blue-50/10 transition-all">
                                  <div className="col-span-6 flex items-center gap-4">
-                                    <img src={getStudentAvatar(sub.studentName)} className="w-10 h-10 rounded-full border-2 border-white shadow-sm" alt={sub.studentName} />
-                                    <span className="text-sm font-black text-[#1E3A8A]">{sub.studentName}</span>
+                                    <img src={getStudentAvatar(sub.studentName)} className="w-10 h-10 rounded-full border-2 border-white shadow-sm bg-white p-0.5" alt={sub.studentName} />
+                                    <div className="flex flex-col">
+                                       <span className="text-sm font-black text-[#1E3A8A]">{sub.studentName}</span>
+                                       {(() => {
+                                          const hw = allHomeworks.find(h => h.id === sub.homeworkId);
+                                          if (!hw) return <span className="text-[10px] text-slate-400 font-bold mt-1">Unknown Assignment</span>;
+                                          return (
+                                             <div className="flex items-center gap-2 mt-1.5">
+                                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${
+                                                   hw.subject === 'maths' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                   hw.subject === 'science' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                   'bg-pink-50 text-pink-600 border-pink-100'
+                                                }`}>
+                                                   {hw.subject}
+                                                </span>
+                                                <span className="text-xs font-bold text-slate-500 truncate max-w-[200px]" title={hw.title}>
+                                                   {hw.title}
+                                                </span>
+                                             </div>
+                                          );
+                                       })()}
+                                    </div>
                                  </div>
                                  <div className="col-span-3 text-center">
                                     <span className={`px-4 py-1 rounded-full text-xs font-black ${sub.score >= 80 ? 'bg-emerald-50 text-emerald-600' : sub.score >= 50 ? 'bg-blue-50 text-blue-600' : 'bg-rose-50 text-rose-600'}`}>
